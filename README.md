@@ -1,1 +1,266 @@
-# app
+[README.md](https://github.com/user-attachments/files/30339029/README.md)
+# app# Pokatuha
+
+> Private P2P activity platform for cyclists, hikers, runners and outdoor communities.
+
+---
+
+# Status
+
+Version: 1.0.0
+
+Status: Approved
+
+Project Type: AI-Ready Documentation
+
+---
+
+# Project Vision
+
+Pokatuha is a privacy-first platform designed for organizing group outdoor activities.
+
+Unlike existing applications, Pokatuha does not rely on a centralized backend for storing user data.
+
+All personal data belongs to the user.
+
+---
+
+# Main Principles
+
+✔ Local-first
+
+✔ Privacy-first
+
+✔ Offline-first
+
+✔ P2P communication
+
+✔ Modular architecture
+
+✔ AI-ready documentation
+
+✔ No mandatory cloud
+
+---
+
+# Core Features
+
+- Activity creation
+- Group management
+- Live GPS
+- Route planning
+- Chat
+- Polls
+- Archive
+- GPX
+- Weather
+- Notifications
+- Photo sharing
+- Video sharing
+- Event stages
+- Custom activity types
+
+---
+
+# Supported Activities
+
+Default:
+
+- MTB
+- XC
+- Enduro
+- Downhill
+- Gravel
+- Road
+- BMX
+- E-Bike
+- Hiking
+- Running
+
+Users may create unlimited custom activity types.
+
+---
+
+# Core Architecture
+
+## Storage
+
+Local only.
+
+Recommended database:
+
+Isar
+
+Stored locally:
+
+- Chat
+- Photos
+- Videos
+- GPX
+- Events
+- Archive
+- Settings
+- Votes
+
+---
+
+## Communication
+
+Two communication modes.
+
+### Live Mode
+
+WebRTC
+
+↓
+
+Peer-to-Peer
+
+↓
+
+GPS
+
+↓
+
+Chat
+
+↓
+
+Events
+
+No cloud storage.
+
+---
+
+### Sleep Mode
+
+Firebase Cloud Messaging
+
+↓
+
+Wake application
+
+↓
+
+Reconnect WebRTC
+
+↓
+
+Continue synchronization
+
+FCM is used ONLY for wake-up notifications.
+
+FCM is NEVER used for:
+
+- storage
+- chat
+- history
+- cloud synchronization
+
+---
+
+# Maps
+
+Default:
+
+- OpenStreetMap
+- MapLibre
+
+Optional:
+
+- Google Maps
+- HERE
+- 2GIS
+- Yandex Maps
+
+User selects preferred provider.
+
+---
+
+# Weather
+
+Provider
+
+Open-Meteo
+
+Requirements
+
+- Free
+- No API key
+- No payment
+
+---
+
+# Notifications
+
+Push notifications
+
+Android
+
+Firebase Cloud Messaging
+
+Only wake-up notifications.
+
+---
+
+# Privacy
+
+The application never stores user data on developer-owned servers.
+
+User controls:
+
+- GPS sharing
+- Photo sharing
+- Event visibility
+- Profile visibility
+
+---
+
+# Repository Structure
+
+```
+docs/
+architecture/
+adr/
+prompts/
+schemas/
+diagrams/
+assets/
+```
+
+---
+
+# Documentation
+
+This repository contains the complete AI-ready documentation for the Pokatuha platform.
+
+The documentation is intended for:
+
+- Claude Code
+- Cursor
+- ChatGPT
+- Gemini
+- GitHub Copilot
+
+---
+
+# License
+
+TBD
+
+---
+
+# Current Documentation Progress
+
+| Document | Status |
+|----------|--------|
+| README | ✅ |
+| AI_RULES | ⏳ |
+| Vision | ⏳ |
+| MasterPrompt | ⏳ |
+| SRS | ⏳ |
+| UI Bible | ⏳ |
+| Database | ⏳ |
+| REST API | ⏳ |
+| WebSocket API | ⏳ |
+| Architecture | ⏳ |
