@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "829500140154",
+    "project_id": "pokatuha-b96e3",
+    "storage_bucket": "pokatuha-b96e3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:829500140154:android:12fdf471c60dd10357e9c3",
+        "android_client_info": {
+          "package_name": "com.pokatuha.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA500FFXBJyMmf5NzeZu3ytZn3RdE-r3pc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
