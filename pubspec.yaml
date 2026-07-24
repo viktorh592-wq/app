@@ -22,7 +22,7 @@ dependencies:
 
   # Identifiers & time (Entity_Standards, UUID_Policy, Timestamp_Policy)
   uuid: ^4.5.1
-  intl: ^0.20.0
+  intl: 0.19.0
 
   # State management & dependency injection
   provider: ^6.1.2
