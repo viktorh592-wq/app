@@ -255,12 +255,67 @@ TBD
 | Document | Status |
 |----------|--------|
 | README | ✅ |
-| AI_RULES | ⏳ |
-| Vision | ⏳ |
-| MasterPrompt | ⏳ |
-| SRS | ⏳ |
-| UI Bible | ⏳ |
-| Database | ⏳ |
-| REST API | ⏳ |
-| WebSocket API | ⏳ |
-| Architecture | ⏳ |
+| AI_RULES | ✅ |
+| Vision | ✅ |
+| MasterPrompt | ✅ |
+| SRS | ✅ |
+| UI Bible | ✅ |
+| Database | ✅ |
+| REST API | n/a (P2P, no REST backend) |
+| WebSocket API | n/a (WebRTC P2P) |
+| Architecture | ✅ |
+
+---
+
+# Implementation
+
+The Flutter application is implemented under `lib/` following the documented
+layered, modular architecture (Architecture.md):
+
+```
+lib/
+  core/            utils, constants, errors, extensions
+  database/        Sembast collections + DatabaseService (ADR-005)
+  domain/          enums, repositories, services (business layer)
+  presentation/    theme, widgets, 5-tab navigation + feature screens
+  l10n/            generated localizations (en, ru)
+  main.dart / app.dart
+android/           Android config + permissions + FCM wake-up service
+test/              unit tests (utils, GPX, repositories, event service)
+```
+
+## Storage note
+
+ADR-004 specified Isar. Isar v3's code generator is incompatible with the
+required Dart 3.8 toolchain (unmaintained; v4 is dev-only), so the storage
+engine is Sembast (ADR-005). The Local-First architecture, privacy rules and
+all entity standards (UUID v7, UTC timestamps, versioning, soft delete) are
+preserved unchanged.
+
+## Build & Run
+
+```bash
+flutter pub get
+flutter run
+```
+
+No code generation step is required (Sembast is pure-Dart).
+
+## Verify
+
+```bash
+flutter analyze   # static analysis (0 issues)
+flutter test      # unit tests
+```
+
+## Localization
+
+Generate localization files after editing `l10n/*.arb`:
+
+```bash
+flutter gen-l10n
+```
+
+---
+
+End of document.

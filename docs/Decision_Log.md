@@ -74,6 +74,21 @@ ADR-004
 
 ---
 
+### Database (revision)
+
+Accepted
+
+Isar v3 generator is incompatible with the supported Dart 3.8 toolchain
+(unmaintained since 2023; v4 is dev-only). Storage engine switched to Sembast
+(pure-Dart, offline-first, no codegen). All Local-First invariants and entity
+standards preserved. Collection class/field names unchanged.
+
+Reference
+
+ADR-005
+
+---
+
 ### Weather
 
 Accepted

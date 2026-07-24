@@ -1,0 +1,78 @@
+name: pokatuha
+description: "Pokatuha — privacy-first, local-first P2P activity coordination platform for cyclists, hikers and outdoor communities."
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.27.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Local-first storage (ADR-004 → ADR-005: Sembast). Pure-Dart, offline-first,
+  # no code generation required. See adr/ADR-005-Storage-Engine.md for the
+  # recorded rationale (Isar v3 generator incompatible with Dart 3.8).
+  sembast: ^3.8.4+1
+  sembast_web: ^2.4.0+2
+  path_provider: ^2.1.5
+
+  # Identifiers & time (Entity_Standards, UUID_Policy, Timestamp_Policy)
+  uuid: ^4.5.1
+  intl: ^0.20.0
+
+  # State management & dependency injection
+  provider: ^6.1.2
+  get_it: ^8.0.3
+
+  # Maps — OpenStreetMap / MapLibre tiles (ADR & Maps rules)
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+
+  # Weather — Open-Meteo (Rule 8)
+  http: ^1.2.2
+
+  # GPS module
+  geolocator: ^13.0.2
+
+  # Notifications
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
+
+  # Sleep Mode wake-up — FCM only (ADR-003)
+  firebase_core: ^3.8.1
+  firebase_messaging: ^15.1.6
+
+  # Media
+  image_picker: ^1.1.2
+  file_picker: ^8.1.6
+
+  # Live Mode transport — WebRTC (ADR-002)
+  flutter_webrtc: ^0.12.5+hotfix.1
+
+  # GPX import/export (FR-008 — Route Planning)
+  xml: ^6.5.0
+
+  # Misc utilities
+  shared_preferences: ^2.3.3
+  collection: ^1.18.0
+  path: ^1.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/icons/
+
+flutter_intl:
+  enabled: true
