@@ -43,6 +43,9 @@ jobs:
       - name: Build APK
         run: flutter build apk --release --no-tree-shake-icons
 
+      - name: Find APK
+        run: find . -name "*.apk"
+  
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
