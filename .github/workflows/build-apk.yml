@@ -2,52 +2,80 @@ name: Build Flutter APK
 
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - main
+      - master
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     permissions:
       contents: write
 
     steps:
-      - name: Checkout code
+      - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          distribution: temurin
+          java-version: 17
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.0'
-          channel: 'stable'
+          flutter-version: 3.29.0
+          channel: stable
+          cache: true
 
-      - name: Fix watcher bug (remove nested .git and clean)
+      - name: Flutter Doctor
+        run: flutter doctor -v
+
+      - name: Clean project
         run: |
-          # Находим и удаляем все вложенные папки .git, которые ломают сборку
-          find . -mindepth 2 -name ".git" -type d -exec rm -rf {} + || true
-          # Полная очистка кэша Flutter и Gradle
           flutter clean
+          rm -rf build
           rm -rf android/.gradle
           rm -rf android/app/.cxx
-          rm -rf build/
 
-      - name: Get dependencies
+      - name: Install dependencies
         run: flutter pub get
 
       - name: Build APK
-        run: flutter build apk --release --no-tree-shake-icons
+        run: flutter build apk --release --no-tree-shake-icons --verbose
 
-      - name: Find APK
-        run: find . -name "*.apk"
-  
+      - name: Show build directory
+        if: always()
+        run: |
+          echo "========== CURRENT DIR =========="
+          pwd
+
+          echo ""
+          echo "========== ROOT =========="
+          ls -la
+
+          echo ""
+          echo "========== BUILD =========="
+          find build || true
+
+          echo ""
+          echo "========== ANDROID =========="
+          find android -maxdepth 4 || true
+
+          echo ""
+          echo "========== APK =========="
+          find . -iname "*.apk" || true
+
       - name: Upload APK
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            android/app/build/outputs/**/*.apk
+            **/*.apk
+          if-no-files-found: warn
