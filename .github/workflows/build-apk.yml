@@ -18,14 +18,14 @@ jobs:
   build:
     name: APK Release
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
@@ -37,41 +37,76 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Detect Flutter project directory
+        id: detect
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -f "pubspec.yaml" ]; then
+            PROJECT_DIR="."
+          else
+            PROJECT_DIR="$(find . -maxdepth 4 -type f -name pubspec.yaml \
+              ! -path "*/.dart_tool/*" \
+              ! -path "*/build/*" \
+              | head -n 1 | xargs -r dirname)"
+          fi
+
+          if [ -z "${PROJECT_DIR:-}" ]; then
+            echo "Flutter project (pubspec.yaml) not found"
+            exit 1
+          fi
+
+          echo "project_dir=$PROJECT_DIR" >> "$GITHUB_OUTPUT"
+          echo "Detected project dir: $PROJECT_DIR"
+
       - name: Flutter doctor
+        working-directory: ${{ steps.detect.outputs.project_dir }}
         run: flutter doctor -v
 
       - name: Install dependencies
+        working-directory: ${{ steps.detect.outputs.project_dir }}
         run: flutter pub get
 
       - name: Clean
+        working-directory: ${{ steps.detect.outputs.project_dir }}
         run: flutter clean
 
       - name: Build APK with Flutter
         id: flutter_build
         continue-on-error: true
+        working-directory: ${{ steps.detect.outputs.project_dir }}
         run: flutter build apk --release --no-tree-shake-icons --verbose
 
-      - name: Fallback build with Gradle (if Flutter step failed)
+      - name: Fallback build with Gradle
         if: steps.flutter_build.outcome == 'failure'
+        shell: bash
+        working-directory: ${{ steps.detect.outputs.project_dir }}/android
         run: |
-          chmod +x android/gradlew
-          cd android
-          ./gradlew :app:assembleRelease --stacktrace --info
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew assembleRelease --stacktrace --info
 
       - name: Collect APK files
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p artifacts
-          find build/app/outputs -type f -name "*.apk" -exec cp -f {} artifacts/ \; 2>/dev/null || true
-          find android/app/build/outputs -type f -name "*.apk" -exec cp -f {} artifacts/ \; 2>/dev/null || true
 
-          shopt -s nullglob
-          apks=(artifacts/*.apk)
-          if [ ${#apks[@]} -eq 0 ]; then
+          # Search globally because Flutter project can be nested.
+          find "$GITHUB_WORKSPACE" -type f -name "*.apk" \
+            ! -path "*/.gradle/*" \
+            ! -path "*/.pub-cache/*" \
+            -print -exec cp -f {} artifacts/ \;
+
+          if ! ls artifacts/*.apk >/dev/null 2>&1; then
             echo "APK files not found"
+            echo "Debug: list of output directories"
+            find "$GITHUB_WORKSPACE" -type d \( -name outputs -o -name flutter-apk -o -name apk \) -print || true
             exit 1
           fi
 
-          echo "Found APK files:"
+          echo "Collected APK files:"
           ls -la artifacts
 
       - name: Upload APK artifact
