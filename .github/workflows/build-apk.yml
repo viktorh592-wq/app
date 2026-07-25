@@ -30,6 +30,9 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Clean build
+        run: flutter clean
+
       - name: Build APK
         run: flutter build apk --release
 
