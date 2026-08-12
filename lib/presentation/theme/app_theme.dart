@@ -1,135 +1,149 @@
-/// Application theme (Design_Language.md). 8dp spacing system, corner radii
-/// (cards 16, dialogs 20, buttons 14), rounded icons, light / dark / AMOLED
-/// themes + custom accent color (FR-010).
 import 'package:flutter/material.dart';
+import 'package:pokatuha/core/tokens/design_tokens.dart';
 
-import 'package:pokatuha/core/constants/app_constants.dart';
-
+/// Pokatuha V2 Theme — Material 3, Light / Dark / System.
+/// Follows design_tokens.md + FIGMA_IMPLEMENTATION.md
 class AppTheme {
   AppTheme._();
 
   static ThemeData light(Color accent) => _base(accent, Brightness.light);
   static ThemeData dark(Color accent) => _base(accent, Brightness.dark);
-  static ThemeData amoled(Color accent) =>
-      _base(accent, Brightness.dark, amoled: true);
+  static ThemeData system(Color accent, BuildContext context) =>
+      MediaQuery.platformBrightnessOf(context) == Brightness.dark
+          ? dark(accent)
+          : light(accent);
 
-  static ThemeData _base(Color accent, Brightness brightness,
-      {bool amoled = false}) {
+  static ThemeData _base(Color accent, Brightness brightness) {
     final isDark = brightness == Brightness.dark;
     final colorScheme = ColorScheme.fromSeed(
       seedColor: accent,
       brightness: brightness,
-      surface: amoled ? Colors.black : null,
+      surface: isDark ? DesignTokens.scaffoldBgDark : DesignTokens.scaffoldBg,
+      surfaceContainerHighest:
+          isDark ? const Color(0xFF3D3D3D) : const Color(0xFFE8E8E8),
+      surfaceContainerLow:
+          isDark ? const Color(0xFF363636) : const Color(0xFFF0F0F0),
+      surfaceContainerHigh:
+          isDark ? const Color(0xFF424242) : const Color(0xFFE0E0E0),
     );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: amoled ? Colors.black : colorScheme.surface,
+      scaffoldBackgroundColor:
+          isDark ? DesignTokens.scaffoldBgDark : DesignTokens.scaffoldBg,
       brightness: brightness,
       splashFactory: InkSparkle.splashFactory,
+      fontFamily: DesignTokens.fontFamily,
       textTheme: _textTheme(colorScheme, isDark),
       appBarTheme: AppBarTheme(
         centerTitle: false,
-        backgroundColor: amoled ? Colors.black : colorScheme.surface,
+        backgroundColor:
+            isDark ? DesignTokens.scaffoldBgDark : DesignTokens.scaffoldBg,
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
-        scrolledUnderElevation: 0.5,
+        scrolledUnderElevation: 0,
+        titleTextStyle: DesignTokens.headline(color: colorScheme.onSurface),
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         elevation: 0,
-        color: amoled
-            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.4)
-            : colorScheme.surfaceContainerLow,
+        color: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppConstants.radiusCard),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
         ),
         margin: EdgeInsets.zero,
       ),
-      listTileTheme: ListTileThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppConstants.radiusButton),
-        ),
-      ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
+          backgroundColor: accent,
+          foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppConstants.radiusButton),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          textStyle: DesignTokens.button(color: Colors.white),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
+          foregroundColor: accent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppConstants.radiusButton),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
           ),
+          side: BorderSide(color: accent),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
+          foregroundColor: accent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppConstants.radiusButton),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
           ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: colorScheme.surfaceContainerHigh,
+        fillColor: isDark
+            ? colorScheme.surfaceContainerHigh
+            : DesignTokens.limeAccent.withOpacity(0.5),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.radiusButton),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.radiusButton),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.radiusButton),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
           borderSide: BorderSide(color: accent, width: 1.5),
         ),
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        hintStyle: DesignTokens.body(color: DesignTokens.textSecondary),
       ),
       chipTheme: ChipThemeData(
+        backgroundColor: DesignTokens.chipLavender,
+        selectedColor: accent.withOpacity(0.2),
+        labelStyle: DesignTokens.caption(),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppConstants.radiusButton),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
         ),
+        side: BorderSide.none,
       ),
-      dialogTheme: DialogThemeData(
+      dialogTheme: DialogTheme(
         backgroundColor: colorScheme.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppConstants.radiusDialog),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
         ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: colorScheme.surface,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
-            top: Radius.circular(AppConstants.radiusDialog),
+            top: Radius.circular(DesignTokens.radiusXl),
           ),
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: accent,
-        foregroundColor: colorScheme.onPrimary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppConstants.radiusCard),
-        ),
+        backgroundColor: DesignTokens.limeAccent,
+        foregroundColor: DesignTokens.textPrimary,
+        shape: const CircleBorder(),
+        elevation: 4,
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: amoled ? Colors.black : colorScheme.surface,
-        indicatorColor: accent.withValues(alpha: 0.18),
+        backgroundColor: DesignTokens.limeAccent,
+        indicatorColor: accent.withOpacity(0.2),
         labelTextStyle: WidgetStatePropertyAll(
-          TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: colorScheme.onSurface,
-          ),
+          DesignTokens.caption(color: DesignTokens.textPrimary),
+        ),
+        iconTheme: WidgetStatePropertyAll(
+          IconThemeData(color: DesignTokens.textPrimary),
         ),
       ),
       dividerTheme: DividerThemeData(
-        color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        color: colorScheme.outlineVariant.withOpacity(0.3),
         thickness: 1,
         space: 1,
       ),
@@ -137,11 +151,14 @@ class AppTheme {
   }
 
   static TextTheme _textTheme(ColorScheme scheme, bool isDark) {
-    final base = isDark ? Typography.whiteCupertino : Typography.blackCupertino;
-    return base.copyWith(
-      titleLarge: base.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-      titleMedium: base.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-      labelLarge: base.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+    return TextTheme(
+      displayLarge: DesignTokens.display(color: scheme.onSurface),
+      displayMedium: DesignTokens.headline(color: scheme.onSurface),
+      titleLarge: DesignTokens.title(color: scheme.onSurface),
+      bodyLarge: DesignTokens.body(color: scheme.onSurface),
+      bodyMedium: DesignTokens.bodyMedium(color: scheme.onSurface),
+      labelLarge: DesignTokens.button(color: scheme.onSurface),
+      labelSmall: DesignTokens.caption(color: scheme.onSurface),
     );
   }
 }
