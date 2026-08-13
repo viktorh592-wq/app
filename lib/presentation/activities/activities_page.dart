@@ -1,6 +1,5 @@
 /// Activities tab — full list of activities with search (FR-001).
 import 'package:flutter/material.dart';
-
 import 'package:pokatuha/database/collections/event_collection.dart';
 import 'package:pokatuha/domain/repositories/activity_type_repository.dart';
 import 'package:pokatuha/domain/repositories/event_repository.dart';
@@ -40,7 +39,10 @@ class _ActivitiesPageState extends State<ActivitiesPage> {
         counts[e.id] = await participants.acceptedCount(e.id);
       }
       return _ActivitiesData(
-          events: events, typeLabels: typeMap, counts: counts);
+        events: events,
+        typeLabels: typeMap,
+        counts: counts,
+      );
     }();
   }
 
@@ -50,7 +52,9 @@ class _ActivitiesPageState extends State<ActivitiesPage> {
     return data.events
         .where((e) =>
             e.title.toLowerCase().contains(q) ||
-            (data.typeLabels[e.activityTypeId] ?? '').toLowerCase().contains(q))
+            (data.typeLabels[e.activityTypeId] ?? '')
+                .toLowerCase()
+                .contains(q))
         .toList();
   }
 
@@ -97,12 +101,10 @@ class _ActivitiesPageState extends State<ActivitiesPage> {
                 itemBuilder: (context, i) {
                   final e = list[i];
                   return Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     child: ActivityCard(
                       event: e,
-                      activityLabel:
-                          data.typeLabels[e.activityTypeId] ?? e.activityTypeId,
+                      activityLabel: data.typeLabels[e.activityTypeId] ?? e.activityTypeId,
                       participantCount: data.counts[e.id] ?? 0,
                       onTap: () => _open(context, e.id),
                     ),
@@ -125,7 +127,8 @@ class _ActivitiesPageState extends State<ActivitiesPage> {
   void _open(BuildContext context, String id) {
     Navigator.of(context)
         .push(
-            MaterialPageRoute(builder: (_) => ActivityDetailPage(eventId: id)))
+          MaterialPageRoute(builder: (_) => ActivityDetailPage(eventId: id)),
+        )
         .then((_) => setState(_load));
   }
 }
