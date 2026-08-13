@@ -2,31 +2,58 @@
 # Gradle
 .gradle/
 build/
+target/
 
 # Android
 *.apk
 *.aar
 *.dex
 
-# IDE
-.idea/
-*.iml
-*.ipr
-*.iws
+# Dependencies
+node_modules/
+vendor/bundle
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+.env
+.env.local
+.env.*
 
 # Logs
 *.log
+.log
 
-# Environment
-.env
-.env.local
-*.env.*
-
-# Dependencies
-node_modules/
-vendor/
-
-# OS generated files
+# OS
 .DS_Store
 Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Compressed
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
 ```
