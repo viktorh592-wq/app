@@ -1,59 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:pokatuha/core/tokens/design_tokens.dart';
 
-/// Pokatuha V2 Theme — Material 3, Light / Dark / System.
+/// Pokatuha V2 Theme — Material 3, Light / Dark / AMOLED.
 /// Follows design_tokens.md + FIGMA_IMPLEMENTATION.md
 class AppTheme {
   AppTheme._();
 
   static ThemeData light(Color accent) => _base(accent, Brightness.light);
   static ThemeData dark(Color accent) => _base(accent, Brightness.dark);
-
-  static ThemeData amoled(Color accent) {
-    final theme = _base(accent, Brightness.dark);
-    return theme.copyWith(
-      scaffoldBackgroundColor: Colors.black,
-      colorScheme: theme.colorScheme.copyWith(
-        surface: Colors.black,
-        surfaceContainerHighest: const Color(0xFF1A1A1A),
-        surfaceContainerLow: const Color(0xFF0D0D0D),
-        surfaceContainerHigh: const Color(0xFF141414),
-      ),
-    );
-  }
-
+  static ThemeData amoled(Color accent) => _base(
+        accent,
+        Brightness.dark,
+        isAmoled: true,
+      );
   static ThemeData system(Color accent, BuildContext context) =>
       MediaQuery.platformBrightnessOf(context) == Brightness.dark
           ? dark(accent)
           : light(accent);
 
-  static ThemeData _base(Color accent, Brightness brightness) {
+  static ThemeData _base(
+    Color accent,
+    Brightness brightness, {
+    bool isAmoled = false,
+  }) {
     final isDark = brightness == Brightness.dark;
+    final surfaceColor = isAmoled
+        ? Colors.black
+        : (isDark ? DesignTokens.scaffoldBgDark : DesignTokens.scaffoldBg);
+
     final colorScheme = ColorScheme.fromSeed(
       seedColor: accent,
       brightness: brightness,
-      surface: isDark ? DesignTokens.scaffoldBgDark : DesignTokens.scaffoldBg,
+      surface: surfaceColor,
       surfaceContainerHighest:
-          isDark ? const Color(0xFF3D3D3D) : const Color(0xFFE8E8E8),
+          isAmoled ? const Color(0xFF121212) : (isDark ? const Color(0xFF3D3D3D) : const Color(0xFFE8E8E8)),
       surfaceContainerLow:
-          isDark ? const Color(0xFF363636) : const Color(0xFFF0F0F0),
+          isAmoled ? const Color(0xFF0A0A0A) : (isDark ? const Color(0xFF363636) : const Color(0xFFF0F0F0)),
       surfaceContainerHigh:
-          isDark ? const Color(0xFF424242) : const Color(0xFFE0E0E0),
+          isAmoled ? const Color(0xFF1A1A1A) : (isDark ? const Color(0xFF424242) : const Color(0xFFE0E0E0)),
     );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor:
-          isDark ? DesignTokens.scaffoldBgDark : DesignTokens.scaffoldBg,
+      scaffoldBackgroundColor: surfaceColor,
       brightness: brightness,
       splashFactory: InkSparkle.splashFactory,
       fontFamily: DesignTokens.fontFamily,
       textTheme: _textTheme(colorScheme, isDark),
       appBarTheme: AppBarTheme(
         centerTitle: false,
-        backgroundColor:
-            isDark ? DesignTokens.scaffoldBgDark : DesignTokens.scaffoldBg,
+        backgroundColor: surfaceColor,
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -65,7 +62,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
         ),
-        margin: const EdgeInsets.zero,
+        margin: EdgeInsets.zero,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
@@ -140,10 +137,10 @@ class AppTheme {
           ),
         ),
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: DesignTokens.limeAccent,
         foregroundColor: DesignTokens.textPrimary,
-        shape: CircleBorder(),
+        shape: const CircleBorder(),
         elevation: 4,
       ),
       navigationBarTheme: NavigationBarThemeData(
@@ -152,7 +149,7 @@ class AppTheme {
         labelTextStyle: WidgetStatePropertyAll(
           DesignTokens.caption(color: DesignTokens.textPrimary),
         ),
-        iconTheme: const WidgetStatePropertyAll(
+        iconTheme: WidgetStatePropertyAll(
           IconThemeData(color: DesignTokens.textPrimary),
         ),
       ),
