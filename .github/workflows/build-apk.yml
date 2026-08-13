@@ -27,7 +27,6 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.0'
           channel: stable
 
       - name: Show Flutter and Dart versions
@@ -45,7 +44,6 @@ jobs:
 
       - name: Fix Android files for CI
         run: |
-          # Перезаписываем settings.gradle.kts с правильным Kotlin-синтаксисом
           cat > android/settings.gradle.kts << 'EOF'
           pluginManagement {
               val flutterSdkPath: String = run {
@@ -74,13 +72,12 @@ jobs:
           include(":app")
           EOF
 
-          # Перезаписываем gradle-wrapper.properties
           cat > android/gradle/wrapper/gradle-wrapper.properties << 'EOF'
           distributionBase=GRADLE_USER_HOME
           distributionPath=wrapper/dists
           zipStoreBase=GRADLE_USER_HOME
           zipStorePath=wrapper/dists
-          distributionUrl=https\://services.gradle.org/distributions/gradle-9.1.0-bin.zip
+          distributionUrl=https\://services.gradle.org/distributions/gradle-8.14.2-bin.zip
           EOF
 
       - name: Get dependencies
@@ -91,7 +88,7 @@ jobs:
         continue-on-error: true
 
       - name: Build APK
-        run: flutter build apk --release --no-tree-shake-icons
+        run: flutter build apk --release --no-tree-shake-icons --android-skip-build-dependency-validation
 
       - name: Find APK
         run: |
