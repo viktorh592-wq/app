@@ -110,7 +110,7 @@ class _ThemesPageState extends State<ThemesPage> {
 
   void _setMode(AppThemeMode mode, SettingsCollection settings) {
     serviceLocator<ThemeService>().setMode(mode);
-    settings.themeMode = mode;
+    settings.setThemeMode(mode.name);
     setState(() {});
   }
 
