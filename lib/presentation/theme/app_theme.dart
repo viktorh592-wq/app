@@ -1,56 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:pokatuha/core/tokens/design_tokens.dart';
 
-/// Pokatuha V2 Theme — Material 3, Light / Dark / AMOLED.
+/// Pokatuha V2 Theme — Material 3, Light / Dark / System.
 /// Follows design_tokens.md + FIGMA_IMPLEMENTATION.md
 class AppTheme {
   AppTheme._();
 
   static ThemeData light(Color accent) => _base(accent, Brightness.light);
   static ThemeData dark(Color accent) => _base(accent, Brightness.dark);
-  static ThemeData amoled(Color accent) => _base(
-        accent,
-        Brightness.dark,
-        isAmoled: true,
-      );
+
+  static ThemeData amoled(Color accent) {
+    final theme = _base(accent, Brightness.dark);
+    return theme.copyWith(
+      scaffoldBackgroundColor: Colors.black,
+      colorScheme: theme.colorScheme.copyWith(
+        surface: Colors.black,
+        surfaceContainerHighest: const Color(0xFF1A1A1A),
+        surfaceContainerLow: const Color(0xFF0D0D0D),
+        surfaceContainerHigh: const Color(0xFF141414),
+      ),
+    );
+  }
+
   static ThemeData system(Color accent, BuildContext context) =>
       MediaQuery.platformBrightnessOf(context) == Brightness.dark
           ? dark(accent)
           : light(accent);
 
-  static ThemeData _base(
-    Color accent,
-    Brightness brightness, {
-    bool isAmoled = false,
-  }) {
+  static ThemeData _base(Color accent, Brightness brightness) {
     final isDark = brightness == Brightness.dark;
-    final surfaceColor = isAmoled
-        ? Colors.black
-        : (isDark ? DesignTokens.scaffoldBgDark : DesignTokens.scaffoldBg);
-
     final colorScheme = ColorScheme.fromSeed(
       seedColor: accent,
       brightness: brightness,
-      surface: surfaceColor,
+      surface: isDark ? DesignTokens.scaffoldBgDark : DesignTokens.scaffoldBg,
       surfaceContainerHighest:
-          isAmoled ? const Color(0xFF121212) : (isDark ? const Color(0xFF3D3D3D) : const Color(0xFFE8E8E8)),
+          isDark ? const Color(0xFF3D3D3D) : const Color(0xFFE8E8E8),
       surfaceContainerLow:
-          isAmoled ? const Color(0xFF0A0A0A) : (isDark ? const Color(0xFF363636) : const Color(0xFFF0F0F0)),
+          isDark ? const Color(0xFF363636) : const Color(0xFFF0F0F0),
       surfaceContainerHigh:
-          isAmoled ? const Color(0xFF1A1A1A) : (isDark ? const Color(0xFF424242) : const Color(0xFFE0E0E0)),
+          isDark ? const Color(0xFF424242) : const Color(0xFFE0E0E0),
     );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: surfaceColor,
+      scaffoldBackgroundColor:
+          isDark ? DesignTokens.scaffoldBgDark : DesignTokens.scaffoldBg,
       brightness: brightness,
       splashFactory: InkSparkle.splashFactory,
       fontFamily: DesignTokens.fontFamily,
       textTheme: _textTheme(colorScheme, isDark),
       appBarTheme: AppBarTheme(
         centerTitle: false,
-        backgroundColor: surfaceColor,
+        backgroundColor:
+            isDark ? DesignTokens.scaffoldBgDark : DesignTokens.scaffoldBg,
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -108,4 +111,68 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
-          borderSide: BorderSide(color: accent, width: 1.
+          borderSide: BorderSide(color: accent, width: 1.5),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        hintStyle: DesignTokens.body(color: DesignTokens.textSecondary),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: DesignTokens.chipLavender,
+        selectedColor: accent.withOpacity(0.2),
+        labelStyle: DesignTokens.caption(),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
+        ),
+        side: BorderSide.none,
+      ),
+      dialogTheme: DialogTheme(
+        backgroundColor: colorScheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+        ),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: colorScheme.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(DesignTokens.radiusXl),
+          ),
+        ),
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: DesignTokens.limeAccent,
+        foregroundColor: DesignTokens.textPrimary,
+        shape: CircleBorder(),
+        elevation: 4,
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: DesignTokens.limeAccent,
+        indicatorColor: accent.withOpacity(0.2),
+        labelTextStyle: WidgetStatePropertyAll(
+          DesignTokens.caption(color: DesignTokens.textPrimary),
+        ),
+        iconTheme: const WidgetStatePropertyAll(
+          IconThemeData(color: DesignTokens.textPrimary),
+        ),
+      ),
+      dividerTheme: DividerThemeData(
+        color: colorScheme.outlineVariant.withOpacity(0.3),
+        thickness: 1,
+        space: 1,
+      ),
+    );
+  }
+
+  static TextTheme _textTheme(ColorScheme scheme, bool isDark) {
+    return TextTheme(
+      displayLarge: DesignTokens.display(color: scheme.onSurface),
+      displayMedium: DesignTokens.headline(color: scheme.onSurface),
+      titleLarge: DesignTokens.title(color: scheme.onSurface),
+      bodyLarge: DesignTokens.body(color: scheme.onSurface),
+      bodyMedium: DesignTokens.bodyMedium(color: scheme.onSurface),
+      labelLarge: DesignTokens.button(color: scheme.onSurface),
+      labelSmall: DesignTokens.caption(color: scheme.onSurface),
+    );
+  }
+}
