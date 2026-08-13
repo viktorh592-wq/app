@@ -100,17 +100,17 @@ class _ThemesPageState extends State<ThemesPage> {
   String _modeLabel(AppLocalizations l, AppThemeMode mode) {
     switch (mode) {
       case AppThemeMode.light:
-        return l.light;
+        return l.lightTheme;
       case AppThemeMode.dark:
-        return l.dark;
+        return l.darkTheme;
       case AppThemeMode.amoled:
-        return l.amoled;
+        return l.amoledTheme;
     }
   }
 
   void _setMode(AppThemeMode mode, SettingsCollection settings) {
-    settings.themeMode = mode;
     serviceLocator<ThemeService>().setMode(mode);
+    settings.setThemeMode(mode.name);
     setState(() {});
   }
 

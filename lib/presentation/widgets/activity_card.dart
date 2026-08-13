@@ -25,7 +25,7 @@ class ActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = _statusColor(event.statusEnum);
+    final accentColor = _statusColor(_statusEnum);
 
     return GestureDetector(
       onTap: onTap,
@@ -136,7 +136,7 @@ class ActivityCard extends StatelessWidget {
               padding: const EdgeInsets.all(DesignTokens.space4),
               child: Row(
                 children: [
-                  _StatusChip(status: _statusLabel(event.statusEnum)),
+                  _StatusChip(status: _statusLabel(_statusEnum)),
                   const Spacer(),
                   FilledButton(
                     onPressed: onTap,

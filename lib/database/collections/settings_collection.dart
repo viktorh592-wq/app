@@ -13,6 +13,9 @@ class SettingsCollection extends BaseEntity {
 
   int accentColor = 0xFF3B82F6;
 
+  // Theme mode setter/getter helpers
+  void setThemeMode(String value) => themeMode = value;
+
   // --- Maps (Maps rules) ---
   /// MapProvider enum stored as string.
   String mapProvider = 'openStreetMap';
