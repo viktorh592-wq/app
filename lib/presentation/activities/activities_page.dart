@@ -103,7 +103,7 @@ class _ActivitiesPageState extends State<ActivitiesPage> {
                       event: e,
                       activityLabel:
                           data.typeLabels[e.activityTypeId] ?? e.activityTypeId,
-                      participantCount: data.counts[e.id],
+                      participantCount: data.counts[e.id] ?? 0,
                       onTap: () => _open(context, e.id),
                     ),
                   );
