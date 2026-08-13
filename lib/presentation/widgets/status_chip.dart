@@ -10,17 +10,17 @@ class StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (:label, :color) = _style(status, Theme.of(context).colorScheme);
+    final style = _style(status, Theme.of(context).colorScheme);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.16),
+        color: style.color.withOpacity(0.16),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        label,
+        style.label,
         style: TextStyle(
-          color: color,
+          color: style.color,
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
