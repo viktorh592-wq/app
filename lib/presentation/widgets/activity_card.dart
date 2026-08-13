@@ -1,38 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:pokatuha/core/tokens/design_tokens.dart';
+import 'package:pokatuha/database/collections/event_collection.dart';
 
 /// Activity card — pixel-perfect to Figma / screenshots.
 /// Uses activity accent color for the entire card background.
 class ActivityCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String date;
-  final String distance;
+  final EventCollection event;
+  final String activityLabel;
   final int participantCount;
-  final String? description;
-  final Color accentColor;
-  final String status;
-  final VoidCallback onOpen;
+  final VoidCallback onTap;
   final VoidCallback? onMenuTap;
   final Widget? mapPreview;
 
   const ActivityCard({
     super.key,
-    required this.title,
-    required this.subtitle,
-    required this.date,
-    required this.distance,
+    required this.event,
+    required this.activityLabel,
     required this.participantCount,
-    this.description,
-    required this.accentColor,
-    required this.status,
-    required this.onOpen,
+    required this.onTap,
     this.onMenuTap,
     this.mapPreview,
   });
 
   @override
   Widget build(BuildContext context) {
+    final title = event.title;
+    final subtitle = activityLabel;
+    final date = _formatDate(event.startAt);
+    const distance = '';
+    final description = event.description;
+    final accentColor = Theme.of(context).colorScheme.primary;
+    final status = event.status;
+    final onOpen = onTap;
+
     return Container(
       margin: const EdgeInsets.symmetric(
         horizontal: DesignTokens.space4,
@@ -60,7 +60,7 @@ class ActivityCard extends StatelessWidget {
                 CircleAvatar(
                   radius: 20,
                   backgroundColor: DesignTokens.limeAccent,
-                  child: Icon(
+                  child: const Icon(
                     Icons.person_outline,
                     color: DesignTokens.textPrimary,
                     size: 20,
@@ -124,7 +124,7 @@ class ActivityCard extends StatelessWidget {
                   icon: Icons.people_outline,
                   text: '$participantCount',
                 ),
-                if (description != null && description!.isNotEmpty) ...[
+                if (description.isNotEmpty) ...[
                   const SizedBox(height: DesignTokens.space3),
                   Text(
                     'Описание: $description',
@@ -152,6 +152,11 @@ class ActivityCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formatDate(int ms) {
+    final dt = DateTime.fromMillisecondsSinceEpoch(ms).toLocal();
+    return '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 }
 
