@@ -1,6 +1,5 @@
 /// Home tab — quick overview of upcoming and live activities (US-001, US-004).
 import 'package:flutter/material.dart';
-
 import 'package:pokatuha/database/collections/event_collection.dart';
 import 'package:pokatuha/domain/repositories/activity_type_repository.dart';
 import 'package:pokatuha/domain/repositories/event_repository.dart';
@@ -32,6 +31,7 @@ class _HomePageState extends State<HomePage> {
     final events = serviceLocator<EventRepository>();
     final participants = serviceLocator<ParticipantRepository>();
     final types = serviceLocator<ActivityTypeRepository>();
+
     _future = () async {
       final upcoming = await events.upcoming();
       final live = await events.live();
@@ -81,11 +81,12 @@ class _HomePageState extends State<HomePage> {
                     final e = data.events[i];
                     return Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 6),
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
                       child: ActivityCard(
                         event: e,
-                        activityLabel: data.typeLabels[e.activityTypeId] ??
-                            e.activityTypeId,
+                        activityLabel: data.typeLabels[e.activityTypeId] ?? e.activityTypeId,
                         participantCount: data.counts[e.id] ?? 0,
                         onTap: () => _open(context, e.id),
                       ),
@@ -103,7 +104,8 @@ class _HomePageState extends State<HomePage> {
   void _open(BuildContext context, String id) {
     Navigator.of(context)
         .push(
-            MaterialPageRoute(builder: (_) => ActivityDetailPage(eventId: id)))
+          MaterialPageRoute(builder: (_) => ActivityDetailPage(eventId: id)),
+        )
         .then((_) => setState(_load));
   }
 }
