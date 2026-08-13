@@ -31,7 +31,7 @@ class _ThemesPageState extends State<ThemesPage> {
         children: [
           _section(l.appearance, [
             for (final mode in AppThemeMode.values)
-              RadioListTile(
+              RadioListTile<AppThemeMode>(
                 value: mode,
                 groupValue: theme.mode,
                 title: Text(_modeLabel(l, mode)),
@@ -51,4 +51,72 @@ class _ThemesPageState extends State<ThemesPage> {
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 180),
                       width: 48,
-                      height: 48
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: c,
+                        shape: BoxShape.circle,
+                        border: selected
+                            ? Border.all(color: Colors.white, width: 3)
+                            : null,
+                        boxShadow: [
+                          if (selected)
+                            BoxShadow(
+                              color: c.withOpacity(0.6),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                        ],
+                      ),
+                      child: selected
+                          ? const Icon(Icons.check, color: Colors.white)
+                          : null,
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ]),
+        ],
+      ),
+    );
+  }
+
+  Widget _section(String title, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        ),
+        ...children,
+      ],
+    );
+  }
+
+  String _modeLabel(AppLocalizations l, AppThemeMode mode) {
+    switch (mode) {
+      case AppThemeMode.light:
+        return l.light;
+      case AppThemeMode.dark:
+        return l.dark;
+      case AppThemeMode.amoled:
+        return l.amoled;
+    }
+  }
+
+  void _setMode(AppThemeMode mode, SettingsCollection settings) {
+    settings.themeMode = mode;
+    serviceLocator<ThemeService>().setMode(mode);
+    setState(() {});
+  }
+
+  void _setAccent(Color color, SettingsCollection settings) {
+    settings.accentColor = color.value;
+    serviceLocator<ThemeService>().setAccent(color);
+    setState(() {});
+  }
+}
