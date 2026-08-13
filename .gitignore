@@ -1,31 +1,32 @@
-# Flutter / Dart
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-.pub-cache/
-.pub/
+```
+# Gradle
+.gradle/
 build/
-*.g.dart
-.flutter/
+
+# Android
+*.apk
+*.aar
+*.dex
 
 # IDE
 .idea/
-.vscode/
 *.iml
+*.ipr
+*.iws
 
-# OS
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Dependencies
+node_modules/
+vendor/
+
+# OS generated files
 .DS_Store
-
-# Generated localizations are committed (output-dir: lib/l10n) so the project
-# analyzes without a generation step; keep them tracked.
-
-# Android
-android/.gradle/
-android/local.properties
-android/key.properties
-**/google-services.json
-
-# Sembast local database (runtime only)
-*.db
-**/GeneratedPluginRegistrant.java
+Thumbs.db
+```
