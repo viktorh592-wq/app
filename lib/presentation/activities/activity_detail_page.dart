@@ -3,7 +3,6 @@
 /// (UC-001..UC-004). Enforces business rules via EventService.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'package:pokatuha/core/errors/app_error.dart';
 import 'package:pokatuha/database/collections/event_collection.dart';
 import 'package:pokatuha/domain/enums/enums.dart';
@@ -48,8 +47,7 @@ class _ActivityDetailPageState extends State<ActivityDetailPage>
   }
 
   Future<void> _load() async {
-    final event =
-        await serviceLocator<EventRepository>().getById(widget.eventId);
+    final event = await serviceLocator<EventRepository>().getById(widget.eventId);
     if (mounted) {
       setState(() {
         _event = event;
@@ -83,8 +81,7 @@ class _ActivityDetailPageState extends State<ActivityDetailPage>
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           SliverAppBar(
             pinned: true,
-            title:
-                Text(event.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+            title: Text(event.title, maxLines: 1, overflow: TextOverflow.ellipsis),
             actions: [
               Padding(
                 padding: const EdgeInsets.only(right: 12),
