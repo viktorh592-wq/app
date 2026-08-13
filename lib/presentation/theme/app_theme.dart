@@ -56,7 +56,7 @@ class AppTheme {
         scrolledUnderElevation: 0,
         titleTextStyle: DesignTokens.headline(color: colorScheme.onSurface),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 0,
         color: Colors.transparent,
         shape: RoundedRectangleBorder(
@@ -123,7 +123,7 @@ class AppTheme {
         ),
         side: BorderSide.none,
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: colorScheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
