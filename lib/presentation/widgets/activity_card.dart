@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pokatuha/core/tokens/design_tokens.dart';
 import 'package:pokatuha/database/collections/event_collection.dart';
+import 'package:pokatuha/domain/enums/enums.dart';
 
 /// Activity card — pixel-perfect to Figma / screenshots.
 /// Uses activity accent color for the entire card background.
@@ -24,139 +25,166 @@ class ActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = event.title;
-    final subtitle = activityLabel;
-    final date = _formatDate(event.startAt);
-    const distance = '';
-    final description = event.description;
-    final accentColor = Theme.of(context).colorScheme.primary;
-    final status = event.status;
-    final onOpen = onTap;
+    final accentColor = _statusColor(event.statusEnum);
 
-    return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: DesignTokens.space4,
-        vertical: DesignTokens.space2,
-      ),
-      decoration: BoxDecoration(
-        color: accentColor,
-        borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(DesignTokens.space4),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: DesignTokens.limeAccent,
-                  child: const Icon(
-                    Icons.person_outline,
-                    color: DesignTokens.textPrimary,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: DesignTokens.space3),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: DesignTokens.title(color: DesignTokens.textPrimary),
-                      ),
-                      Text(
-                        subtitle,
-                        style: DesignTokens.caption(
-                          color: DesignTokens.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (onMenuTap != null)
-                  IconButton(
-                    icon: const Icon(Icons.more_vert),
-                    onPressed: onMenuTap,
-                    color: DesignTokens.textPrimary,
-                  ),
-              ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(
+          horizontal: DesignTokens.space4,
+          vertical: DesignTokens.space2,
+        ),
+        decoration: BoxDecoration(
+          color: accentColor,
+          borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
-
-          // Map preview
-          if (mapPreview != null)
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: DesignTokens.space4,
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-                child: SizedBox(
-                  height: 180,
-                  width: double.infinity,
-                  child: mapPreview,
-                ),
+              padding: const EdgeInsets.all(DesignTokens.space4),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: DesignTokens.limeAccent,
+                    child: Icon(
+                      Icons.person_outline,
+                      color: DesignTokens.textPrimary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: DesignTokens.space3),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          event.title,
+                          style: DesignTokens.title(color: DesignTokens.textPrimary),
+                        ),
+                        Text(
+                          activityLabel,
+                          style: DesignTokens.caption(
+                            color: DesignTokens.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (onMenuTap != null)
+                    IconButton(
+                      icon: const Icon(Icons.more_vert),
+                      onPressed: onMenuTap,
+                      color: DesignTokens.textPrimary,
+                    ),
+                ],
               ),
             ),
 
-          // Info rows
-          Padding(
-            padding: const EdgeInsets.all(DesignTokens.space4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _InfoRow(icon: Icons.calendar_today_outlined, text: date),
-                const SizedBox(height: DesignTokens.space2),
-                _InfoRow(icon: Icons.location_on_outlined, text: distance),
-                const SizedBox(height: DesignTokens.space2),
-                _InfoRow(
-                  icon: Icons.people_outline,
-                  text: '$participantCount',
+            // Map preview
+            if (mapPreview != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DesignTokens.space4,
                 ),
-                if (description.isNotEmpty) ...[
-                  const SizedBox(height: DesignTokens.space3),
-                  Text(
-                    'Описание: $description',
-                    style: DesignTokens.body(color: DesignTokens.textSecondary),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                  child: SizedBox(
+                    height: 180,
+                    width: double.infinity,
+                    child: mapPreview,
+                  ),
+                ),
+              ),
+
+            // Info rows
+            Padding(
+              padding: const EdgeInsets.all(DesignTokens.space4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _InfoRow(icon: Icons.calendar_today_outlined, text: _formatDate(event.startAt)),
+                  const SizedBox(height: DesignTokens.space2),
+                  _InfoRow(icon: Icons.location_on_outlined, text: event.meetingPointLabel ?? '—'),
+                  const SizedBox(height: DesignTokens.space2),
+                  _InfoRow(
+                    icon: Icons.people_outline,
+                    text: '$participantCount',
+                  ),
+                  if (event.description.isNotEmpty) ...[
+                    const SizedBox(height: DesignTokens.space3),
+                    Text(
+                      'Описание: ${event.description}',
+                      style: DesignTokens.body(color: DesignTokens.textSecondary),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            // Actions
+            Padding(
+              padding: const EdgeInsets.all(DesignTokens.space4),
+              child: Row(
+                children: [
+                  _StatusChip(status: _statusLabel(event.statusEnum)),
+                  const Spacer(),
+                  FilledButton(
+                    onPressed: onTap,
+                    child: const Text('Открыть'),
                   ),
                 ],
-              ],
+              ),
             ),
-          ),
-
-          // Actions
-          Padding(
-            padding: const EdgeInsets.all(DesignTokens.space4),
-            child: Row(
-              children: [
-                _StatusChip(status: status),
-                const Spacer(),
-                FilledButton(
-                  onPressed: onOpen,
-                  child: const Text('Открыть'),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  String _formatDate(int ms) {
-    final dt = DateTime.fromMillisecondsSinceEpoch(ms).toLocal();
-    return '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  EventStatus get _statusEnum {
+    return EventStatus.values.firstWhere(
+      (e) => e.name == event.status,
+      orElse: () => EventStatus.preparation,
+    );
+  }
+
+  String _statusLabel(EventStatus status) {
+    return switch (status) {
+      EventStatus.preparation => 'Подготовка',
+      EventStatus.meeting => 'Сбор',
+      EventStatus.ride => 'В пути',
+      EventStatus.pause => 'Пауза',
+      EventStatus.finished => 'Завершено',
+      EventStatus.archived => 'В архиве',
+      EventStatus.cancelled => 'Отменено',
+    };
+  }
+
+  Color _statusColor(EventStatus status) {
+    return switch (status) {
+      EventStatus.preparation => const Color(0xFF9B8AFB),
+      EventStatus.meeting => const Color(0xFF64B5F6),
+      EventStatus.ride => const Color(0xFF81C784),
+      EventStatus.pause => const Color(0xFFFFE082),
+      EventStatus.finished => const Color(0xFFFFB74D),
+      EventStatus.archived => const Color(0xFFB0BEC5),
+      EventStatus.cancelled => const Color(0xFFFF5252),
+    };
+  }
+
+  String _formatDate(int timestamp) {
+    final dt = DateTime.fromMillisecondsSinceEpoch(timestamp);
+    return '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}';
   }
 }
 
