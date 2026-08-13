@@ -35,7 +35,7 @@ class _HomePageState extends State<HomePage> {
     _future = () async {
       final upcoming = await events.upcoming();
       final live = await events.live();
-      final all = <EventCollection>[...live, ...upcoming];
+      final all = [...live, ...upcoming];
       final typeMap = {for (final t in await types.all()) t.id: t.label};
       final counts = <String, int>{};
       for (final e in all) {
@@ -86,7 +86,7 @@ class _HomePageState extends State<HomePage> {
                         event: e,
                         activityLabel: data.typeLabels[e.activityTypeId] ??
                             e.activityTypeId,
-                        participantCount: data.counts[e.id],
+                        participantCount: data.counts[e.id] ?? 0,
                         onTap: () => _open(context, e.id),
                       ),
                     );
