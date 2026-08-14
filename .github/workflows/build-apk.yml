@@ -40,14 +40,15 @@ jobs:
           dart --version
           java --version
 
+      # ВАЖНО: Не удаляем android/.gradle, чтобы сохранить gradlew и кэш
       - name: Clean project
         run: |
           flutter clean
           rm -rf build/
           rm -rf .dart_tool/
-          # НЕ удаляем android/.gradle и android/app/build полностью, чтобы не сломать gradlew
           rm -rf android/app/.cxx/
-          flutter pub cache clean --force
+          rm -rf android/app/build/
+          # НЕ удаляем android/.gradle и android/gradlew
 
       - name: Create local.properties
         run: echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
@@ -112,30 +113,24 @@ jobs:
         run: flutter analyze
         continue-on-error: true
 
-      # Используем flutter build apk, но с отключенным watcher через переменную окружения
-      - name: Build APK
+      # Используем прямой вызов Gradle, так как flutter build apk падает с "Already watching path"
+      - name: Build APK (Direct Gradle)
         env:
-          DART_VM_OPTIONS: "--disable-dart-dev"
-          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.watchfs=false"
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4g"
         run: |
-          # Пытаемся собрать через flutter
-          flutter build apk --release --no-tree-shake-icons --android-skip-build-dependency-validation
-          
-          # Если файл не найден в стандартном месте, ищем его там, где мог положить чистый градл
-          if [ ! -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
-             echo "Standard APK not found, searching..."
-             find . -name "app-release.apk" -type f
-             # Копируем найденный файл в ожидаемое место для следующего шага
-             FOUND_APK=$(find . -name "app-release.apk" -type f | head -n 1)
-             if [ ! -z "$FOUND_APK" ]; then
-               mkdir -p build/app/outputs/flutter-apk/
-               cp "$FOUND_APK" build/app/outputs/flutter-apk/app-release.apk
-             fi
-          fi
+          cd android
+          chmod +x gradlew
+          ./gradlew :app:assembleRelease --stacktrace --info
+          cd ..
 
+      - name: Find APK
+        run: |
+          echo "Searching for APK..."
+          find . -type f -name "*.apk" -print
+          
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: pokatuha-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
