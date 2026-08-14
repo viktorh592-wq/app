@@ -12,7 +12,8 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
+      contents: write
+      actions: write
 
     steps:
       - name: Checkout code
@@ -28,9 +29,8 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          cache: true # Включаем встроенный кэш pub-пакетов
+          cache: true
 
-      # ЭТОТ ШАГ КРИТИЧЕСКИ ВАЖЕН! Он скачивает SDK и принимает все лицензии
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
@@ -50,8 +50,6 @@ jobs:
           rm -rf android/app/build/
           flutter pub cache clean --force
 
-      # Создаем local.properties ДО того, как Gradle попытается его прочитать
-      # $FLUTTER_ROOT автоматически создается экшеном subosito/flutter-action
       - name: Create local.properties
         run: echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
 
@@ -97,7 +95,6 @@ jobs:
           distributionUrl=https\://services.gradle.org/distributions/gradle-8.14.2-bin.zip
           EOF
 
-      # Кэшируем Gradle, чтобы повторные билды летали
       - name: Cache Gradle packages
         uses: actions/cache@v4
         with:
@@ -117,9 +114,7 @@ jobs:
         continue-on-error: true
 
       - name: Build APK
-        run: |
-          ./gradlew assembleRelease --no-daemon --stacktrace
-          cd ..
+        run: flutter build apk --release --no-tree-shake-icons --android-skip-build-dependency-validation --no-file-system-watching
 
       - name: Find APK
         run: |
