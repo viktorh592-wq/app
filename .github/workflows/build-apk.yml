@@ -117,7 +117,10 @@ jobs:
         continue-on-error: true
 
       - name: Build APK
-        run: flutter build apk --release --no-tree-shake-icons --android-skip-build-dependency-validation
+        run: |
+          cd android
+          ./gradlew assembleRelease --no-daemon --stacktrace
+          cd ..
 
       - name: Find APK
         run: |
