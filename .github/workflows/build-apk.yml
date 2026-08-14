@@ -45,9 +45,8 @@ jobs:
           flutter clean
           rm -rf build/
           rm -rf .dart_tool/
-          rm -rf android/.gradle/
+          # НЕ удаляем android/.gradle и android/app/build полностью, чтобы не сломать gradlew
           rm -rf android/app/.cxx/
-          rm -rf android/app/build/
           flutter pub cache clean --force
 
       - name: Create local.properties
@@ -113,23 +112,30 @@ jobs:
         run: flutter analyze
         continue-on-error: true
 
-      - name: Build APK (Direct Gradle)
+      # Используем flutter build apk, но с отключенным watcher через переменную окружения
+      - name: Build APK
         env:
-          GRADLE_USER_HOME: /home/runner/.gradle-custom
+          DART_VM_OPTIONS: "--disable-dart-dev"
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.watchfs=false"
         run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon --stacktrace
-          cd ..
-
-      - name: Find APK
-        run: |
-          echo "Searching for APK..."
-          find . -type f -name "*.apk" -print
+          # Пытаемся собрать через flutter
+          flutter build apk --release --no-tree-shake-icons --android-skip-build-dependency-validation
           
+          # Если файл не найден в стандартном месте, ищем его там, где мог положить чистый градл
+          if [ ! -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
+             echo "Standard APK not found, searching..."
+             find . -name "app-release.apk" -type f
+             # Копируем найденный файл в ожидаемое место для следующего шага
+             FOUND_APK=$(find . -name "app-release.apk" -type f | head -n 1)
+             if [ ! -z "$FOUND_APK" ]; then
+               mkdir -p build/app/outputs/flutter-apk/
+               cp "$FOUND_APK" build/app/outputs/flutter-apk/app-release.apk
+             fi
+          fi
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: pokatuha-release
-          path: android/app/build/outputs/apk/release/app-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
