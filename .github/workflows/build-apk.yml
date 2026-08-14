@@ -40,15 +40,15 @@ jobs:
           dart --version
           java --version
 
-      - name: Safe Clean (Keep gradlew)
+      # БЕЗОПАСНАЯ ОЧИСТКА: Не удаляем android/.gradle и android/gradlew
+      - name: Clean project
         run: |
           flutter clean
           rm -rf build/
           rm -rf .dart_tool/
-          # НЕ удаляем android/.gradle и android/gradlew!
-          rm -rf android/app/.cxx/
           rm -rf android/app/build/
-          flutter pub cache clean --force || true
+          rm -rf android/app/.cxx/
+          # НЕ удаляем android/.gradle и android/gradlew!
 
       - name: Create local.properties
         run: echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
@@ -113,11 +113,10 @@ jobs:
         run: flutter analyze
         continue-on-error: true
 
-      - name: Make gradlew executable
-        run: chmod +x android/gradlew
-
+      # ЯВНЫЙ ЗАПУСК GRADLE ИЗ КОРНЯ
       - name: Build APK (Direct Gradle)
         run: |
+          chmod +x android/gradlew
           cd android
           ./gradlew assembleRelease --no-daemon --stacktrace
 
