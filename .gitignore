@@ -1,179 +1,67 @@
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+*.class
+*.exe
+*.dll
+*.so
+*.a
+*.out
+
 # Dependencies
-.pub/
-.buildlog
-.flutter-plugins
-.flutter-plugin-dependencies
-.packages
-
-# Generated plugin code
-lib/generated_plugin_registrant.dart
-
-# Build outputs
-build/
-*.iws
-*.iml
-*.ipr
-out/
-
-# Environment
+node_modules/
+venv/
+.venv/
 .env
 .env.local
 .env.*
 
-# Logs
+# Build outputs
+dist/
+build/
+target/
 *.log
-**/logs
+*.tmp
+*.swp
+*.swo
 
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# IDE specific
+# IDE and editor files
+.vscode/
 .idea/
 *.swp
 *.swo
-.vscode/
 
-# Coverage
+# System files
+.DS_Store
+Thumbs.db
+
+# Coverage and testing
 coverage/
-*.lcov
+htmlcov/
+.coverage
 
-# Temporary files
-*.tmp
-*.temp
-*.bak
-
-# Dart tooling
-.dart_tool/
-.dart_tool/*
-!.dart_tool/package_config.json
-
-# Flutter tooling
-.fvm/
-.fvm/*/
-!.fvm/.last_used_fvm_version
-!.fvm/README.md
-!.fvm/CODE_OF_CONDUCT.md
-!.fvm/LICENSE
-!.fvm/pubspec.*
-!.fvm/toolchain.yaml
-!.fvm/fvm_config.json
-
-# Analyzer
-analysis_options.yaml
-!analysis_options.yaml
-
-# Test coverage
-coverage/
-
-# Secrets
-secrets/**
-!secrets/.gitkeep
-
-# CI
-.github/workflows/**
-
-# Android
-**/android/**/gradle-wrapper.properties
-**/android/key.properties
-**/android/app/src/main/res/drawable/**
-**/android/app/src/main/res/values/**
-**/android/local.properties
-**/android/gradle.properties
-**/android/gradlew
-**/android/gradlew.bat
-**/android/build/**
-
-# iOS
-**/ios/**/*.mode1v3
-**/ios/**/*.mode2v3
-**/ios/**/*.perspectivev3
-**/ios/**/*.pbxuser
-**/ios/**/*.xccheckout
-**/ios/**/*.moved-aside
-**/ios/**/*.xcscmblueprint
-**/ios/Frameworks/**
-**/ios/Flutter/**
-**/ios/Runner/Assets.xcassets/**
-**/ios/Runner/Base.lproj/**
-**/ios/Runner.xcodeproj/**
-**/ios/Runner.xcworkspace/**
-**/ios/Pods/**
-**/ios/.symlinks/**
-**/ios/Podfile.lock
-**/ios/Flutter/App.framework/**
-**/ios/Flutter/flutter_assets/**
-**/ios/Flutter/Flutter.framework/**
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Generated.xcconfig
-**/ios/Flutter/ephemeral/**
-**/ios/Flutter/app.flx
-**/ios/Flutter/app.zip
-**/ios/Flutter/engine.version
-**/ios/Flutter/.last_build_id
-**/ios/Default-*.png
-**/ios/Runner/Info.plist
-**/ios/Runner/Assets.xcassets/LaunchImage.imageset/**
-**/ios/Flutter/Debug.xcconfig
-**/ios/Flutter/Release.xcconfig
-**/ios/Flutter/Profile.xcconfig
-**/ios/Flutter/GeneratedPluginRegistrant.h
-**/ios/Flutter/GeneratedPluginRegistrant.m
-**/ios/Flutter/FlutterPluginRegistrant.h
-**/ios/Flutter/FlutterPluginRegistrant.m
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.framework
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.framework.tar.xz
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter......
+# Compressed files
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst

@@ -81,8 +81,8 @@ class ActivityCard extends StatelessWidget {
                     ),
                   ),
                   if (onMenuTap != null)
-                    const IconButton(
-                      icon: Icon(Icons.more_vert),
+                    IconButton(
+                      icon: const Icon(Icons.more_vert),
                       onPressed: onMenuTap,
                       color: DesignTokens.textPrimary,
                     ),
