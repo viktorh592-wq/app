@@ -10,7 +10,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
 
     permissions:
       contents: write
@@ -114,17 +113,23 @@ jobs:
         run: flutter analyze
         continue-on-error: true
 
-      - name: Build APK
-        run: flutter build apk --release --no-tree-shake-icons --android-skip-build-dependency-validation
+      - name: Build APK (Direct Gradle)
+        env:
+          GRADLE_USER_HOME: /home/runner/.gradle-custom
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+          cd ..
 
       - name: Find APK
         run: |
-          echo "APK files found:"
+          echo "Searching for APK..."
           find . -type f -name "*.apk" -print
-
+          
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: pokatuha-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
