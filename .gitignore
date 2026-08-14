@@ -1,31 +1,179 @@
-# Flutter / Dart
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-.pub-cache/
+# Dependencies
 .pub/
+.buildlog
+.flutter-plugins
+.flutter-plugin-dependencies
+.packages
+
+# Generated plugin code
+lib/generated_plugin_registrant.dart
+
+# Build outputs
 build/
-*.g.dart
-.flutter/
-
-# IDE
-.idea/
-.vscode/
+*.iws
 *.iml
+*.ipr
+out/
 
-# OS
+# Environment
+.env
+.env.local
+.env.*
+
+# Logs
+*.log
+**/logs
+
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# Generated localizations are committed (output-dir: lib/l10n) so the project
-# analyzes without a generation step; keep them tracked.
+# IDE specific
+.idea/
+*.swp
+*.swo
+.vscode/
+
+# Coverage
+coverage/
+*.lcov
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Dart tooling
+.dart_tool/
+.dart_tool/*
+!.dart_tool/package_config.json
+
+# Flutter tooling
+.fvm/
+.fvm/*/
+!.fvm/.last_used_fvm_version
+!.fvm/README.md
+!.fvm/CODE_OF_CONDUCT.md
+!.fvm/LICENSE
+!.fvm/pubspec.*
+!.fvm/toolchain.yaml
+!.fvm/fvm_config.json
+
+# Analyzer
+analysis_options.yaml
+!analysis_options.yaml
+
+# Test coverage
+coverage/
+
+# Secrets
+secrets/**
+!secrets/.gitkeep
+
+# CI
+.github/workflows/**
 
 # Android
-android/.gradle/
-android/local.properties
-android/key.properties
-**/google-services.json
+**/android/**/gradle-wrapper.properties
+**/android/key.properties
+**/android/app/src/main/res/drawable/**
+**/android/app/src/main/res/values/**
+**/android/local.properties
+**/android/gradle.properties
+**/android/gradlew
+**/android/gradlew.bat
+**/android/build/**
 
-# Sembast local database (runtime only)
-*.db
-**/GeneratedPluginRegistrant.java
+# iOS
+**/ios/**/*.mode1v3
+**/ios/**/*.mode2v3
+**/ios/**/*.perspectivev3
+**/ios/**/*.pbxuser
+**/ios/**/*.xccheckout
+**/ios/**/*.moved-aside
+**/ios/**/*.xcscmblueprint
+**/ios/Frameworks/**
+**/ios/Flutter/**
+**/ios/Runner/Assets.xcassets/**
+**/ios/Runner/Base.lproj/**
+**/ios/Runner.xcodeproj/**
+**/ios/Runner.xcworkspace/**
+**/ios/Pods/**
+**/ios/.symlinks/**
+**/ios/Podfile.lock
+**/ios/Flutter/App.framework/**
+**/ios/Flutter/flutter_assets/**
+**/ios/Flutter/Flutter.framework/**
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/**
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/engine.version
+**/ios/Flutter/.last_build_id
+**/ios/Default-*.png
+**/ios/Runner/Info.plist
+**/ios/Runner/Assets.xcassets/LaunchImage.imageset/**
+**/ios/Flutter/Debug.xcconfig
+**/ios/Flutter/Release.xcconfig
+**/ios/Flutter/Profile.xcconfig
+**/ios/Flutter/GeneratedPluginRegistrant.h
+**/ios/Flutter/GeneratedPluginRegistrant.m
+**/ios/Flutter/FlutterPluginRegistrant.h
+**/ios/Flutter/FlutterPluginRegistrant.m
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.framework.tar.xz
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter......

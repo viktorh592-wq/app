@@ -53,7 +53,7 @@ class ActivityCard extends StatelessWidget {
               padding: const EdgeInsets.all(DesignTokens.space4),
               child: Row(
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 20,
                     backgroundColor: DesignTokens.limeAccent,
                     child: Icon(
@@ -81,8 +81,8 @@ class ActivityCard extends StatelessWidget {
                     ),
                   ),
                   if (onMenuTap != null)
-                    IconButton(
-                      icon: const Icon(Icons.more_vert),
+                    const IconButton(
+                      icon: Icon(Icons.more_vert),
                       onPressed: onMenuTap,
                       color: DesignTokens.textPrimary,
                     ),
