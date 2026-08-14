@@ -10,6 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     permissions:
       contents: write
@@ -114,7 +115,7 @@ jobs:
         continue-on-error: true
 
       - name: Build APK
-        run: flutter build apk --release --no-tree-shake-icons --android-skip-build-dependency-validation --no-file-system-watching
+        run: flutter build apk --release --no-tree-shake-icons --android-skip-build-dependency-validation
 
       - name: Find APK
         run: |
