@@ -40,16 +40,15 @@ jobs:
           dart --version
           java --version
 
-      # БЕЗОПАСНАЯ ОЧИСТКА: Не удаляем android/.gradle и android/gradle/wrapper
-      - name: Clean project
+      - name: Safe Clean (Keep gradlew)
         run: |
           flutter clean
           rm -rf build/
           rm -rf .dart_tool/
-          # НЕ удаляем android/.gradle и android/gradle/wrapper!
+          # НЕ удаляем android/.gradle и android/gradlew!
           rm -rf android/app/.cxx/
           rm -rf android/app/build/
-          flutter pub cache clean --force
+          flutter pub cache clean --force || true
 
       - name: Create local.properties
         run: echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
@@ -114,20 +113,13 @@ jobs:
         run: flutter analyze
         continue-on-error: true
 
-      # ВОССТАНОВЛЕНИЕ GRADLEW И СБОРКА
-      - name: Ensure gradlew exists and Build APK
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build APK (Direct Gradle)
         run: |
           cd android
-          # Если gradlew удален, воссоздаем его
-          if [ ! -f "gradlew" ]; then
-            echo "gradlew not found, regenerating..."
-            flutter create .
-          fi
-          chmod +x gradlew
-          
-          # Запускаем сборку напрямую через Gradle
-          ./gradlew :app:assembleRelease --no-daemon --stacktrace
-          cd ..
+          ./gradlew assembleRelease --no-daemon --stacktrace
 
       - name: Find APK
         run: |
