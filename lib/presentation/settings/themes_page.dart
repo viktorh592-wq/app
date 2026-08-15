@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:pokatuha/database/collections/settings_collection.dart';
 import 'package:pokatuha/domain/enums/enums.dart';
 import 'package:pokatuha/domain/services/service_locator.dart';
-import 'package:pokatuha/domain/services/settings_service.dart';
 import 'package:pokatuha/domain/services/theme_service.dart';
 import 'package:pokatuha/l10n/app_localizations.dart';
 import 'package:pokatuha/presentation/app_view_model.dart';

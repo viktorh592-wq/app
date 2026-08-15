@@ -53,7 +53,7 @@ class ActivityCard extends StatelessWidget {
               padding: const EdgeInsets.all(DesignTokens.space4),
               child: Row(
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 20,
                     backgroundColor: DesignTokens.limeAccent,
                     child: Icon(

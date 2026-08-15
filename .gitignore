@@ -1,31 +1,67 @@
-# Flutter / Dart
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-.pub-cache/
-.pub/
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+*.class
+*.exe
+*.dll
+*.so
+*.a
+*.out
+
+# Dependencies
+node_modules/
+venv/
+.venv/
+.env
+.env.local
+.env.*
+
+# Build outputs
+dist/
 build/
-*.g.dart
-.flutter/
+target/
+*.log
+*.tmp
+*.swp
+*.swo
 
-# IDE
-.idea/
+# IDE and editor files
 .vscode/
-*.iml
+.idea/
+*.swp
+*.swo
 
-# OS
+# System files
 .DS_Store
+Thumbs.db
 
-# Generated localizations are committed (output-dir: lib/l10n) so the project
-# analyzes without a generation step; keep them tracked.
+# Coverage and testing
+coverage/
+htmlcov/
+.coverage
 
-# Android
-android/.gradle/
-android/local.properties
-android/key.properties
-**/google-services.json
-
-# Sembast local database (runtime only)
-*.db
-**/GeneratedPluginRegistrant.java
+# Compressed files
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst

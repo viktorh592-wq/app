@@ -137,10 +137,10 @@ class AppTheme {
           ),
         ),
       ),
-      floatingActionButtonTheme: FloatingActionButtonThemeData(
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: DesignTokens.limeAccent,
         foregroundColor: DesignTokens.textPrimary,
-        shape: const CircleBorder(),
+        shape: CircleBorder(),
         elevation: 4,
       ),
       navigationBarTheme: NavigationBarThemeData(
@@ -149,7 +149,7 @@ class AppTheme {
         labelTextStyle: WidgetStatePropertyAll(
           DesignTokens.caption(color: DesignTokens.textPrimary),
         ),
-        iconTheme: WidgetStatePropertyAll(
+        iconTheme: const WidgetStatePropertyAll(
           IconThemeData(color: DesignTokens.textPrimary),
         ),
       ),
