@@ -271,4 +271,209 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get search => 'Search';
+
+  @override
+  String get tabGroups => 'Groups';
+
+  @override
+  String get createGroup => 'Create group';
+
+  @override
+  String get noGroups => 'No groups';
+
+  @override
+  String get noGroupsHint => 'Create your first group';
+
+  @override
+  String get groupName => 'Group name';
+
+  @override
+  String get groupDescription => 'Description';
+
+  @override
+  String get groupType => 'Group type';
+
+  @override
+  String get groupTypePublic => 'Public';
+
+  @override
+  String get groupTypePublicHint => 'Discoverable, join without approval';
+
+  @override
+  String get groupTypePrivate => 'Private';
+
+  @override
+  String get groupTypePrivateHint => 'Not discoverable, invitation only';
+
+  @override
+  String get groupTypeInviteOnly => 'Invite-only';
+
+  @override
+  String get groupTypeInviteOnlyHint => 'Requires admin approval';
+
+  @override
+  String get groupMembers => 'Members';
+
+  @override
+  String get groupMedia => 'Media';
+
+  @override
+  String get groupSettings => 'Settings';
+
+  @override
+  String get inviteToGroup => 'Invite to group';
+
+  @override
+  String get showGroupQr => 'Show group QR';
+
+  @override
+  String get shareInviteLink => 'Share invite link';
+
+  @override
+  String get searchByNickname => 'Search by nickname';
+
+  @override
+  String get leaveGroup => 'Leave group';
+
+  @override
+  String get deleteGroup => 'Delete group';
+
+  @override
+  String get deleteGroupConfirm => 'Delete the group with its activities?';
+
+  @override
+  String get defaultColor => 'Default activity color';
+
+  @override
+  String get roleOwner => 'Owner';
+
+  @override
+  String get roleAdmin => 'Admin';
+
+  @override
+  String get roleMember => 'Member';
+
+  @override
+  String get noMembers => 'No members yet';
+
+  @override
+  String get noMedia => 'No media yet';
+
+  @override
+  String get noMediaHint =>
+      'Photos and videos from group chats will appear here';
+
+  @override
+  String get invite => 'Invite';
+
+  @override
+  String memberAdded(String name) {
+    return '$name added to the group';
+  }
+
+  @override
+  String membersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# members',
+      one: '# member',
+      zero: 'No members',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get showMyQr => 'Show my QR';
+
+  @override
+  String get scanQr => 'Scan QR';
+
+  @override
+  String get addToContacts => 'Add to contacts';
+
+  @override
+  String get addedToContacts => 'Added to contacts';
+
+  @override
+  String get writeMessage => 'Write';
+
+  @override
+  String get comingSoon => 'Coming in a later sprint';
+
+  @override
+  String get userNotFound => 'User not found on this device';
+
+  @override
+  String get noUsersFound => 'No users found';
+
+  @override
+  String get noUsersFoundHint =>
+      'Users appear after QR scan or contact exchange';
+
+  @override
+  String get invalidQr => 'Unrecognized QR code';
+
+  @override
+  String get yourQrCode => 'Your QR code';
+
+  @override
+  String get groupQrCode => 'Group QR code';
+
+  @override
+  String get copy => 'Copy';
+
+  @override
+  String get copied => 'Copied';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get done => 'Done';
+
+  @override
+  String get mapActions => 'Map actions';
+
+  @override
+  String get findMe => 'Find me';
+
+  @override
+  String get shareLocation => 'Share location';
+
+  @override
+  String get stopSharingLocation => 'Stop sharing location';
+
+  @override
+  String get showRoute => 'Show route';
+
+  @override
+  String get downloadGpx => 'Download GPX';
+
+  @override
+  String get selectMap => 'Select map';
+
+  @override
+  String get showParticipants => 'Show participants';
+
+  @override
+  String get noActiveActivity => 'No active activity';
+
+  @override
+  String get locationSharingOn => 'Location sharing on';
+
+  @override
+  String get locationSharingOff => 'Location sharing off';
+
+  @override
+  String get noRoutes => 'No routes yet';
+
+  @override
+  String get noRoutesHint => 'Add a route to a group activity';
+
+  @override
+  String get gpxExported => 'GPX is ready to share';
+
+  @override
+  String get noParticipantsOnMap => 'No participants with live position';
 }

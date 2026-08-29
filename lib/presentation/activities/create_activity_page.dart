@@ -1,13 +1,17 @@
-/// Create activity form (UC-001 — Create Ride). Implements FR-001 fields:
-/// title, description, date, time, meeting point, activity type, visibility,
-/// max participants. Uses the local EventService (Business rules BR-001).
+/// Create activity form (UC-001 — Create Ride). Opens only from a group
+/// context — V2 Group-first model (GROUPS_AND_ACTIVITIES.md §1: users never
+/// create standalone activities from the main screen). Implements FR-001
+/// fields: title, description, date, time, meeting point, activity type,
+/// visibility, max participants. Uses the local EventService (BR-001).
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:pokatuha/core/errors/app_error.dart';
 import 'package:pokatuha/database/collections/activity_type_collection.dart';
+import 'package:pokatuha/database/collections/group_collection.dart';
 import 'package:pokatuha/domain/enums/enums.dart';
 import 'package:pokatuha/domain/repositories/activity_type_repository.dart';
+import 'package:pokatuha/domain/repositories/group_repository.dart';
 import 'package:pokatuha/domain/services/event_service.dart';
 import 'package:pokatuha/domain/services/gps_service.dart';
 import 'package:pokatuha/domain/services/service_locator.dart';
@@ -15,7 +19,10 @@ import 'package:pokatuha/l10n/app_localizations.dart';
 import 'package:pokatuha/presentation/app_view_model.dart';
 
 class CreateActivityPage extends StatefulWidget {
-  const CreateActivityPage({super.key});
+  const CreateActivityPage({super.key, required this.groupId});
+
+  /// Group the new activity belongs to (required — V2 Group-first).
+  final String groupId;
 
   @override
   State<CreateActivityPage> createState() => _CreateActivityPageState();
@@ -81,6 +88,7 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
       final user = context.read<AppViewModel>().user!;
       await serviceLocator<EventService>().createActivity(
         organizer: user,
+        groupId: widget.groupId,
         title: _title.text,
         description: _description.text,
         startAt: _dateTime.toUtc().millisecondsSinceEpoch,
@@ -116,6 +124,32 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            FutureBuilder<GroupCollection?>(
+              future: serviceLocator<GroupRepository>().getById(widget.groupId),
+              builder: (context, snapshot) {
+                final group = snapshot.data;
+                if (group == null) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Row(
+                    children: [
+                      Icon(Icons.group_outlined,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          group.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
             TextFormField(
               controller: _title,
               decoration: InputDecoration(labelText: l.title),

@@ -271,4 +271,211 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get search => 'Поиск';
+
+  @override
+  String get tabGroups => 'Группы';
+
+  @override
+  String get createGroup => 'Создать группу';
+
+  @override
+  String get noGroups => 'Нет групп';
+
+  @override
+  String get noGroupsHint => 'Создайте первую группу';
+
+  @override
+  String get groupName => 'Название группы';
+
+  @override
+  String get groupDescription => 'Описание';
+
+  @override
+  String get groupType => 'Тип группы';
+
+  @override
+  String get groupTypePublic => 'Публичная';
+
+  @override
+  String get groupTypePublicHint => 'Видна в поиске, вход без подтверждения';
+
+  @override
+  String get groupTypePrivate => 'Приватная';
+
+  @override
+  String get groupTypePrivateHint =>
+      'Не видна в поиске, вход только по приглашению';
+
+  @override
+  String get groupTypeInviteOnly => 'По приглашению';
+
+  @override
+  String get groupTypeInviteOnlyHint => 'Вход с подтверждением администратора';
+
+  @override
+  String get groupMembers => 'Участники';
+
+  @override
+  String get groupMedia => 'Медиа';
+
+  @override
+  String get groupSettings => 'Настройки';
+
+  @override
+  String get inviteToGroup => 'Пригласить в группу';
+
+  @override
+  String get showGroupQr => 'Показать QR группы';
+
+  @override
+  String get shareInviteLink => 'Поделиться ссылкой';
+
+  @override
+  String get searchByNickname => 'Найти по нику';
+
+  @override
+  String get leaveGroup => 'Покинуть группу';
+
+  @override
+  String get deleteGroup => 'Удалить группу';
+
+  @override
+  String get deleteGroupConfirm => 'Удалить группу вместе с активностями?';
+
+  @override
+  String get defaultColor => 'Цвет активностей по умолчанию';
+
+  @override
+  String get roleOwner => 'Владелец';
+
+  @override
+  String get roleAdmin => 'Админ';
+
+  @override
+  String get roleMember => 'Участник';
+
+  @override
+  String get noMembers => 'Пока нет участников';
+
+  @override
+  String get noMedia => 'Медиа пока нет';
+
+  @override
+  String get noMediaHint => 'Фото и видео из чатов группы появятся здесь';
+
+  @override
+  String get invite => 'Пригласить';
+
+  @override
+  String memberAdded(String name) {
+    return '$name добавлен(а) в группу';
+  }
+
+  @override
+  String membersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# участников',
+      many: '# участников',
+      few: '# участника',
+      one: '# участник',
+      zero: 'Нет участников',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get showMyQr => 'Показать мой QR';
+
+  @override
+  String get scanQr => 'Сканировать QR';
+
+  @override
+  String get addToContacts => 'Добавить в контакты';
+
+  @override
+  String get addedToContacts => 'Добавлено в контакты';
+
+  @override
+  String get writeMessage => 'Написать';
+
+  @override
+  String get comingSoon => 'Появится в следующем спринте';
+
+  @override
+  String get userNotFound => 'Пользователь не найден на этом устройстве';
+
+  @override
+  String get noUsersFound => 'Никого не найдено';
+
+  @override
+  String get noUsersFoundHint =>
+      'Пользователи появятся после сканирования QR или обмена контактами';
+
+  @override
+  String get invalidQr => 'QR-код не распознан';
+
+  @override
+  String get yourQrCode => 'Ваш QR-код';
+
+  @override
+  String get groupQrCode => 'QR-код группы';
+
+  @override
+  String get copy => 'Скопировать';
+
+  @override
+  String get copied => 'Скопировано';
+
+  @override
+  String get share => 'Поделиться';
+
+  @override
+  String get done => 'Готово';
+
+  @override
+  String get mapActions => 'Действия на карте';
+
+  @override
+  String get findMe => 'Найти меня';
+
+  @override
+  String get shareLocation => 'Поделиться местоположением';
+
+  @override
+  String get stopSharingLocation => 'Остановить шаринг локации';
+
+  @override
+  String get showRoute => 'Показать маршрут';
+
+  @override
+  String get downloadGpx => 'Скачать GPX';
+
+  @override
+  String get selectMap => 'Выбрать карту';
+
+  @override
+  String get showParticipants => 'Показать участников';
+
+  @override
+  String get noActiveActivity => 'Нет активной активности';
+
+  @override
+  String get locationSharingOn => 'Шаринг локации включён';
+
+  @override
+  String get locationSharingOff => 'Шаринг локации выключен';
+
+  @override
+  String get noRoutes => 'Маршрутов пока нет';
+
+  @override
+  String get noRoutesHint => 'Добавьте маршрут в активность группы';
+
+  @override
+  String get gpxExported => 'GPX готов к отправке';
+
+  @override
+  String get noParticipantsOnMap => 'Нет участников с активной позицией';
 }

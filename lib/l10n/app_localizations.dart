@@ -613,6 +613,390 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search'**
   String get search;
+
+  /// No description provided for @tabGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get tabGroups;
+
+  /// No description provided for @createGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create group'**
+  String get createGroup;
+
+  /// No description provided for @noGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'No groups'**
+  String get noGroups;
+
+  /// No description provided for @noGroupsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first group'**
+  String get noGroupsHint;
+
+  /// No description provided for @groupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name'**
+  String get groupName;
+
+  /// No description provided for @groupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get groupDescription;
+
+  /// No description provided for @groupType.
+  ///
+  /// In en, this message translates to:
+  /// **'Group type'**
+  String get groupType;
+
+  /// No description provided for @groupTypePublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get groupTypePublic;
+
+  /// No description provided for @groupTypePublicHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Discoverable, join without approval'**
+  String get groupTypePublicHint;
+
+  /// No description provided for @groupTypePrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get groupTypePrivate;
+
+  /// No description provided for @groupTypePrivateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Not discoverable, invitation only'**
+  String get groupTypePrivateHint;
+
+  /// No description provided for @groupTypeInviteOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite-only'**
+  String get groupTypeInviteOnly;
+
+  /// No description provided for @groupTypeInviteOnlyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires admin approval'**
+  String get groupTypeInviteOnlyHint;
+
+  /// No description provided for @groupMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get groupMembers;
+
+  /// No description provided for @groupMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Media'**
+  String get groupMedia;
+
+  /// No description provided for @groupSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get groupSettings;
+
+  /// No description provided for @inviteToGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite to group'**
+  String get inviteToGroup;
+
+  /// No description provided for @showGroupQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Show group QR'**
+  String get showGroupQr;
+
+  /// No description provided for @shareInviteLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Share invite link'**
+  String get shareInviteLink;
+
+  /// No description provided for @searchByNickname.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by nickname'**
+  String get searchByNickname;
+
+  /// No description provided for @leaveGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave group'**
+  String get leaveGroup;
+
+  /// No description provided for @deleteGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete group'**
+  String get deleteGroup;
+
+  /// No description provided for @deleteGroupConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the group with its activities?'**
+  String get deleteGroupConfirm;
+
+  /// No description provided for @defaultColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Default activity color'**
+  String get defaultColor;
+
+  /// No description provided for @roleOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get roleOwner;
+
+  /// No description provided for @roleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get roleAdmin;
+
+  /// No description provided for @roleMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get roleMember;
+
+  /// No description provided for @noMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'No members yet'**
+  String get noMembers;
+
+  /// No description provided for @noMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'No media yet'**
+  String get noMedia;
+
+  /// No description provided for @noMediaHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and videos from group chats will appear here'**
+  String get noMediaHint;
+
+  /// No description provided for @invite.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite'**
+  String get invite;
+
+  /// No description provided for @memberAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} added to the group'**
+  String memberAdded(String name);
+
+  /// No description provided for @membersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No members} one{# member} other{# members}}'**
+  String membersCount(int count);
+
+  /// No description provided for @showMyQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Show my QR'**
+  String get showMyQr;
+
+  /// No description provided for @scanQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR'**
+  String get scanQr;
+
+  /// No description provided for @addToContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to contacts'**
+  String get addToContacts;
+
+  /// No description provided for @addedToContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to contacts'**
+  String get addedToContacts;
+
+  /// No description provided for @writeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Write'**
+  String get writeMessage;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming in a later sprint'**
+  String get comingSoon;
+
+  /// No description provided for @userNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'User not found on this device'**
+  String get userNotFound;
+
+  /// No description provided for @noUsersFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No users found'**
+  String get noUsersFound;
+
+  /// No description provided for @noUsersFoundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Users appear after QR scan or contact exchange'**
+  String get noUsersFoundHint;
+
+  /// No description provided for @invalidQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Unrecognized QR code'**
+  String get invalidQr;
+
+  /// No description provided for @yourQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Your QR code'**
+  String get yourQrCode;
+
+  /// No description provided for @groupQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Group QR code'**
+  String get groupQrCode;
+
+  /// No description provided for @copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copy;
+
+  /// No description provided for @copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get copied;
+
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @mapActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Map actions'**
+  String get mapActions;
+
+  /// No description provided for @findMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Find me'**
+  String get findMe;
+
+  /// No description provided for @shareLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Share location'**
+  String get shareLocation;
+
+  /// No description provided for @stopSharingLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop sharing location'**
+  String get stopSharingLocation;
+
+  /// No description provided for @showRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Show route'**
+  String get showRoute;
+
+  /// No description provided for @downloadGpx.
+  ///
+  /// In en, this message translates to:
+  /// **'Download GPX'**
+  String get downloadGpx;
+
+  /// No description provided for @selectMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Select map'**
+  String get selectMap;
+
+  /// No description provided for @showParticipants.
+  ///
+  /// In en, this message translates to:
+  /// **'Show participants'**
+  String get showParticipants;
+
+  /// No description provided for @noActiveActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'No active activity'**
+  String get noActiveActivity;
+
+  /// No description provided for @locationSharingOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Location sharing on'**
+  String get locationSharingOn;
+
+  /// No description provided for @locationSharingOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Location sharing off'**
+  String get locationSharingOff;
+
+  /// No description provided for @noRoutes.
+  ///
+  /// In en, this message translates to:
+  /// **'No routes yet'**
+  String get noRoutes;
+
+  /// No description provided for @noRoutesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a route to a group activity'**
+  String get noRoutesHint;
+
+  /// No description provided for @gpxExported.
+  ///
+  /// In en, this message translates to:
+  /// **'GPX is ready to share'**
+  String get gpxExported;
+
+  /// No description provided for @noParticipantsOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'No participants with live position'**
+  String get noParticipantsOnMap;
 }
 
 class _AppLocalizationsDelegate
