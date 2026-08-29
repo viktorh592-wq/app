@@ -50,16 +50,18 @@ class GpxService {
   /// Parse a KML document into a list of [GeoPoint] track / route points
   /// (V2 ROUTES_IMPORT.md §1 — KML support, FIX_PLAN S5-T6).
   ///
-  /// KML uses `<coordinates>lng,lat,alt lng,lat,alt ...</coordinates>`
-  /// inside `<Point>`, `<LineString>`, `<Track>` or `<MultiGeometry>`.
-  /// Timestamps are extracted from `<when>` elements when present (KML Track
-  /// / gx:Track extensions) and aligned by index with `<coordinates>`.
+  /// Two coordinate sources are supported:
+  ///  1. `<coordinates>lng,lat,alt lng,lat,alt ...</coordinates>` inside
+  ///     `<Point>`, `<LineString>`, `<MultiGeometry>` (classic KML).
+  ///  2. `<coord>lng lat alt</coord>` per-line triplet inside a `<gx:Track>`
+  ///     (Google extension). When `<when>` elements align by count with
+  ///     `<coord>` elements, timestamps are attached to each point.
   List<GeoPoint> parseKml(String kmlContent) {
     try {
       final document = XmlDocument.parse(kmlContent);
       final points = <GeoPoint>[];
 
-      // V2 §1 — collect coordinates from every <coordinates> element found.
+      // Source 1 — classic <coordinates> elements.
       for (final coordNode in document.findAllElements('coordinates')) {
         final raw = coordNode.innerText.trim();
         if (raw.isEmpty) continue;
@@ -80,15 +82,48 @@ class GpxService {
         }
       }
 
-      // gx:Track timestamps — `<when>` elements aligned with `<coord>`.
-      // Only attach if both lists have the same length.
-      final whenNodes = document.findAllElements('when').toList();
-      final coordStringNodes =
-          document.findAllElements('coord').toList(growable: false);
-      if (whenNodes.length == coordStringNodes.length &&
-          whenNodes.length == points.length) {
-        for (var i = 0; i < points.length; i++) {
-          points[i].timestamp = _parseTime(whenNodes[i].innerText);
+      // Source 2 — gx:Track `<coord>` elements (space-separated, not comma).
+      // Only used when no classic <coordinates> was found.
+      var gxTimestamps = <int>[];
+      if (points.isEmpty) {
+        final coordStringNodes =
+            document.findAllElements('coord').toList(growable: false);
+        if (coordStringNodes.isNotEmpty) {
+          final whenNodes = document.findAllElements('when').toList();
+          if (whenNodes.isNotEmpty && whenNodes.length == coordStringNodes.length) {
+            gxTimestamps = whenNodes
+                .map((n) => _parseTime(n.innerText))
+                .toList(growable: false);
+          }
+          for (var i = 0; i < coordStringNodes.length; i++) {
+            final token = coordStringNodes[i].innerText.trim();
+            final parts = token.split(RegExp(r'\s+'));
+            if (parts.length < 2) continue;
+            final lng = double.tryParse(parts[0]);
+            final lat = double.tryParse(parts[1]);
+            if (lat == null || lng == null) continue;
+            final elevation =
+                parts.length >= 3 ? (double.tryParse(parts[2]) ?? 0) : 0.0;
+            final ts = i < gxTimestamps.length ? gxTimestamps[i] : 0;
+            points.add(GeoPoint(
+              lat: lat,
+              lng: lng,
+              elevation: elevation,
+              timestamp: ts,
+            ));
+          }
+        }
+      } else if (document.findAllElements('coord').isNotEmpty) {
+        // Classic coordinates were found — but a gx:Track may also be present
+        // with matching `<when>` count. Attach timestamps in that case.
+        final coordStringNodes =
+            document.findAllElements('coord').toList(growable: false);
+        final whenNodes = document.findAllElements('when').toList();
+        if (whenNodes.length == coordStringNodes.length &&
+            whenNodes.length == points.length) {
+          for (var i = 0; i < points.length; i++) {
+            points[i].timestamp = _parseTime(whenNodes[i].innerText);
+          }
         }
       }
 
