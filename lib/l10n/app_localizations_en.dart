@@ -476,4 +476,213 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noParticipantsOnMap => 'No participants with live position';
+
+  @override
+  String get tabMain => 'Main';
+
+  @override
+  String get activityColor => 'Activity color';
+
+  @override
+  String get openMap => 'Open map';
+
+  @override
+  String get shareActivity => 'Share activity';
+
+  @override
+  String get noRouteYet => 'No route yet';
+
+  @override
+  String get kmUnit => 'km';
+
+  @override
+  String get mUnit => 'm';
+
+  @override
+  String get noParticipants => 'No participants yet';
+
+  @override
+  String liveSharingCount(int count) {
+    return '$count live';
+  }
+
+  @override
+  String get noMessagesYet => 'No messages yet';
+
+  @override
+  String get details => 'Details';
+
+  @override
+  String get menuEdit => 'Edit';
+
+  @override
+  String get menuDuplicate => 'Duplicate';
+
+  @override
+  String get menuShare => 'Share';
+
+  @override
+  String get menuPin => 'Pin in group';
+
+  @override
+  String get menuUnpin => 'Unpin from group';
+
+  @override
+  String get menuArchive => 'Archive';
+
+  @override
+  String get deleteActivityConfirm =>
+      'Delete this activity? The archive record is kept.';
+
+  @override
+  String get duplicated => 'Activity duplicated';
+
+  @override
+  String get pinned => 'Pinned in group';
+
+  @override
+  String get unpinned => 'Unpinned';
+
+  @override
+  String get archived => 'Activity moved to archive';
+
+  @override
+  String get chatReaction => 'Reaction';
+
+  @override
+  String get chatReply => 'Reply';
+
+  @override
+  String get chatForward => 'Forward';
+
+  @override
+  String get chatPinMessage => 'Pin';
+
+  @override
+  String get chatUnpinMessage => 'Unpin';
+
+  @override
+  String get chatCopy => 'Copy';
+
+  @override
+  String get chatDeleteMessage => 'Delete';
+
+  @override
+  String chatForwardedFrom(String name) => 'Forwarded from $name';
+
+  @override
+  String chatReplyTo(String name) => 'Reply to $name';
+
+  @override
+  String chatPinnedBar(int count) {
+    switch (count) {
+      case 1:
+        return '1 pinned';
+      default:
+        return '$count pinned';
+    }
+  }
+
+  @override
+  String get chatAttachCamera => 'Camera';
+
+  @override
+  String get chatAttachGallery => 'Gallery';
+
+  @override
+  String get chatAttachRoute => 'Route';
+
+  @override
+  String get chatAttachFile => 'File';
+
+  @override
+  String get chatAttachLocation => 'Location';
+
+  @override
+  String get chatAttachPoll => 'Poll';
+
+  @override
+  String get chatAttachVoice => 'Voice';
+
+  @override
+  String get chatMenuSearch => 'Search';
+
+  @override
+  String get chatMenuMedia => 'Media';
+
+  @override
+  String get chatMenuPinned => 'Pinned';
+
+  @override
+  String get chatMenuSharedRoutes => 'Shared routes';
+
+  @override
+  String get chatMenuFiles => 'Files';
+
+  @override
+  String get chatMenuMute => 'Mute';
+
+  @override
+  String get chatMenuUnmute => 'Unmute';
+
+  @override
+  String get chatMenuExport => 'Export';
+
+  @override
+  String get chatReadOnlyBanner =>
+      'This activity is archived. The chat is read-only.';
+
+  @override
+  String get chatVoiceHoldToRecord => 'Hold to record';
+
+  @override
+  String get chatVoiceSlideToCancel => 'Slide down to cancel';
+
+  @override
+  String get chatVoiceRecording => 'Recording…';
+
+  @override
+  String get chatSearchPlaceholder => 'Search messages';
+
+  @override
+  String get chatSearchNoResults => 'No messages found';
+
+  @override
+  String get chatExportReady => 'Chat exported';
+
+  @override
+  String get chatMuted => 'Chat muted';
+
+  @override
+  String get chatUnmuted => 'Chat unmuted';
+
+  @override
+  String get chatForwardTarget => 'Forward to…';
+
+  @override
+  String get chatForwarded => 'Message forwarded';
+
+  @override
+  String chatPhotoSizeWarning(int kb) => 'Photo size: $kb KB';
+
+  @override
+  String get chatNoMedia => 'No media in this chat yet';
+
+  @override
+  String get chatNoPinned => 'No pinned messages';
+
+  @override
+  String get chatNoFiles => 'No files in this chat yet';
+
+  @override
+  String get chatNoRoutes => 'No routes shared in this chat yet';
+
+  @override
+  String get chatOpenInMap => 'Open in map';
+
+  @override
+  String chatPlaybackSpeed(String speed) => '${speed}x speed';
+
+  @override
+  String get chatDocumentOpen => 'Open';
 }

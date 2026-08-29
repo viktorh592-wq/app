@@ -997,6 +997,402 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No participants with live position'**
   String get noParticipantsOnMap;
+
+  /// No description provided for @tabMain.
+  ///
+  /// In en, this message translates to:
+  /// **'Main'**
+  String get tabMain;
+
+  /// No description provided for @activityColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity color'**
+  String get activityColor;
+
+  /// No description provided for @openMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Open map'**
+  String get openMap;
+
+  /// No description provided for @shareActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Share activity'**
+  String get shareActivity;
+
+  /// No description provided for @noRouteYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No route yet'**
+  String get noRouteYet;
+
+  /// No description provided for @kmUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'km'**
+  String get kmUnit;
+
+  /// No description provided for @mUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'m'**
+  String get mUnit;
+
+  /// No description provided for @noParticipants.
+  ///
+  /// In en, this message translates to:
+  /// **'No participants yet'**
+  String get noParticipants;
+
+  /// No description provided for @liveSharingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} live'**
+  String liveSharingCount(int count);
+
+  /// No description provided for @noMessagesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet'**
+  String get noMessagesYet;
+
+  /// No description provided for @details.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get details;
+
+  /// No description provided for @menuEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get menuEdit;
+
+  /// No description provided for @menuDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get menuDuplicate;
+
+  /// No description provided for @menuShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get menuShare;
+
+  /// No description provided for @menuPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin in group'**
+  String get menuPin;
+
+  /// No description provided for @menuUnpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin from group'**
+  String get menuUnpin;
+
+  /// No description provided for @menuArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get menuArchive;
+
+  /// No description provided for @deleteActivityConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this activity? The archive record is kept.'**
+  String get deleteActivityConfirm;
+
+  /// No description provided for @duplicated.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity duplicated'**
+  String get duplicated;
+
+  /// No description provided for @pinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned in group'**
+  String get pinned;
+
+  /// No description provided for @unpinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpinned'**
+  String get unpinned;
+
+  /// No description provided for @archived.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity moved to archive'**
+  String get archived;
+
+  /// No description provided for @chatReaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Reaction'**
+  String get chatReaction;
+
+  /// No description provided for @chatReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get chatReply;
+
+  /// No description provided for @chatForward.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward'**
+  String get chatForward;
+
+  /// No description provided for @chatPinMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin'**
+  String get chatPinMessage;
+
+  /// No description provided for @chatUnpinMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get chatUnpinMessage;
+
+  /// No description provided for @chatCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get chatCopy;
+
+  /// No description provided for @chatDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get chatDeleteMessage;
+
+  /// No description provided for @chatForwardedFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Forwarded from {name}'**
+  String chatForwardedFrom(String name);
+
+  /// No description provided for @chatReplyTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply to {name}'**
+  String chatReplyTo(String name);
+
+  /// No description provided for @chatPinnedBar.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} pinned'**
+  String chatPinnedBar(int count);
+
+  /// No description provided for @chatAttachCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get chatAttachCamera;
+
+  /// No description provided for @chatAttachGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get chatAttachGallery;
+
+  /// No description provided for @chatAttachRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Route'**
+  String get chatAttachRoute;
+
+  /// No description provided for @chatAttachFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get chatAttachFile;
+
+  /// No description provided for @chatAttachLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get chatAttachLocation;
+
+  /// No description provided for @chatAttachPoll.
+  ///
+  /// In en, this message translates to:
+  /// **'Poll'**
+  String get chatAttachPoll;
+
+  /// No description provided for @chatAttachVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get chatAttachVoice;
+
+  /// No description provided for @chatMenuSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get chatMenuSearch;
+
+  /// No description provided for @chatMenuMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Media'**
+  String get chatMenuMedia;
+
+  /// No description provided for @chatMenuPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get chatMenuPinned;
+
+  /// No description provided for @chatMenuSharedRoutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared routes'**
+  String get chatMenuSharedRoutes;
+
+  /// No description provided for @chatMenuFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get chatMenuFiles;
+
+  /// No description provided for @chatMenuMute.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get chatMenuMute;
+
+  /// No description provided for @chatMenuUnmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get chatMenuUnmute;
+
+  /// No description provided for @chatMenuExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get chatMenuExport;
+
+  /// No description provided for @chatReadOnlyBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'This activity is archived. The chat is read-only.'**
+  String get chatReadOnlyBanner;
+
+  /// No description provided for @chatVoiceHoldToRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to record'**
+  String get chatVoiceHoldToRecord;
+
+  /// No description provided for @chatVoiceSlideToCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide down to cancel'**
+  String get chatVoiceSlideToCancel;
+
+  /// No description provided for @chatVoiceRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording…'**
+  String get chatVoiceRecording;
+
+  /// No description provided for @chatSearchPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search messages'**
+  String get chatSearchPlaceholder;
+
+  /// No description provided for @chatSearchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages found'**
+  String get chatSearchNoResults;
+
+  /// No description provided for @chatExportReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat exported'**
+  String get chatExportReady;
+
+  /// No description provided for @chatMuted.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat muted'**
+  String get chatMuted;
+
+  /// No description provided for @chatUnmuted.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat unmuted'**
+  String get chatUnmuted;
+
+  /// No description provided for @chatForwardTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward to…'**
+  String get chatForwardTarget;
+
+  /// No description provided for @chatForwarded.
+  ///
+  /// In en, this message translates to:
+  /// **'Message forwarded'**
+  String get chatForwarded;
+
+  /// No description provided for @chatPhotoSizeWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo size: {kb} KB'**
+  String chatPhotoSizeWarning(int kb);
+
+  /// No description provided for @chatNoMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'No media in this chat yet'**
+  String get chatNoMedia;
+
+  /// No description provided for @chatNoPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'No pinned messages'**
+  String get chatNoPinned;
+
+  /// No description provided for @chatNoFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'No files in this chat yet'**
+  String get chatNoFiles;
+
+  /// No description provided for @chatNoRoutes.
+  ///
+  /// In en, this message translates to:
+  /// **'No routes shared in this chat yet'**
+  String get chatNoRoutes;
+
+  /// No description provided for @chatOpenInMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in map'**
+  String get chatOpenInMap;
+
+  /// No description provided for @chatPlaybackSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'{speed}x speed'**
+  String chatPlaybackSpeed(String speed);
+
+  /// No description provided for @chatDocumentOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get chatDocumentOpen;
 }
 
 class _AppLocalizationsDelegate
