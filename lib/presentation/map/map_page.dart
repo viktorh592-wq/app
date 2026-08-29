@@ -15,9 +15,10 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart' hide Path;
+import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -996,20 +997,20 @@ class _HeadingArrowPainter extends CustomPainter {
   const _HeadingArrowPainter();
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    final path = Path()
+  void paint(ui.Canvas canvas, ui.Size size) {
+    final paint = ui.Paint()
+      ..color = const ui.Color.fromARGB(255, 255, 255, 255)
+      ..style = ui.PaintingStyle.fill;
+    final path = ui.Path()
       ..moveTo(size.width / 2, 0)
       ..lineTo(size.width, size.height)
       ..lineTo(size.width / 2, size.height * 0.7)
       ..lineTo(0, size.height)
       ..close();
     canvas.drawPath(path, paint);
-    final border = Paint()
-      ..color = const Color(0xFF1A1A2E)
-      ..style = PaintingStyle.stroke
+    final border = ui.Paint()
+      ..color = const ui.Color.fromARGB(255, 0x1A, 0x1A, 0x2E)
+      ..style = ui.PaintingStyle.stroke
       ..strokeWidth = 1;
     canvas.drawPath(path, border);
   }
