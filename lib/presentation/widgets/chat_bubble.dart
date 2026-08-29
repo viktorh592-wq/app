@@ -10,6 +10,11 @@
 ///   • a reactions row (S3-T2) under the bubble;
 ///   • a delivery icon (S3-T10) for outgoing messages;
 ///   • a read-by count (S3-T11) for outgoing messages in group chats.
+///
+/// V3 Sprint 5 (FIX_PLAN S5-T8, S5-T9) — the bubble now renders:
+///   • a poll card (question + open/closed status) — V2 POLLS.md §7
+///   • a route card with distance / elevation / duration + Открыть / Скачать
+///     buttons — V2 ROUTES_IMPORT.md §3
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -19,8 +24,10 @@ import 'package:latlong2/latlong.dart';
 import 'package:pokatuha/core/tokens/design_tokens.dart';
 import 'package:pokatuha/database/collections/embedded/geo_point.dart';
 import 'package:pokatuha/database/collections/message_collection.dart';
+import 'package:pokatuha/domain/enums/enums.dart';
 import 'package:pokatuha/domain/services/map_service.dart';
 import 'package:pokatuha/domain/services/service_locator.dart';
+import 'package:pokatuha/l10n/app_localizations.dart';
 
 /// Compact reply-preview block used above the composer and inside bubbles.
 class ReplyPreview extends StatelessWidget {
@@ -202,7 +209,7 @@ class AttachmentPreview extends StatelessWidget {
       AttachmentType.document => _documentPreview(context),
       AttachmentType.location => _locationPreview(context),
       AttachmentType.route => _routePreview(context),
-      AttachmentType.poll => const SizedBox.shrink(),
+      AttachmentType.poll => _pollPreview(context),
     };
   }
 
@@ -388,6 +395,7 @@ class AttachmentPreview extends StatelessWidget {
                 Map<String, dynamic>.from(e as Map)))
             .toList() ??
         <GeoPoint>[];
+    final l = AppLocalizations.of(context)!;
     if (waypoints.isEmpty) {
       return InkWell(
         onTap: onOpenMap,
@@ -402,42 +410,188 @@ class AttachmentPreview extends StatelessWidget {
             children: [
               const Icon(Icons.route_rounded),
               const SizedBox(width: 8),
-              Text('route', style: DesignTokens.pin()),
+              Text(l.route, style: DesignTokens.pin()),
             ],
           ),
         ),
       );
     }
     final points = waypoints.map((w) => LatLng(w.lat, w.lng)).toList();
-    return GestureDetector(
-      onTap: onOpenMap,
-      child: ClipRRect(
+
+    // V2 §3 — distance / elevation / duration from attachment meta (S5-T9).
+    final distanceMeters =
+        (meta['distanceMeters'] as num?)?.toDouble() ?? 0.0;
+    final elevationGain =
+        (meta['elevationGainMeters'] as num?)?.toDouble() ?? 0.0;
+    final durationSecs = (meta['durationSeconds'] as num?)?.toInt() ?? 0;
+    final km = (distanceMeters / 1000).toStringAsFixed(1);
+    final elev = elevationGain.round().toString();
+    String? duration;
+    if (durationSecs > 0) {
+      final hours = durationSecs ~/ 3600;
+      final mins = (durationSecs % 3600) ~/ 60;
+      duration = hours > 0 ? '${hours}h ${mins}m' : '${mins}m';
+    }
+    final name = (meta['name'] as String?) ?? '';
+
+    return Container(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width * 0.7,
+      ),
+      decoration: BoxDecoration(
+        color: DesignTokens.chipLavender,
         borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
-        child: SizedBox(
-          width: 220,
-          height: 130,
-          child: IgnorePointer(
-            child: FlutterMap(
-              options: MapOptions(
-                initialCenter: points.first,
-                initialZoom: 12,
-                interactionOptions:
-                    const InteractionOptions(flags: InteractiveFlag.none),
-              ),
-              children: [
-                serviceLocator<MapService>().tileLayer(),
-                PolylineLayer(
-                  polylines: [
-                    Polyline(
-                      points: points,
-                      color: DesignTokens.primary,
-                      strokeWidth: 4,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // V2 §3 — mini map preview (existing behaviour).
+          GestureDetector(
+            onTap: onOpenMap,
+            child: ClipRRect(
+              borderRadius:
+                  BorderRadius.circular(DesignTokens.radiusSm),
+              child: SizedBox(
+                width: double.infinity,
+                height: 120,
+                child: IgnorePointer(
+                  child: FlutterMap(
+                    options: MapOptions(
+                      initialCenter: points.first,
+                      initialZoom: 12,
+                      interactionOptions: const InteractionOptions(
+                          flags: InteractiveFlag.none),
                     ),
+                    children: [
+                      serviceLocator<MapService>().tileLayer(),
+                      PolylineLayer(
+                        polylines: [
+                          Polyline(
+                            points: points,
+                            color: DesignTokens.primary,
+                            strokeWidth: 4,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (name.isNotEmpty) ...[
+                  Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: DesignTokens.pin()
+                        .copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 2),
+                ],
+                Text(
+                  duration == null
+                      ? l.routeStats(km, elev)
+                      : l.routeStatsWithDuration(km, elev, duration),
+                  style: DesignTokens.pin(),
+                ),
+                // V2 §5 — Открыть / Скачать buttons (S5-T9).
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _MiniButton(
+                      icon: Icons.directions_rounded,
+                      label: l.openInNavigator,
+                      onTap: onOpenMap,
+                    ),
+                    if (message.attachmentPath != null &&
+                        message.attachmentPath!.isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      _MiniButton(
+                        icon: Icons.download_rounded,
+                        label: l.download,
+                        onTap: onOpenDocument,
+                      ),
+                    ],
                   ],
                 ),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// V2 POLLS.md §7 — poll card in chat shows the question + open/closed
+  /// status (FIX_PLAN S5-T8). Tapping the card opens the polls tab (caller
+  /// wires onOpenMap to a navigate-to-polls action).
+  Widget _pollPreview(BuildContext context) {
+    final meta = message.attachmentMetaMap;
+    final question = (meta['question'] as String?) ?? '';
+    final statusStr = (meta['status'] as String?) ?? PollStatus.open.name;
+    final isOpen = statusStr == PollStatus.open.name;
+    final l = AppLocalizations.of(context)!;
+    return InkWell(
+      onTap: onOpenMap,
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.65,
+        ),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: DesignTokens.chipLavender,
+          borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.poll_rounded, size: 18),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    question.isEmpty ? l.addPoll : question,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: DesignTokens.pin()
+                        .copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isOpen
+                      ? Icons.radio_button_unchecked_rounded
+                      : Icons.lock_outline_rounded,
+                  size: 12,
+                  color: DesignTokens.textSecondary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  isOpen ? l.pollOpen : l.pollClosed,
+                  style: DesignTokens.pin(
+                      color: DesignTokens.textSecondary),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -729,6 +883,48 @@ class _ForwardedHeader extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Compact pill button used inside chat route / poll cards
+/// (V2 §5 — Открыть / Скачать / etc., FIX_PLAN S5-T9).
+class _MiniButton extends StatelessWidget {
+  const _MiniButton({
+    required this.icon,
+    required this.label,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: DesignTokens.primary.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 12, color: DesignTokens.primary),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: DesignTokens.pin(color: DesignTokens.primary),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

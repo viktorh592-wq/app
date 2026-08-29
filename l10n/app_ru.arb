@@ -271,5 +271,51 @@
   "gpsServiceDisabled": "Службы геолокации отключены",
   "gpsOpenSettings": "Открыть настройки",
   "gpsForegroundTracking": "Покатуха делится вашим местоположением",
-  "gpsForegroundTrackingBody": "Живая позиция передаётся участникам активности."
+  "gpsForegroundTrackingBody": "Живая позиция передаётся участникам активности.",
+
+  "pollAnonymous": "Анонимный",
+  "pollPublic": "Открытый",
+  "pollOpen": "Открыт",
+  "pollClosed": "Закрыт",
+  "closePoll": "Закрыть",
+  "pollDeadline": "Без срока",
+  "pollOption": "Вариант",
+  "addOption": "Добавить вариант",
+
+  "closesInMinutes": "Закроется через {minutes}м",
+  "@closesInMinutes": { "placeholders": { "minutes": { "type": "String" } } },
+  "closesInHours": "Закроется через {hours}ч",
+  "@closesInHours": { "placeholders": { "hours": { "type": "String" } } },
+  "closesInDays": "Закроется через {days}д",
+  "@closesInDays": { "placeholders": { "days": { "type": "String" } } },
+  "closedMinutesAgo": "Закрыт {minutes}м назад",
+  "@closedMinutesAgo": { "placeholders": { "minutes": { "type": "String" } } },
+  "closedHoursAgo": "Закрыт {hours}ч назад",
+  "@closedHoursAgo": { "placeholders": { "hours": { "type": "String" } } },
+  "closedDaysAgo": "Закрыт {days}д назад",
+  "@closedDaysAgo": { "placeholders": { "days": { "type": "String" } } },
+
+  "routeStats": "{km} км • ↑ {elev} м",
+  "@routeStats": {
+    "placeholders": {
+      "km": { "type": "String" },
+      "elev": { "type": "String" }
+    }
+  },
+  "routeStatsWithDuration": "{km} км • ↑ {elev} м • ⏱ {duration}",
+  "@routeStatsWithDuration": {
+    "placeholders": {
+      "km": { "type": "String" },
+      "elev": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "importRoute": "Импорт маршрута",
+  "importFailed": "Ошибка импорта",
+  "fitNotSupported": "FIT формат не поддерживается (проприетарный бинарный)",
+  "unsupportedFormat": "Неподдерживаемый формат файла",
+  "openInNavigator": "Навигатор",
+  "noNavigatorApp": "Не найдено приложение-навигатор",
+  "shareFailed": "Не удалось поделиться",
+  "download": "Скачать"
 }

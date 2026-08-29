@@ -758,4 +758,76 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get gpsForegroundTrackingBody => 'Живая позиция передаётся участникам активности.';
+
+  @override
+  String get pollAnonymous => 'Анонимный';
+
+  @override
+  String get pollPublic => 'Открытый';
+
+  @override
+  String get pollOpen => 'Открыт';
+
+  @override
+  String get pollClosed => 'Закрыт';
+
+  @override
+  String get closePoll => 'Закрыть';
+
+  @override
+  String get pollDeadline => 'Без срока';
+
+  @override
+  String get pollOption => 'Вариант';
+
+  @override
+  String get addOption => 'Добавить вариант';
+
+  @override
+  String closesInMinutes(String minutes) => 'Закроется через ${minutes}м';
+
+  @override
+  String closesInHours(String hours) => 'Закроется через ${hours}ч';
+
+  @override
+  String closesInDays(String days) => 'Закроется через ${days}д';
+
+  @override
+  String closedMinutesAgo(String minutes) => 'Закрыт ${minutes}м назад';
+
+  @override
+  String closedHoursAgo(String hours) => 'Закрыт ${hours}ч назад';
+
+  @override
+  String closedDaysAgo(String days) => 'Закрыт ${days}д назад';
+
+  @override
+  String routeStats(String km, String elev) => '${km} км • ↑ ${elev} м';
+
+  @override
+  String routeStatsWithDuration(String km, String elev, String duration) => '${km} км • ↑ ${elev} м • ⏱ ${duration}';
+
+  @override
+  String get importRoute => 'Импорт маршрута';
+
+  @override
+  String get importFailed => 'Ошибка импорта';
+
+  @override
+  String get fitNotSupported => 'FIT формат не поддерживается (проприетарный бинарный)';
+
+  @override
+  String get unsupportedFormat => 'Неподдерживаемый формат файла';
+
+  @override
+  String get openInNavigator => 'Навигатор';
+
+  @override
+  String get noNavigatorApp => 'Не найдено приложение-навигатор';
+
+  @override
+  String get shareFailed => 'Не удалось поделиться';
+
+  @override
+  String get download => 'Скачать';
 }

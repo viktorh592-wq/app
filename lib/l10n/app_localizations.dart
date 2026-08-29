@@ -1580,6 +1580,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Live position is being shared with activity participants.'**
   String get gpsForegroundTrackingBody;
+
+  /// No description provided for @pollAnonymous.
+  ///
+  /// In en, this message translates to:
+  /// **'Anonymous'**
+  String get pollAnonymous;
+
+  /// No description provided for @pollPublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get pollPublic;
+
+  /// No description provided for @pollOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get pollOpen;
+
+  /// No description provided for @pollClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get pollClosed;
+
+  /// No description provided for @closePoll.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get closePoll;
+
+  /// No description provided for @pollDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'No deadline'**
+  String get pollDeadline;
+
+  /// No description provided for @pollOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Option'**
+  String get pollOption;
+
+  /// No description provided for @addOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Add option'**
+  String get addOption;
+
+  /// No description provided for @closesInMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Closes in {minutes}m'**
+  String closesInMinutes(String minutes);
+
+  /// No description provided for @closesInHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Closes in {hours}h'**
+  String closesInHours(String hours);
+
+  /// No description provided for @closesInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Closes in {days}d'**
+  String closesInDays(String days);
+
+  /// No description provided for @closedMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed {minutes}m ago'**
+  String closedMinutesAgo(String minutes);
+
+  /// No description provided for @closedHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed {hours}h ago'**
+  String closedHoursAgo(String hours);
+
+  /// No description provided for @closedDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed {days}d ago'**
+  String closedDaysAgo(String days);
+
+  /// No description provided for @routeStats.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} km • ↑ {elev} m'**
+  String routeStats(String km, String elev);
+
+  /// No description provided for @routeStatsWithDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} km • ↑ {elev} m • ⏱ {duration}'**
+  String routeStatsWithDuration(String km, String elev, String duration);
+
+  /// No description provided for @importRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Import route'**
+  String get importRoute;
+
+  /// No description provided for @importFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed'**
+  String get importFailed;
+
+  /// No description provided for @fitNotSupported.
+  ///
+  /// In en, this message translates to:
+  /// **'FIT format is not supported (proprietary binary)'**
+  String get fitNotSupported;
+
+  /// No description provided for @unsupportedFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported file format'**
+  String get unsupportedFormat;
+
+  /// No description provided for @openInNavigator.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigate'**
+  String get openInNavigator;
+
+  /// No description provided for @noNavigatorApp.
+  ///
+  /// In en, this message translates to:
+  /// **'No navigation app found'**
+  String get noNavigatorApp;
+
+  /// No description provided for @shareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Share failed'**
+  String get shareFailed;
+
+  /// No description provided for @download.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get download;
 }
 
 class _AppLocalizationsDelegate

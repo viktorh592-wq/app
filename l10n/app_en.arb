@@ -271,5 +271,51 @@
   "gpsServiceDisabled": "Location services are disabled",
   "gpsOpenSettings": "Open settings",
   "gpsForegroundTracking": "Pokatuha is sharing your location",
-  "gpsForegroundTrackingBody": "Live position is being shared with activity participants."
+  "gpsForegroundTrackingBody": "Live position is being shared with activity participants.",
+
+  "pollAnonymous": "Anonymous",
+  "pollPublic": "Public",
+  "pollOpen": "Open",
+  "pollClosed": "Closed",
+  "closePoll": "Close",
+  "pollDeadline": "No deadline",
+  "pollOption": "Option",
+  "addOption": "Add option",
+
+  "closesInMinutes": "Closes in {minutes}m",
+  "@closesInMinutes": { "placeholders": { "minutes": { "type": "String" } } },
+  "closesInHours": "Closes in {hours}h",
+  "@closesInHours": { "placeholders": { "hours": { "type": "String" } } },
+  "closesInDays": "Closes in {days}d",
+  "@closesInDays": { "placeholders": { "days": { "type": "String" } } },
+  "closedMinutesAgo": "Closed {minutes}m ago",
+  "@closedMinutesAgo": { "placeholders": { "minutes": { "type": "String" } } },
+  "closedHoursAgo": "Closed {hours}h ago",
+  "@closedHoursAgo": { "placeholders": { "hours": { "type": "String" } } },
+  "closedDaysAgo": "Closed {days}d ago",
+  "@closedDaysAgo": { "placeholders": { "days": { "type": "String" } } },
+
+  "routeStats": "{km} km • ↑ {elev} m",
+  "@routeStats": {
+    "placeholders": {
+      "km": { "type": "String" },
+      "elev": { "type": "String" }
+    }
+  },
+  "routeStatsWithDuration": "{km} km • ↑ {elev} m • ⏱ {duration}",
+  "@routeStatsWithDuration": {
+    "placeholders": {
+      "km": { "type": "String" },
+      "elev": { "type": "String" },
+      "duration": { "type": "String" }
+    }
+  },
+  "importRoute": "Import route",
+  "importFailed": "Import failed",
+  "fitNotSupported": "FIT format is not supported (proprietary binary)",
+  "unsupportedFormat": "Unsupported file format",
+  "openInNavigator": "Navigate",
+  "noNavigatorApp": "No navigation app found",
+  "shareFailed": "Share failed",
+  "download": "Download"
 }

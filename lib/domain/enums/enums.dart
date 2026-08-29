@@ -39,6 +39,11 @@ enum PollType { singleChoice, multipleChoice }
 /// Poll lifecycle.
 enum PollStatus { open, closed }
 
+/// Poll visibility (V2 POLLS.md §3 — anonymous vs public).
+///   • anonymous — votes hidden, only tallies shown
+///   • public    — shows who voted for what
+enum PollVisibility { anonymous, public }
+
 /// Message kinds (FR-004).
 enum MessageKind { text, image, reply, system, pinned }
 

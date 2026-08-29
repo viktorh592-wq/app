@@ -58,6 +58,7 @@ class RouteRepository {
       ..waypoints = waypoints
       ..distanceMeters = stats.distance
       ..elevationGainMeters = stats.elevation
+      ..durationSeconds = stats.durationSeconds
       ..isRecorded = false
       ..createdBy = createdBy;
     return _store.put(route);
@@ -78,6 +79,7 @@ class RouteRepository {
       ..waypoints = List<GeoPoint>.from(route.waypoints)
       ..distanceMeters = route.distanceMeters
       ..elevationGainMeters = route.elevationGainMeters
+      ..durationSeconds = route.durationSeconds
       ..isRecorded = route.isRecorded
       ..gpxFilePath = route.gpxFilePath;
     return _store.put(copy);
@@ -139,7 +141,8 @@ class RouteRepository {
         sortOrders: [SortOrder('timestamp')],
       );
 
-  ({double distance, double elevation}) _computeStats(List<GeoPoint> points) {
+  ({double distance, double elevation, int durationSeconds})
+      _computeStats(List<GeoPoint> points) {
     double distance = 0;
     double elevation = 0;
     for (var i = 1; i < points.length; i++) {
@@ -155,6 +158,21 @@ class RouteRepository {
         elevation += b.elevation - a.elevation;
       }
     }
-    return (distance: distance, elevation: elevation);
+    // V2 ROUTES_IMPORT.md §3 — duration = last - first timestamp.
+    // Only valid if both endpoints have a non-zero timestamp (i.e. recorded
+    // track, not a planned route).
+    var durationSeconds = 0;
+    if (points.length >= 2) {
+      final first = points.first.timestamp;
+      final last = points.last.timestamp;
+      if (first > 0 && last > 0 && last >= first) {
+        durationSeconds = ((last - first) / 1000).round();
+      }
+    }
+    return (
+      distance: distance,
+      elevation: elevation,
+      durationSeconds: durationSeconds,
+    );
   }
 }

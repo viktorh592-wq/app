@@ -758,4 +758,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gpsForegroundTrackingBody => 'Live position is being shared with activity participants.';
+
+  @override
+  String get pollAnonymous => 'Anonymous';
+
+  @override
+  String get pollPublic => 'Public';
+
+  @override
+  String get pollOpen => 'Open';
+
+  @override
+  String get pollClosed => 'Closed';
+
+  @override
+  String get closePoll => 'Close';
+
+  @override
+  String get pollDeadline => 'No deadline';
+
+  @override
+  String get pollOption => 'Option';
+
+  @override
+  String get addOption => 'Add option';
+
+  @override
+  String closesInMinutes(String minutes) => 'Closes in ${minutes}m';
+
+  @override
+  String closesInHours(String hours) => 'Closes in ${hours}h';
+
+  @override
+  String closesInDays(String days) => 'Closes in ${days}d';
+
+  @override
+  String closedMinutesAgo(String minutes) => 'Closed ${minutes}m ago';
+
+  @override
+  String closedHoursAgo(String hours) => 'Closed ${hours}h ago';
+
+  @override
+  String closedDaysAgo(String days) => 'Closed ${days}d ago';
+
+  @override
+  String routeStats(String km, String elev) => '${km} km • ↑ ${elev} m';
+
+  @override
+  String routeStatsWithDuration(String km, String elev, String duration) => '${km} km • ↑ ${elev} m • ⏱ ${duration}';
+
+  @override
+  String get importRoute => 'Import route';
+
+  @override
+  String get importFailed => 'Import failed';
+
+  @override
+  String get fitNotSupported => 'FIT format is not supported (proprietary binary)';
+
+  @override
+  String get unsupportedFormat => 'Unsupported file format';
+
+  @override
+  String get openInNavigator => 'Navigate';
+
+  @override
+  String get noNavigatorApp => 'No navigation app found';
+
+  @override
+  String get shareFailed => 'Share failed';
+
+  @override
+  String get download => 'Download';
 }

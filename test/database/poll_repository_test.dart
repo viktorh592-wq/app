@@ -113,4 +113,64 @@ void main() {
       throwsA(isA<BusinessRuleError>()),
     );
   });
+
+  // V2 POLLS.md §3 — visibility (FIX_PLAN S5-T2).
+  test('create poll persists the visibility field', () async {
+    final poll = await polls.create(
+      eventId: eventId,
+      question: 'Anonymous?',
+      optionTexts: ['A', 'B'],
+      type: PollType.singleChoice,
+      visibility: PollVisibility.anonymous,
+    );
+    expect(poll.visibility, PollVisibility.anonymous.name);
+
+    final fetched = await polls.getById(poll.id);
+    expect(fetched!.visibility, PollVisibility.anonymous.name);
+  });
+
+  test('create poll defaults visibility to public', () async {
+    final poll = await polls.create(
+      eventId: eventId,
+      question: 'Default?',
+      optionTexts: ['A', 'B'],
+      type: PollType.singleChoice,
+    );
+    expect(poll.visibility, PollVisibility.public.name);
+  });
+
+  // V2 POLLS.md §4 — auto-close on read when deadline passed (FIX_PLAN S5-T2).
+  test('byEvent auto-closes a poll whose deadline has passed', () async {
+    final pastDeadline = DateTime.now()
+        .subtract(const Duration(minutes: 1))
+        .toUtc()
+        .millisecondsSinceEpoch;
+    final poll = await polls.create(
+      eventId: eventId,
+      question: 'Auto-close?',
+      optionTexts: ['A', 'B'],
+      type: PollType.singleChoice,
+      deadlineAt: pastDeadline,
+    );
+    expect(poll.status, PollStatus.open.name);
+
+    final list = await polls.byEvent(eventId);
+    final fetched = list.firstWhere((p) => p.id == poll.id);
+    expect(fetched.status, PollStatus.closed.name);
+
+    final byId = await polls.getById(poll.id);
+    expect(byId!.status, PollStatus.closed.name);
+  });
+
+  test('byEvent leaves an open poll with no deadline untouched', () async {
+    final poll = await polls.create(
+      eventId: eventId,
+      question: 'Open?',
+      optionTexts: ['A', 'B'],
+      type: PollType.singleChoice,
+    );
+    final list = await polls.byEvent(eventId);
+    final fetched = list.firstWhere((p) => p.id == poll.id);
+    expect(fetched.status, PollStatus.open.name);
+  });
 }
