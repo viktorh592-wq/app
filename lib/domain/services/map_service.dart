@@ -161,10 +161,14 @@ class MapService {
     MapProvider.cartoVoyager,
   ];
 
-  /// Deprecated non-V2 providers (kept for back-compat with persisted
-  /// settings; selected ones fall back to OSM tiles).
+  /// Deprecated non-V2 providers — kept for back-compat with persisted
+  /// settings; selected ones fall back to OSM tiles.
+  ///
+  /// Note: `mapLibre` is NOT in this list — it's the V1 default-style
+  /// option and renders its own demotiles URL. Only the V1 vendor-specific
+  /// providers (Google / HERE / 2GIS / Yandex) that V2 explicitly forbids
+  /// are deprecated.
   static const List<MapProvider> deprecatedProviders = [
-    MapProvider.mapLibre,
     MapProvider.googleMaps,
     MapProvider.here,
     MapProvider.twoGis,

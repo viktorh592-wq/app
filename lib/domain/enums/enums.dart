@@ -51,9 +51,13 @@ enum MessageKind { text, image, reply, system, pinned }
 ///   • esriSatellite  — satellite
 ///   • cartoVoyager   — clean navigation
 ///
-/// Deprecated (kept for back-compat with persisted settings; fall back to OSM
-/// tiles, see MapService._urlTemplate):
-///   • mapLibre, googleMaps, here, twoGis, yandexMaps
+/// V1 default-style provider:
+///   • mapLibre — renders the maplibre demotiles URL (kept selectable for
+///     back-compat with persisted settings; not part of the V2 spec).
+///
+/// Deprecated (V2 forbids these — they fall back to OSM tiles, see
+/// MapService._urlTemplate):
+///   • googleMaps, here, twoGis, yandexMaps
 enum MapProvider {
   openStreetMap,
   cyclOSM,
@@ -61,9 +65,11 @@ enum MapProvider {
   esriSatellite,
   cartoVoyager,
 
+  // V1 default-style — not deprecated, just not part of V2 spec.
+  mapLibre,
+
   // Deprecated — V2 forbids Google Maps (API key + ToS violation); others
   // remain selectable so old user settings don't break.
-  mapLibre,
   googleMaps,
   here,
   twoGis,

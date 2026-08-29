@@ -43,6 +43,11 @@ void main() {
       expect(url, contains('{a-d}'));
     });
 
+    test('mapLibre returns the demotiles URL when no custom style is set', () {
+      final url = service.urlTemplateFor(MapProvider.mapLibre);
+      expect(url, 'https://demotiles.maplibre.org/style/{z}/{x}/{y}.png');
+    });
+
     test('deprecated non-V2 providers fall back to OSM tiles', () {
       for (final p in MapService.deprecatedProviders) {
         final url = service.urlTemplateFor(p);

@@ -40,7 +40,13 @@ class MessageRepository {
         filter: Filter.equals('eventId', eventId) &
             Filter.equals('pinned', true) &
             Filter.equals('isDeleted', false),
-        sortOrders: [SortOrder('createdAt', false)],
+        // Sort newest first; when two messages land in the same millisecond
+        // (common under high-frequency test runs), break ties by id
+        // descending so the order stays deterministic (S3-T5 stability).
+        sortOrders: [
+          SortOrder('createdAt', false),
+          SortOrder('id', false),
+        ],
       );
 
   /// Pinned messages stream (S3-T5 — top-bar with preview + count). Emits a
