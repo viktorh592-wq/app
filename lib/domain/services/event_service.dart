@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:pokatuha/core/errors/app_error.dart';
+import 'package:pokatuha/database/collections/embedded/geo_point.dart';
 import 'package:pokatuha/database/collections/event_collection.dart';
 import 'package:pokatuha/database/collections/participant_collection.dart';
 import 'package:pokatuha/database/collections/user_collection.dart';
@@ -50,6 +51,9 @@ class EventService {
   /// (GROUPS_AND_ACTIVITIES.md §1: users never create standalone activities
   /// from the main screen). The organizer is auto-added as a participant
   /// (BR-001 — every activity belongs to exactly one organizer).
+  ///
+  /// [accentColor] — activity accent (ARGB); defaults to violet
+  /// (EventCollection.defaultAccentColorArgb) per V2 §10, §11.
   Future<EventCollection> createActivity({
     required UserCollection organizer,
     required String groupId,
@@ -57,11 +61,12 @@ class EventService {
     required String description,
     required int startAt,
     required String activityTypeId,
-    required double meetingLat,
-    required double meetingLng,
+    double? meetingLat,
+    double? meetingLng,
     String? meetingPointLabel,
     EventVisibility visibility = EventVisibility.private,
     int? maxParticipants,
+    int? accentColor,
   }) async {
     final event = EventCollection()
       ..groupId = groupId
@@ -72,11 +77,15 @@ class EventService {
       ..organizerId = organizer.id
       ..visibility = visibility.name
       ..maxParticipants = maxParticipants
+      ..accentColor = accentColor ?? EventCollection.defaultAccentColorArgb
       ..meetingPointLabel = meetingPointLabel
       ..arrivalThresholdNear = 500
       ..arrivalThresholdClose = 200
       ..arrivalThresholdArrived = 50
       ..createdBy = organizer.id;
+    if (meetingLat != null && meetingLng != null) {
+      event.meetingPoint = GeoPoint(lat: meetingLat, lng: meetingLng);
+    }
 
     final created = await _eventRepository.create(event);
 
@@ -168,6 +177,144 @@ class EventService {
           actorId: user.id,
         ));
     return updated;
+  }
+
+  /// Edit an existing activity (V2 §9 — activity menu → Edit). Validates the
+  /// same invariants as creation (title, start time).
+  Future<EventCollection> editActivity({
+    required EventCollection event,
+    required String title,
+    required String description,
+    required int startAt,
+    required String activityTypeId,
+    double? meetingLat,
+    double? meetingLng,
+    String? meetingPointLabel,
+    EventVisibility? visibility,
+    int? maxParticipants,
+    int? accentColor,
+  }) async {
+    if (title.trim().isEmpty) {
+      throw const BusinessRuleError('Event title is required');
+    }
+    if (startAt <= 0) {
+      throw const BusinessRuleError('Event start time is required');
+    }
+    event
+      ..title = title
+      ..description = description
+      ..startAt = startAt
+      ..activityTypeId = activityTypeId
+      ..meetingPointLabel = meetingPointLabel
+      ..visibility = (visibility ?? EventVisibility.private).name
+      ..maxParticipants = maxParticipants
+      ..accentColor = accentColor ?? event.accentColor;
+    if (meetingLat != null && meetingLng != null) {
+      event.meetingPoint = GeoPoint(lat: meetingLat, lng: meetingLng);
+    }
+    final updated = await _eventRepository.update(event);
+    _addTimeline(
+        event.id,
+        TimelineEntry(
+          timestamp: updated.updatedAt,
+          action: 'ride_updated',
+          detail: updated.title,
+        ));
+    return updated;
+  }
+
+  /// Duplicate an activity (V2 §9 — activity menu → Duplicate): creates a
+  /// fresh copy in the same group in `preparation` with the same route
+  /// parameters and accent color. Legacy activities without a group cannot
+  /// be duplicated (V2 Group-first model).
+  Future<EventCollection> duplicate({
+    required EventCollection event,
+    required UserCollection organizer,
+  }) async {
+    final groupId = event.groupId;
+    if (groupId == null || groupId.isEmpty) {
+      throw const BusinessRuleError(
+          'Cannot duplicate a legacy activity without a group');
+    }
+    final visibility = EventVisibility.values.firstWhere(
+      (v) => v.name == event.visibility,
+      orElse: () => EventVisibility.private,
+    );
+    final copy = await createActivity(
+      organizer: organizer,
+      groupId: groupId,
+      title: '${event.title} (copy)',
+      description: event.description,
+      startAt: event.startAt,
+      activityTypeId: event.activityTypeId,
+      meetingLat: event.meetingPoint?.lat,
+      meetingLng: event.meetingPoint?.lng,
+      meetingPointLabel: event.meetingPointLabel,
+      visibility: visibility,
+      maxParticipants: event.maxParticipants,
+      accentColor: event.accentColor,
+    );
+    _addTimeline(
+        event.id,
+        TimelineEntry(
+          timestamp: copy.createdAt,
+          action: 'ride_duplicated',
+          detail: copy.id,
+          actorId: organizer.id,
+        ));
+    return copy;
+  }
+
+  /// Pin / unpin the activity in its group (V2 §9 — activity menu → Pin).
+  Future<EventCollection> setPinned(EventCollection event, bool pinned) async {
+    event.pinnedInGroup = pinned;
+    final updated = await _eventRepository.update(event);
+    _addTimeline(
+        event.id,
+        TimelineEntry(
+          timestamp: updated.updatedAt,
+          action: pinned ? 'activity_pinned' : 'activity_unpinned',
+        ));
+    return updated;
+  }
+
+  /// Archive an activity immediately (V2 §9 — activity menu → Archive).
+  /// Behaves like [finishRide] but may be called from any non-archived
+  /// status; creates the archive record (BR-007) and stops GPS sharing.
+  Future<void> archiveNow(EventCollection event) async {
+    if (event.status == EventStatus.archived.name) {
+      throw const BusinessRuleError('Activity is already archived');
+    }
+    final now = _now();
+    final startedAt = event.rideStartedAt ?? now;
+    event
+      ..status = EventStatus.archived.name
+      ..rideFinishedAt = now
+      ..gpsSharingEnabled = false;
+    await _eventRepository.update(event);
+
+    final participants = await _participantRepository.byEvent(event.id);
+    final accepted = participants
+        .where((p) => p.status == ParticipantStatus.accepted.name)
+        .length;
+
+    await _archiveRepository.createFromEvent(
+      event,
+      participantCount: accepted,
+      durationSeconds: ((now - startedAt) / 1000).round(),
+      timeline: timelineFor(event.id).map((e) => e.toJson()).toList(),
+    );
+
+    _addTimeline(
+        event.id, TimelineEntry(timestamp: now, action: 'ride_archived'));
+  }
+
+  /// Soft-delete an activity (V2 §9 — activity menu → Delete,
+  /// Soft_Delete.md). The archive record is kept (BR-007).
+  Future<void> deleteActivity(EventCollection event, {String? by}) async {
+    await _eventRepository.softDelete(event, by: by);
+    _addTimeline(
+        event.id, TimelineEntry(timestamp: _now(), action: 'ride_deleted'));
   }
 
   /// Start a ride (UC-003). GPS sharing begins only after explicit user
