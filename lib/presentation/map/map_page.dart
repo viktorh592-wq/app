@@ -71,11 +71,17 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
       final events = await serviceLocator<EventRepository>().all();
       final participants = serviceLocator<ParticipantRepository>();
       final liveEvents = <EventCollection>[];
-      final liveParticipants = <ParticipantCollection>[];
+      final liveParticipants = <_LiveParticipant>[];
       for (final e in events) {
         if (e.meetingPoint != null) liveEvents.add(e);
         if (e.status == EventStatus.ride.name) {
-          liveParticipants.addAll(await participants.byEvent(e.id));
+          // V2 §11 — each live participant is ringed with its activity color.
+          final accent =
+              Color(e.accentColor ?? EventCollection.defaultAccentColorArgb);
+          for (final p in await participants.byEvent(e.id)) {
+            liveParticipants
+                .add(_LiveParticipant(participant: p, accent: accent));
+          }
         }
       }
       return _MapData(events: liveEvents, participants: liveParticipants);
@@ -117,15 +123,9 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
               MarkerLayer(
                 markers: [
                   ...data.events.map(_meetingMarker),
-                  ...data.participants.where((p) => p.lastLat != null).map(
-                        (p) => Marker(
-                          point: LatLng(p.lastLat!, p.lastLng!),
-                          width: 40,
-                          height: 40,
-                          child: const Icon(Icons.directions_bike_rounded,
-                              color: Colors.blue),
-                        ),
-                      ),
+                  ...data.participants
+                      .where((lp) => lp.participant.lastLat != null)
+                      .map(_participantMarker),
                 ],
               ),
               RichAttributionWidget(
@@ -158,7 +158,8 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
         return LatLng(e.meetingPoint!.lat, e.meetingPoint!.lng);
       }
     }
-    for (final p in data.participants) {
+    for (final lp in data.participants) {
+      final p = lp.participant;
       if (p.lastLat != null) return LatLng(p.lastLat!, p.lastLng!);
     }
     return const LatLng(0, 0);
@@ -174,6 +175,29 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
         onTap: () => Navigator.of(context).push(MaterialPageRoute(
             builder: (_) => ActivityDetailPage(eventId: e.id))),
         child: const Icon(Icons.place_rounded, color: Colors.red, size: 36),
+      ),
+    );
+  }
+
+  /// Live participant marker with an activity-accent ring (V2 §4, §11 —
+  /// MAPS_AND_GPS_FIX.md participant marker, FIX_PLAN S2-T7).
+  Marker _participantMarker(_LiveParticipant lp) {
+    final p = lp.participant;
+    return Marker(
+      point: LatLng(p.lastLat!, p.lastLng!),
+      width: 44,
+      height: 44,
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: lp.accent,
+          border: Border.all(color: Colors.white, width: 2),
+        ),
+        child: const Icon(
+          Icons.directions_bike_rounded,
+          color: Colors.white,
+          size: 22,
+        ),
       ),
     );
   }
@@ -548,7 +572,15 @@ class _MapData {
   _MapData({required this.events, required this.participants});
 
   final List<EventCollection> events;
-  final List<ParticipantCollection> participants;
+  final List<_LiveParticipant> participants;
+}
+
+/// A live participant together with its activity accent color (V2 §11).
+class _LiveParticipant {
+  _LiveParticipant({required this.participant, required this.accent});
+
+  final ParticipantCollection participant;
+  final Color accent;
 }
 
 class _RoutePick {

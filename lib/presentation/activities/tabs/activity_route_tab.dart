@@ -1,5 +1,7 @@
 /// Route tab — route planning + GPX import/export (FR-008). Shows planned
-/// routes on a map (OSM/MapLibre) and supports importing GPX files.
+/// routes on a map (OSM/MapLibre) and supports importing GPX files. The
+/// route polyline uses the activity accent color (V2 §11 — propagation,
+/// FIX_PLAN S2-T7).
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -8,6 +10,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'package:pokatuha/core/errors/app_error.dart';
+import 'package:pokatuha/core/tokens/design_tokens.dart';
 import 'package:pokatuha/database/collections/route_collection.dart';
 import 'package:pokatuha/domain/repositories/route_repository.dart';
 import 'package:pokatuha/domain/services/gpx_service.dart';
@@ -16,9 +19,12 @@ import 'package:pokatuha/domain/services/service_locator.dart';
 import 'package:pokatuha/l10n/app_localizations.dart';
 
 class ActivityRouteTab extends StatefulWidget {
-  const ActivityRouteTab({super.key, required this.eventId});
+  const ActivityRouteTab({super.key, required this.eventId, this.accentColor});
 
   final String eventId;
+
+  /// Activity accent color (V2 §11).
+  final Color? accentColor;
 
   @override
   State<ActivityRouteTab> createState() => _ActivityRouteTabState();
@@ -110,7 +116,10 @@ class _ActivityRouteTabState extends State<ActivityRouteTab> {
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
             itemCount: routes.length,
-            itemBuilder: (context, i) => _RouteCard(route: routes[i]),
+            itemBuilder: (context, i) => _RouteCard(
+              route: routes[i],
+              accentColor: widget.accentColor,
+            ),
           );
         },
       ),
@@ -119,9 +128,12 @@ class _ActivityRouteTabState extends State<ActivityRouteTab> {
 }
 
 class _RouteCard extends StatelessWidget {
-  const _RouteCard({required this.route});
+  const _RouteCard({required this.route, this.accentColor});
 
   final RouteCollection route;
+
+  /// Activity accent color (V2 §11) — polyline color.
+  final Color? accentColor;
 
   @override
   Widget build(BuildContext context) {
@@ -145,7 +157,7 @@ class _RouteCard extends StatelessWidget {
                     polylines: [
                       Polyline(
                         points: points,
-                        color: theme.colorScheme.primary,
+                        color: accentColor ?? DesignTokens.primary,
                         strokeWidth: 4,
                       ),
                     ],

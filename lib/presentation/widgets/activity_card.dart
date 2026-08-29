@@ -4,7 +4,9 @@ import 'package:pokatuha/database/collections/event_collection.dart';
 import 'package:pokatuha/domain/enums/enums.dart';
 
 /// Activity card — pixel-perfect to Figma / screenshots.
-/// Uses activity accent color for the entire card background.
+/// Uses the activity accent color for the entire card background (V2 §11 —
+/// color propagation; FIX_PLAN S2-T7). Shows a pin badge when the activity
+/// is pinned in its group (V2 §9).
 class ActivityCard extends StatelessWidget {
   final EventCollection event;
   final String activityLabel;
@@ -25,7 +27,7 @@ class ActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = _statusColor(_statusEnum);
+    final accentColor = _accent;
 
     return GestureDetector(
       onTap: onTap,
@@ -69,7 +71,8 @@ class ActivityCard extends StatelessWidget {
                       children: [
                         Text(
                           event.title,
-                          style: DesignTokens.title(color: DesignTokens.textPrimary),
+                          style: DesignTokens.title(
+                              color: DesignTokens.textPrimary),
                         ),
                         Text(
                           activityLabel,
@@ -80,6 +83,15 @@ class ActivityCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (event.pinnedInGroup)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: Icon(
+                        Icons.push_pin_rounded,
+                        size: 18,
+                        color: DesignTokens.textPrimary.withOpacity(0.7),
+                      ),
+                    ),
                   if (onMenuTap != null)
                     IconButton(
                       icon: const Icon(Icons.more_vert),
@@ -112,9 +124,13 @@ class ActivityCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _InfoRow(icon: Icons.calendar_today_outlined, text: _formatDate(event.startAt)),
+                  _InfoRow(
+                      icon: Icons.calendar_today_outlined,
+                      text: _formatDate(event.startAt)),
                   const SizedBox(height: DesignTokens.space2),
-                  _InfoRow(icon: Icons.location_on_outlined, text: event.meetingPointLabel ?? '—'),
+                  _InfoRow(
+                      icon: Icons.location_on_outlined,
+                      text: event.meetingPointLabel ?? '—'),
                   const SizedBox(height: DesignTokens.space2),
                   _InfoRow(
                     icon: Icons.people_outline,
@@ -124,7 +140,8 @@ class ActivityCard extends StatelessWidget {
                     const SizedBox(height: DesignTokens.space3),
                     Text(
                       'Описание: ${event.description}',
-                      style: DesignTokens.body(color: DesignTokens.textSecondary),
+                      style:
+                          DesignTokens.body(color: DesignTokens.textSecondary),
                     ),
                   ],
                 ],
@@ -170,16 +187,11 @@ class ActivityCard extends StatelessWidget {
     };
   }
 
-  Color _statusColor(EventStatus status) {
-    return switch (status) {
-      EventStatus.preparation => const Color(0xFF9B8AFB),
-      EventStatus.meeting => const Color(0xFF64B5F6),
-      EventStatus.ride => const Color(0xFF81C784),
-      EventStatus.pause => const Color(0xFFFFE082),
-      EventStatus.finished => const Color(0xFFFFB74D),
-      EventStatus.archived => const Color(0xFFB0BEC5),
-      EventStatus.cancelled => const Color(0xFFFF5252),
-    };
+  /// Activity accent color (V2 §11): event.accentColor if set, violet
+  /// otherwise. Replaces the old status-based card color (FIX_PLAN S2-T7).
+  Color get _accent {
+    final argb = event.accentColor;
+    return argb != null ? Color(argb) : ActivityColors.swatches.first;
   }
 
   String _formatDate(int timestamp) {
