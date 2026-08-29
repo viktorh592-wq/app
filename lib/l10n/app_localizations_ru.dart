@@ -4,6 +4,7 @@ import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
 
+
 /// The translations for Russian (`ru`).
 class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
@@ -144,19 +145,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get finished => 'Завершено';
 
   @override
-  String arrivalNear(String name) {
-    return '$name в 500 м';
-  }
+  String arrivalNear(String name) => '${name} в 500 м';
 
   @override
-  String arrivalClose(String name) {
-    return '$name приближается';
-  }
+  String arrivalClose(String name) => '${name} приближается';
 
   @override
-  String arrivalArrived(String name) {
-    return '$name прибыл';
-  }
+  String arrivalArrived(String name) => '${name} прибыл';
 
   @override
   String get offlineMode => 'Автономный режим';
@@ -211,6 +206,33 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get yandexMaps => 'Яндекс Карты';
+
+  @override
+  String get cyclOSM => 'CyclOSM';
+
+  @override
+  String get openTopoMap => 'OpenTopoMap';
+
+  @override
+  String get esriSatellite => 'Esri Спутник';
+
+  @override
+  String get cartoVoyager => 'Carto Voyager';
+
+  @override
+  String mapLayerByContext(String context) => 'Подходит для: ${context}';
+
+  @override
+  String get mapContextCycling => 'велосипед';
+
+  @override
+  String get mapContextMountains => 'горы';
+
+  @override
+  String get mapContextForest => 'лес';
+
+  @override
+  String get mapContextCity => 'город';
 
   @override
   String get language => 'Язык';
@@ -303,8 +325,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get groupTypePrivate => 'Приватная';
 
   @override
-  String get groupTypePrivateHint =>
-      'Не видна в поиске, вход только по приглашению';
+  String get groupTypePrivateHint => 'Не видна в поиске, вход только по приглашению';
 
   @override
   String get groupTypeInviteOnly => 'По приглашению';
@@ -367,23 +388,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get invite => 'Пригласить';
 
   @override
-  String memberAdded(String name) {
-    return '$name добавлен(а) в группу';
-  }
+  String memberAdded(String name) => '${name} добавлен(а) в группу';
 
   @override
-  String membersCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '# участников',
-      many: '# участников',
-      few: '# участника',
-      one: '# участник',
-      zero: 'Нет участников',
-    );
-    return '$_temp0';
-  }
+  String membersCount(int count) => if (count == 0) 'Нет участников' else if (count == 1) '$count участник' else if (count >= 2 && count <= 4) '$count участника' else if (count >= 5 && count <= 10) '$count участников' else '$count участников';
 
   @override
   String get showMyQr => 'Показать мой QR';
@@ -410,8 +418,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noUsersFound => 'Никого не найдено';
 
   @override
-  String get noUsersFoundHint =>
-      'Пользователи появятся после сканирования QR или обмена контактами';
+  String get noUsersFoundHint => 'Пользователи появятся после сканирования QR или обмена контактами';
 
   @override
   String get invalidQr => 'QR-код не распознан';
@@ -504,9 +511,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noParticipants => 'Пока нет участников';
 
   @override
-  String liveSharingCount(int count) {
-    return '$count в эфире';
-  }
+  String liveSharingCount(int count) => '${count} в эфире';
 
   @override
   String get noMessagesYet => 'Сообщений пока нет';
@@ -533,8 +538,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menuArchive => 'В архив';
 
   @override
-  String get deleteActivityConfirm =>
-      'Удалить эту активность? Запись в архиве сохранится.';
+  String get deleteActivityConfirm => 'Удалить эту активность? Запись в архиве сохранится.';
 
   @override
   String get duplicated => 'Активность продублирована';
@@ -570,20 +574,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatDeleteMessage => 'Удалить';
 
   @override
-  String chatForwardedFrom(String name) => 'Переслано от $name';
+  String chatForwardedFrom(String name) => 'Переслано от ${name}';
 
   @override
-  String chatReplyTo(String name) => 'Ответ $name';
+  String chatReplyTo(String name) => 'Ответ ${name}';
 
   @override
-  String chatPinnedBar(int count) {
-    switch (count) {
-      case 1:
-        return '1 закрепл.';
-      default:
-        return '$count закрепл.';
-    }
-  }
+  String chatPinnedBar(int count) => '${count} закрепл.';
 
   @override
   String get chatAttachCamera => 'Камера';
@@ -631,8 +628,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatMenuExport => 'Экспорт';
 
   @override
-  String get chatReadOnlyBanner =>
-      'Эта активность в архиве. Чат только для чтения.';
+  String get chatReadOnlyBanner => 'Эта активность в архиве. Чат только для чтения.';
 
   @override
   String get chatVoiceHoldToRecord => 'Удерживайте для записи';
@@ -665,7 +661,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatForwarded => 'Сообщение переслано';
 
   @override
-  String chatPhotoSizeWarning(int kb) => 'Размер фото: $kb КБ';
+  String chatPhotoSizeWarning(int kb) => 'Размер фото: ${kb} КБ';
 
   @override
   String get chatNoMedia => 'В чате пока нет медиа';
@@ -687,4 +683,79 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatDocumentOpen => 'Открыть';
+
+  @override
+  String get mapParticipantStatus => 'Статус';
+
+  @override
+  String get mapParticipantSpeed => 'Скорость';
+
+  @override
+  String get mapParticipantDistance => 'Дистанция до меня';
+
+  @override
+  String get mapParticipantHeading => 'Направление';
+
+  @override
+  String get mapParticipantBattery => 'Батарея';
+
+  @override
+  String get mapParticipantStatusRiding => 'Едет к месту сбора';
+
+  @override
+  String get mapParticipantStatusArrived => 'Прибыл';
+
+  @override
+  String get mapParticipantStatusIdle => 'Ожидает';
+
+  @override
+  String mapParticipantBatteryValue(int percent) => '${percent}%';
+
+  @override
+  String mapParticipantSpeedValue(String kmh) => '${kmh} км/ч';
+
+  @override
+  String mapParticipantDistanceValue(String meters) => '${meters} м';
+
+  @override
+  String get mapHeadingN => 'Север';
+
+  @override
+  String get mapHeadingNE => 'Северо-восток';
+
+  @override
+  String get mapHeadingE => 'Восток';
+
+  @override
+  String get mapHeadingSE => 'Юго-восток';
+
+  @override
+  String get mapHeadingS => 'Юг';
+
+  @override
+  String get mapHeadingSW => 'Юго-запад';
+
+  @override
+  String get mapHeadingW => 'Запад';
+
+  @override
+  String get mapHeadingNW => 'Северо-запад';
+
+  @override
+  String get gpsPermissionDenied => 'Доступ к местоположению запрещён';
+
+  @override
+  String get gpsPermissionDeniedForever => 'Доступ запрещён навсегда. Откройте настройки, чтобы разрешить.';
+
+  @override
+  String get gpsServiceDisabled => 'Службы геолокации отключены';
+
+  @override
+  String get gpsOpenSettings => 'Открыть настройки';
+
+  @override
+  String get gpsForegroundTracking => 'Покатуха делится вашим местоположением';
+
+  @override
+  String get gpsForegroundTrackingBody => 'Живая позиция передаётся участникам активности.';
 }

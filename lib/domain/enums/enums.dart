@@ -42,9 +42,27 @@ enum PollStatus { open, closed }
 /// Message kinds (FR-004).
 enum MessageKind { text, image, reply, system, pinned }
 
-/// Map providers (Maps rules — replaceable, no vendor lock-in).
+/// Map providers (V2 MAPS_AND_GPS_FIX.md §1).
+///
+/// V2 providers (rendered natively via flutter_map):
+///   • openStreetMap  — base / fallback
+///   • cyclOSM        — cycling default
+///   • openTopoMap    — relief / heights
+///   • esriSatellite  — satellite
+///   • cartoVoyager   — clean navigation
+///
+/// Deprecated (kept for back-compat with persisted settings; fall back to OSM
+/// tiles, see MapService._urlTemplate):
+///   • mapLibre, googleMaps, here, twoGis, yandexMaps
 enum MapProvider {
   openStreetMap,
+  cyclOSM,
+  openTopoMap,
+  esriSatellite,
+  cartoVoyager,
+
+  // Deprecated — V2 forbids Google Maps (API key + ToS violation); others
+  // remain selectable so old user settings don't break.
   mapLibre,
   googleMaps,
   here,

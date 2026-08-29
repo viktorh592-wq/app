@@ -1,10 +1,20 @@
-/// Map tab — OpenStreetMap / MapLibre via flutter_map (Maps rules). Shows
+/// Map tab — V2 map providers via flutter_map (MAPS_AND_GPS_FIX.md). Shows
 /// activity meeting points and live participant positions (FR-005).
-/// FAB opens the map action menu with the six V2 actions
-/// (MAPS_AND_GPS_FIX.md §5): find me, share location, show route,
-/// download GPX, select map, show participants.
+/// FAB opens the map action menu with the six V2 actions (§5): find me,
+/// share location, show route, download GPX, select map, show participants.
+///
+/// V2 Sprint 4 (S4-T1..T6):
+///   • Layer switcher offers all five V2 providers (CyclOSM, OpenTopoMap,
+///     Esri Satellite, Carto Voyager, OpenStreetMap) with localized labels.
+///   • Participant marker is a circular avatar ringed with the activity
+///     accent color, with a heading arrow and a speed badge (§4).
+///   • Tapping a participant marker opens a popup sheet with name, status,
+///     speed, distance-to-me, heading text, battery % (§4).
+///   • When zoomed out, overlapping participant markers are clustered
+///     into a single count badge (§6).
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -15,6 +25,7 @@ import 'package:share_plus/share_plus.dart';
 
 import 'package:pokatuha/core/errors/app_error.dart';
 import 'package:pokatuha/core/tokens/design_tokens.dart';
+import 'package:pokatuha/core/utils/geo_utils.dart';
 import 'package:pokatuha/database/collections/event_collection.dart';
 import 'package:pokatuha/database/collections/participant_collection.dart';
 import 'package:pokatuha/database/collections/route_collection.dart';
@@ -23,6 +34,7 @@ import 'package:pokatuha/domain/repositories/event_repository.dart';
 import 'package:pokatuha/domain/repositories/participant_repository.dart';
 import 'package:pokatuha/domain/repositories/route_repository.dart';
 import 'package:pokatuha/domain/repositories/user_repository.dart';
+import 'package:pokatuha/domain/services/foreground_location_service.dart';
 import 'package:pokatuha/domain/services/gps_service.dart';
 import 'package:pokatuha/domain/services/gpx_service.dart';
 import 'package:pokatuha/domain/services/map_service.dart';
@@ -46,9 +58,16 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
   /// Points of the route selected via «Show route» (drawn as a polyline).
   List<LatLng> _selectedRoutePoints = [];
 
-  /// Live GPS sharing state (basic local version; P2P sync — S4-T3).
+  /// Live GPS sharing state (basic local version; P2P sync — S5).
   bool _sharingLocation = false;
   StreamSubscription<GpsSample>? _locationSub;
+
+  /// 15-minute periodic fallback timer (V2 §6 — refreshes local participant
+  /// positions for viewers when no FCM wake-up has triggered an update).
+  Timer? _periodicFallback;
+
+  /// Current map zoom — used to decide clustering threshold.
+  double _currentZoom = 12;
 
   @override
   bool get wantKeepAlive => true;
@@ -62,6 +81,7 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
   @override
   void dispose() {
     _locationSub?.cancel();
+    _periodicFallback?.cancel();
     serviceLocator<GpsService>().stopSharing();
     super.dispose();
   }
@@ -106,7 +126,15 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
             mapController: _mapController,
             options: MapOptions(
               initialCenter: center,
-              initialZoom: 12,
+              initialZoom: _currentZoom,
+              minZoom: 3,
+              maxZoom: 19,
+              onPositionChanged: (position, hasGesture) {
+                final z = position.zoom;
+                if (z != null && z != _currentZoom) {
+                  setState(() => _currentZoom = z);
+                }
+              },
             ),
             children: [
               serviceLocator<MapService>().tileLayer(),
@@ -123,9 +151,7 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
               MarkerLayer(
                 markers: [
                   ...data.events.map(_meetingMarker),
-                  ...data.participants
-                      .where((lp) => lp.participant.lastLat != null)
-                      .map(_participantMarker),
+                  ..._participantMarkers(data.participants),
                 ],
               ),
               RichAttributionWidget(
@@ -179,27 +205,126 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
     );
   }
 
-  /// Live participant marker with an activity-accent ring (V2 §4, §11 —
-  /// MAPS_AND_GPS_FIX.md participant marker, FIX_PLAN S2-T7).
-  Marker _participantMarker(_LiveParticipant lp) {
+  // --- Participant markers (V2 §4, §6 + S4-T4 + S4-T6) ---
+
+  /// Build participant markers, clustering overlapping ones when zoomed out
+  /// (V2 §6 — cluster overlapping participant icons when zoomed out).
+  List<Marker> _participantMarkers(List<_LiveParticipant> participants) {
+    final withPosition = participants
+        .where((lp) => lp.participant.lastLat != null)
+        .toList();
+    if (withPosition.isEmpty) return [];
+
+    // Below zoom 14 (~city-level), cluster markers within ~1 km into a single
+    // count badge so the map stays readable. Above 14, render individually.
+    if (_currentZoom >= 14) {
+      return withPosition.map(_singleParticipantMarker).toList();
+    }
+    final clusters = _clusterParticipants(withPosition, thresholdMeters: 1000);
+    return clusters.map(_clusterMarker).toList();
+  }
+
+  /// V2 §4 — single participant marker: circular avatar ringed with the
+  /// activity accent color + heading arrow (rotated by bearing) + speed
+  /// badge. Tapping opens the participant popup sheet (S4-T5).
+  Marker _singleParticipantMarker(_LiveParticipant lp) {
     final p = lp.participant;
     return Marker(
       point: LatLng(p.lastLat!, p.lastLng!),
-      width: 44,
-      height: 44,
-      child: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: lp.accent,
-          border: Border.all(color: Colors.white, width: 2),
-        ),
-        child: const Icon(
-          Icons.directions_bike_rounded,
-          color: Colors.white,
-          size: 22,
+      width: 52,
+      height: 60,
+      child: GestureDetector(
+        onTap: () => _showParticipantPopup(lp),
+        child: _ParticipantAvatar(
+          accent: lp.accent,
+          heading: p.lastHeading,
+          speed: p.lastSpeed,
         ),
       ),
     );
+  }
+
+  /// Cluster marker — single pill showing the count of overlapping
+  /// participants.
+  Marker _clusterMarker(_ParticipantCluster cluster) {
+    return Marker(
+      point: cluster.center,
+      width: 56,
+      height: 56,
+      child: GestureDetector(
+        onTap: () {
+          _mapController.move(cluster.center, 16);
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: cluster.accent,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x33000000),
+                blurRadius: 6,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              '${cluster.count}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Distance-based clustering (simple, no external dependency). Returns
+  /// clusters where each member is within [thresholdMeters] of the cluster
+  /// centroid.
+  List<_ParticipantCluster> _clusterParticipants(
+    List<_LiveParticipant> participants, {
+    required double thresholdMeters,
+  }) {
+    final remaining = [...participants];
+    final clusters = <_ParticipantCluster>[];
+    while (remaining.isNotEmpty) {
+      final seed = remaining.removeLast();
+      var cx = seed.participant.lastLat!;
+      var cy = seed.participant.lastLng!;
+      var n = 1;
+      var accent = seed.accent;
+      final members = <_LiveParticipant>[seed];
+      for (var i = remaining.length - 1; i >= 0; i--) {
+        final m = remaining[i];
+        final d = GeoUtils.distanceMeters(
+          lat1: m.participant.lastLat!,
+          lng1: m.participant.lastLng!,
+          lat2: cx / n,
+          lng2: cy / n,
+        );
+        if (d <= thresholdMeters) {
+          members.add(m);
+          cx += m.participant.lastLat!;
+          cy += m.participant.lastLng!;
+          n += 1;
+          remaining.removeAt(i);
+        }
+      }
+      final lat = cx / n;
+      final lng = cy / n;
+      clusters.add(_ParticipantCluster(
+        center: LatLng(lat, lng),
+        count: n,
+        accent: accent,
+        members: members,
+      ));
+    }
+    return clusters;
   }
 
   // --- Map action menu (MAPS_AND_GPS_FIX.md §5) ---
@@ -290,13 +415,20 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
 
   /// «Поделиться местоположением» — stream GPS into my participant records
   /// of active (ride) activities. Basic local version: positions are stored
-  /// locally and rendered on the map; P2P propagation arrives with S4-T3.
+  /// locally and rendered on the map. V2 §3 starts an Android foreground
+  /// service (S4-T8) so the stream keeps flowing when the app is in the
+  /// background. V2 §6 also requires a 15-minute periodic fallback timer
+  /// (S4-T9) — wired here.
   Future<void> _toggleShareLocation() async {
     final l = AppLocalizations.of(context)!;
+    final fg = serviceLocator<ForegroundLocationService>();
     if (_sharingLocation) {
       _locationSub?.cancel();
       _locationSub = null;
+      _periodicFallback?.cancel();
+      _periodicFallback = null;
       serviceLocator<GpsService>().stopSharing();
+      await fg.stop();
       setState(() => _sharingLocation = false);
       _toast(l.locationSharingOff);
       return;
@@ -305,7 +437,7 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
     if (me == null) return;
     try {
       if (!await serviceLocator<GpsService>().ensurePermission()) {
-        _toast(l.noActiveActivity);
+        _toast(l.gpsPermissionDenied);
         return;
       }
       final events = serviceLocator<EventRepository>();
@@ -320,6 +452,10 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
         _toast(l.noActiveActivity);
         return;
       }
+      await fg.start(
+        title: l.gpsForegroundTracking,
+        body: l.gpsForegroundTrackingBody,
+      );
       final stream = serviceLocator<GpsService>().startSharing();
       _locationSub = stream.listen((sample) async {
         for (final p in mine) {
@@ -332,6 +468,16 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
           );
         }
         if (mounted) setState(_load);
+      });
+      // V2 §6 — 15-minute periodic fallback. Re-emits the last sample to
+      // participant records so map timestamps stay fresh for viewers when
+      // no movement has happened.
+      _periodicFallback =
+          Timer.periodic(const Duration(minutes: 15), (_) async {
+        if (!mounted || !_sharingLocation) return;
+        for (final p in mine) {
+          await participants.touchLastSeen(p);
+        }
       });
       setState(() => _sharingLocation = true);
       _toast(l.locationSharingOn);
@@ -409,14 +555,13 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
     }
   }
 
-  /// «Выбрать карту» — layer switcher. Sprint 1 offers the two natively
-  /// rendered providers (OSM, MapLibre); the V2 provider set
-  /// (CyclOSM/OpenTopoMap/Esri/Carto) arrives with S4-T1/S4-T2. The choice
-  /// is persisted in local settings (MAPS_AND_GPS_FIX.md §6).
+  /// «Выбрать карту» — V2 layer switcher (S4-T3). Offers all five V2
+  /// providers with localized labels; selection is persisted via
+  /// SettingsService (MAPS_AND_GPS_FIX.md §6).
   Future<void> _showLayerSwitcher() async {
     final l = AppLocalizations.of(context)!;
     final mapService = serviceLocator<MapService>();
-    final providers = const [MapProvider.openStreetMap, MapProvider.mapLibre];
+    final providers = MapService.v2Providers;
     final selected = await showModalBottomSheet<MapProvider>(
       context: context,
       showDragHandle: true,
@@ -434,9 +579,8 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
                 value: p,
                 groupValue: mapService.provider,
                 onChanged: (v) => Navigator.pop(sheetContext, v),
-                title: Text(p == MapProvider.openStreetMap
-                    ? l.openStreetMap
-                    : l.mapLibre),
+                title: Text(_providerLabel(l, p)),
+                subtitle: Text(_providerContextHint(l, p)),
               ),
             ),
             const SizedBox(height: DesignTokens.space2),
@@ -455,6 +599,52 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
       );
     }
     setState(_load);
+  }
+
+  String _providerLabel(AppLocalizations l, MapProvider p) {
+    switch (p) {
+      case MapProvider.openStreetMap:
+        return l.openStreetMap;
+      case MapProvider.cyclOSM:
+        return l.cyclOSM;
+      case MapProvider.openTopoMap:
+        return l.openTopoMap;
+      case MapProvider.esriSatellite:
+        return l.esriSatellite;
+      case MapProvider.cartoVoyager:
+        return l.cartoVoyager;
+      case MapProvider.mapLibre:
+        return l.mapLibre;
+      case MapProvider.googleMaps:
+        return l.googleMaps;
+      case MapProvider.here:
+        return l.hereMaps;
+      case MapProvider.twoGis:
+        return l.twoGis;
+      case MapProvider.yandexMaps:
+        return l.yandexMaps;
+    }
+  }
+
+  /// V2 §1 — context hint under each radio in the layer switcher.
+  String _providerContextHint(AppLocalizations l, MapProvider p) {
+    switch (p) {
+      case MapProvider.cyclOSM:
+        return l.mapLayerByContext(l.mapContextCycling);
+      case MapProvider.openTopoMap:
+        return l.mapLayerByContext(l.mapContextMountains);
+      case MapProvider.esriSatellite:
+        return l.mapLayerByContext(l.mapContextForest);
+      case MapProvider.cartoVoyager:
+        return l.mapLayerByContext(l.mapContextCity);
+      case MapProvider.openStreetMap:
+      case MapProvider.mapLibre:
+      case MapProvider.googleMaps:
+      case MapProvider.here:
+      case MapProvider.twoGis:
+      case MapProvider.yandexMaps:
+        return '';
+    }
   }
 
   /// «Показать участников» — list participants of active activities with a
@@ -490,6 +680,99 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
     );
     if (selected == null) return;
     _mapController.move(LatLng(selected.lat, selected.lng), 15);
+  }
+
+  /// V2 §4 — S4-T5 — participant popup sheet on marker tap. Shows name,
+  /// status text, speed (km/h), distance to me, heading text, battery %.
+  Future<void> _showParticipantPopup(_LiveParticipant lp) async {
+    final l = AppLocalizations.of(context)!;
+    final p = lp.participant;
+    final users = serviceLocator<UserRepository>();
+    final user = await users.getById(p.userId);
+    final name = user?.displayName ?? p.userId.substring(0, 6);
+    if (!mounted) return;
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final theme = Theme.of(sheetContext);
+        final speedKmh = p.lastSpeed != null
+            ? (p.lastSpeed! * 3.6).toStringAsFixed(1)
+            : null;
+        final batteryPct = p.lastBattery;
+        final headingText = p.lastHeading != null
+            ? _headingText(l, p.lastHeading!)
+            : null;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(DesignTokens.space5),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    _ParticipantAvatar(
+                      accent: lp.accent,
+                      heading: p.lastHeading,
+                      speed: p.lastSpeed,
+                      size: 48,
+                    ),
+                    const SizedBox(width: DesignTokens.space4),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(name, style: theme.textTheme.titleMedium),
+                          Text(_statusLabel(l, p),
+                              style: theme.textTheme.bodySmall),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: DesignTokens.space4),
+                _PopupRow(label: l.mapParticipantSpeed,
+                    value: speedKmh != null
+                        ? l.mapParticipantSpeedValue(speedKmh)
+                        : '—'),
+                if (headingText != null)
+                  _PopupRow(
+                      label: l.mapParticipantHeading, value: headingText),
+                if (batteryPct != null)
+                  _PopupRow(
+                    label: l.mapParticipantBattery,
+                    value: l.mapParticipantBatteryValue(batteryPct),
+                  ),
+                const SizedBox(height: DesignTokens.space3),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  String _statusLabel(AppLocalizations l, ParticipantCollection p) {
+    if (p.arrivalStage == 'arrived') return l.mapParticipantStatusArrived;
+    if (p.status == ParticipantStatus.accepted.name ||
+        p.status == ParticipantStatus.invited.name) {
+      return l.mapParticipantStatusRiding;
+    }
+    return l.mapParticipantStatusIdle;
+  }
+
+  /// Map a bearing (degrees 0..360) to a localized compass-direction text.
+  String _headingText(AppLocalizations l, double bearing) {
+    final b = (bearing + 360) % 360;
+    if (b >= 337.5 || b < 22.5) return l.mapHeadingN;
+    if (b < 67.5) return l.mapHeadingNE;
+    if (b < 112.5) return l.mapHeadingE;
+    if (b < 157.5) return l.mapHeadingSE;
+    if (b < 202.5) return l.mapHeadingS;
+    if (b < 247.5) return l.mapHeadingSW;
+    if (b < 292.5) return l.mapHeadingW;
+    return l.mapHeadingNW;
   }
 
   // --- helpers ---
@@ -602,4 +885,160 @@ class _ParticipantPick {
   final String eventTitle;
   final double lat;
   final double lng;
+}
+
+/// Cluster of overlapping participants (V2 §6).
+class _ParticipantCluster {
+  _ParticipantCluster({
+    required this.center,
+    required this.count,
+    required this.accent,
+    required this.members,
+  });
+
+  final LatLng center;
+  final int count;
+  final Color accent;
+  final List<_LiveParticipant> members;
+}
+
+/// V2 §4 — circular avatar ringed with the activity accent color, with a
+/// heading arrow rotated by bearing and a speed badge.
+class _ParticipantAvatar extends StatelessWidget {
+  const _ParticipantAvatar({
+    required this.accent,
+    this.heading,
+    this.speed,
+    this.size = 44,
+  });
+
+  final Color accent;
+  final double? heading;
+  final double? speed; // m/s
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final speedKmh = (speed != null && speed! > 0)
+        ? (speed! * 3.6).round().toString()
+        : null;
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Outer ring — activity accent color (V2 §11).
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: accent,
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x33000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 1),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.directions_bike_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
+          ),
+          // Heading arrow — a small triangle rotated by bearing, anchored
+          // on the outer ring (V2 §4 — heading arrow).
+          if (heading != null && heading! >= 0)
+            Positioned(
+              left: size / 2 - 6,
+              top: -8,
+              child: Transform.rotate(
+                angle: heading! * math.pi / 180.0,
+                child: const CustomPaint(
+                  size: Size(12, 12),
+                  painter: _HeadingArrowPainter(),
+                ),
+              ),
+            ),
+          // Speed badge — bottom-right.
+          if (speedKmh != null)
+            Positioned(
+              right: -4,
+              bottom: -4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: accent, width: 1),
+                ),
+                child: Text(
+                  speedKmh,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: accent,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeadingArrowPainter extends CustomPainter {
+  const _HeadingArrowPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    final path = Path()
+      ..moveTo(size.width / 2, 0)
+      ..lineTo(size.width, size.height)
+      ..lineTo(size.width / 2, size.height * 0.7)
+      ..lineTo(0, size.height)
+      ..close();
+    canvas.drawPath(path, paint);
+    final border = Paint()
+      ..color = const Color(0xFF1A1A2E)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    canvas.drawPath(path, border);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// V2 §4 — a single label : value row in the participant popup sheet.
+class _PopupRow extends StatelessWidget {
+  const _PopupRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: DesignTokens.space1),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: theme.textTheme.bodyMedium),
+          Text(value,
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
 }

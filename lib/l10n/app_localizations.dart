@@ -38,29 +38,11 @@ import 'app_localizations_ru.dart';
 ///   flutter_localizations:
 ///     sdk: flutter
 ///   intl: any # Use the pinned version from flutter_localizations
-///
-///   # Rest of dependencies
 /// ```
 ///
-/// ## iOS Applications
+/// ## iOS Integration
 ///
-/// iOS applications define key application metadata, including supported
-/// locales, in an Info.plist file that is built into the application bundle.
-/// To configure the locales supported by your app, you’ll need to edit this
-/// file.
-///
-/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
-/// Then, in the Project Navigator, open the Info.plist file under the Runner
-/// project’s Runner folder.
-///
-/// Next, select the Information Property List item, select Add Item from the
-/// Editor menu, then select Localizations from the pop-up menu.
-///
-/// Select and expand the newly-created Localizations item then, for each
-/// locale your application supports, add a new item and select the locale
-/// you wish to add from the pop-up menu in the Value field. This list should
-/// be consistent with the languages listed in the AppLocalizations.supportedLocales
-/// property.
+/// Also update your iOS Info.plist file. Add entries for the supported locales.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
       : localeName = intl.Intl.canonicalizedLocale(locale.toString());
@@ -97,6 +79,7 @@ abstract class AppLocalizations {
     Locale('en'),
     Locale('ru')
   ];
+
 
   /// No description provided for @appName.
   ///
@@ -493,6 +476,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yandex Maps'**
   String get yandexMaps;
+
+  /// No description provided for @cyclOSM.
+  ///
+  /// In en, this message translates to:
+  /// **'CyclOSM'**
+  String get cyclOSM;
+
+  /// No description provided for @openTopoMap.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenTopoMap'**
+  String get openTopoMap;
+
+  /// No description provided for @esriSatellite.
+  ///
+  /// In en, this message translates to:
+  /// **'Esri Satellite'**
+  String get esriSatellite;
+
+  /// No description provided for @cartoVoyager.
+  ///
+  /// In en, this message translates to:
+  /// **'Carto Voyager'**
+  String get cartoVoyager;
+
+  /// No description provided for @mapLayerByContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested for: {context}'**
+  String mapLayerByContext(String context);
+
+  /// No description provided for @mapContextCycling.
+  ///
+  /// In en, this message translates to:
+  /// **'cycling'**
+  String get mapContextCycling;
+
+  /// No description provided for @mapContextMountains.
+  ///
+  /// In en, this message translates to:
+  /// **'mountains'**
+  String get mapContextMountains;
+
+  /// No description provided for @mapContextForest.
+  ///
+  /// In en, this message translates to:
+  /// **'forest'**
+  String get mapContextForest;
+
+  /// No description provided for @mapContextCity.
+  ///
+  /// In en, this message translates to:
+  /// **'city'**
+  String get mapContextCity;
 
   /// No description provided for @language.
   ///
@@ -1393,6 +1430,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open'**
   String get chatDocumentOpen;
+
+  /// No description provided for @mapParticipantStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get mapParticipantStatus;
+
+  /// No description provided for @mapParticipantSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed'**
+  String get mapParticipantSpeed;
+
+  /// No description provided for @mapParticipantDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance to me'**
+  String get mapParticipantDistance;
+
+  /// No description provided for @mapParticipantHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Heading'**
+  String get mapParticipantHeading;
+
+  /// No description provided for @mapParticipantBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery'**
+  String get mapParticipantBattery;
+
+  /// No description provided for @mapParticipantStatusRiding.
+  ///
+  /// In en, this message translates to:
+  /// **'Riding to meeting'**
+  String get mapParticipantStatusRiding;
+
+  /// No description provided for @mapParticipantStatusArrived.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrived'**
+  String get mapParticipantStatusArrived;
+
+  /// No description provided for @mapParticipantStatusIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Idle'**
+  String get mapParticipantStatusIdle;
+
+  /// No description provided for @mapParticipantBatteryValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String mapParticipantBatteryValue(int percent);
+
+  /// No description provided for @mapParticipantSpeedValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{kmh} km/h'**
+  String mapParticipantSpeedValue(String kmh);
+
+  /// No description provided for @mapParticipantDistanceValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{meters} m'**
+  String mapParticipantDistanceValue(String meters);
+
+  /// No description provided for @mapHeadingN.
+  ///
+  /// In en, this message translates to:
+  /// **'North'**
+  String get mapHeadingN;
+
+  /// No description provided for @mapHeadingNE.
+  ///
+  /// In en, this message translates to:
+  /// **'Northeast'**
+  String get mapHeadingNE;
+
+  /// No description provided for @mapHeadingE.
+  ///
+  /// In en, this message translates to:
+  /// **'East'**
+  String get mapHeadingE;
+
+  /// No description provided for @mapHeadingSE.
+  ///
+  /// In en, this message translates to:
+  /// **'Southeast'**
+  String get mapHeadingSE;
+
+  /// No description provided for @mapHeadingS.
+  ///
+  /// In en, this message translates to:
+  /// **'South'**
+  String get mapHeadingS;
+
+  /// No description provided for @mapHeadingSW.
+  ///
+  /// In en, this message translates to:
+  /// **'Southwest'**
+  String get mapHeadingSW;
+
+  /// No description provided for @mapHeadingW.
+  ///
+  /// In en, this message translates to:
+  /// **'West'**
+  String get mapHeadingW;
+
+  /// No description provided for @mapHeadingNW.
+  ///
+  /// In en, this message translates to:
+  /// **'Northwest'**
+  String get mapHeadingNW;
+
+  /// No description provided for @gpsPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission denied'**
+  String get gpsPermissionDenied;
+
+  /// No description provided for @gpsPermissionDeniedForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission permanently denied. Open settings to enable.'**
+  String get gpsPermissionDeniedForever;
+
+  /// No description provided for @gpsServiceDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Location services are disabled'**
+  String get gpsServiceDisabled;
+
+  /// No description provided for @gpsOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get gpsOpenSettings;
+
+  /// No description provided for @gpsForegroundTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Pokatuha is sharing your location'**
+  String get gpsForegroundTracking;
+
+  /// No description provided for @gpsForegroundTrackingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Live position is being shared with activity participants.'**
+  String get gpsForegroundTrackingBody;
 }
 
 class _AppLocalizationsDelegate

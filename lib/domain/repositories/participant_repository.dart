@@ -97,4 +97,15 @@ class ParticipantRepository {
       ..updatedAt = now;
     await _store.put(participant);
   }
+
+  /// V2 §6 — bump `lastSeenAt` without moving the position. Used by the
+  /// 15-minute periodic fallback timer so the marker's "last seen" stays
+  /// fresh for viewers when the sharing user has not moved.
+  Future<void> touchLastSeen(ParticipantCollection participant) async {
+    final now = Timestamps.nowUtc();
+    participant
+      ..lastSeenAt = now
+      ..updatedAt = now;
+    await _store.put(participant);
+  }
 }

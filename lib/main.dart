@@ -18,5 +18,10 @@ Future<void> main() async {
 
   await setupServiceLocator();
 
+  // V2 MAPS_AND_GPS_FIX.md §3 — the Android foreground service is started
+  // on demand by `ForegroundLocationService` when the user enables live
+  // location sharing (BR-005). No startup init needed — see
+  // `lib/domain/services/foreground_location_service.dart`.
+
   runApp(const PokatuhaApp());
 }
