@@ -46,6 +46,22 @@ dependencies:
   collection: ^1.18.0
   path: ^1.9.0
 
+  # --- V3 Sprint 1: user discovery & map actions (USER_DISCOVERY.md §2,
+  # MAPS_AND_GPS_FIX.md §5). Justification per AGENTS.md:
+  # qr_flutter — render the profile/group QR code (USER_DISCOVERY.md §2)
+  # mobile_scanner — scan QR codes (USER_DISCOVERY.md §2)
+  # share_plus — share invite links / exported GPX (USER_DISCOVERY.md §2)
+  # url_launcher — open external https links from invite QR payloads
+  # flutter_foreground_task — background location service (MAPS_AND_GPS_FIX.md §3)
+  # record / just_audio — voice messages (TELEGRAM_STYLE_CHAT.md §9)
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^5.2.3
+  share_plus: ^10.1.2
+  url_launcher: ^6.3.1
+  flutter_foreground_task: ^8.10.0
+  record: ^5.1.2
+  just_audio: ^0.9.40
+
 dependency_overrides:
   intl: 0.19.0
 
