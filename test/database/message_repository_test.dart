@@ -91,6 +91,10 @@ void main() {
         () async {
       final a = await repo.sendText(
           eventId: eventId, authorId: 'u1', text: 'a');
+      // Sprint 5 — small delay guarantees b.createdAt > a.createdAt so the
+      // secondary SortOrder('id', false) in MessageRepository.pinned is not
+      // the deciding factor (UUID v7 random suffix is not insertion-ordered).
+      await Future<void>.delayed(const Duration(milliseconds: 20));
       final b = await repo.sendText(
           eventId: eventId, authorId: 'u1', text: 'b');
       await repo.pin(a);
