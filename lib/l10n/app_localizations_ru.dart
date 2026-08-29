@@ -547,4 +547,144 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get archived => 'Активность перемещена в архив';
+
+  @override
+  String get chatReaction => 'Реакция';
+
+  @override
+  String get chatReply => 'Ответить';
+
+  @override
+  String get chatForward => 'Переслать';
+
+  @override
+  String get chatPinMessage => 'Закрепить';
+
+  @override
+  String get chatUnpinMessage => 'Открепить';
+
+  @override
+  String get chatCopy => 'Копировать';
+
+  @override
+  String get chatDeleteMessage => 'Удалить';
+
+  @override
+  String chatForwardedFrom(String name) => 'Переслано от $name';
+
+  @override
+  String chatReplyTo(String name) => 'Ответ $name';
+
+  @override
+  String chatPinnedBar(int count) {
+    switch (count) {
+      case 1:
+        return '1 закрепл.';
+      default:
+        return '$count закрепл.';
+    }
+  }
+
+  @override
+  String get chatAttachCamera => 'Камера';
+
+  @override
+  String get chatAttachGallery => 'Галерея';
+
+  @override
+  String get chatAttachRoute => 'Маршрут';
+
+  @override
+  String get chatAttachFile => 'Файл';
+
+  @override
+  String get chatAttachLocation => 'Локация';
+
+  @override
+  String get chatAttachPoll => 'Опрос';
+
+  @override
+  String get chatAttachVoice => 'Голосовое';
+
+  @override
+  String get chatMenuSearch => 'Поиск';
+
+  @override
+  String get chatMenuMedia => 'Медиа';
+
+  @override
+  String get chatMenuPinned => 'Закреплённые';
+
+  @override
+  String get chatMenuSharedRoutes => 'Маршруты';
+
+  @override
+  String get chatMenuFiles => 'Файлы';
+
+  @override
+  String get chatMenuMute => 'Без звука';
+
+  @override
+  String get chatMenuUnmute => 'Со звуком';
+
+  @override
+  String get chatMenuExport => 'Экспорт';
+
+  @override
+  String get chatReadOnlyBanner =>
+      'Эта активность в архиве. Чат только для чтения.';
+
+  @override
+  String get chatVoiceHoldToRecord => 'Удерживайте для записи';
+
+  @override
+  String get chatVoiceSlideToCancel => 'Свайп вниз для отмены';
+
+  @override
+  String get chatVoiceRecording => 'Запись…';
+
+  @override
+  String get chatSearchPlaceholder => 'Поиск по сообщениям';
+
+  @override
+  String get chatSearchNoResults => 'Ничего не найдено';
+
+  @override
+  String get chatExportReady => 'Чат экспортирован';
+
+  @override
+  String get chatMuted => 'Чат без звука';
+
+  @override
+  String get chatUnmuted => 'Звук включён';
+
+  @override
+  String get chatForwardTarget => 'Переслать в…';
+
+  @override
+  String get chatForwarded => 'Сообщение переслано';
+
+  @override
+  String chatPhotoSizeWarning(int kb) => 'Размер фото: $kb КБ';
+
+  @override
+  String get chatNoMedia => 'В чате пока нет медиа';
+
+  @override
+  String get chatNoPinned => 'Нет закреплённых сообщений';
+
+  @override
+  String get chatNoFiles => 'В чате пока нет файлов';
+
+  @override
+  String get chatNoRoutes => 'В чате пока нет маршрутов';
+
+  @override
+  String get chatOpenInMap => 'Открыть на карте';
+
+  @override
+  String chatPlaybackSpeed(String speed) => 'Скорость ${speed}x';
+
+  @override
+  String get chatDocumentOpen => 'Открыть';
 }
