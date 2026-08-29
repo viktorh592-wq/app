@@ -245,7 +245,7 @@ class _PollCardState extends State<_PollCard> {
                 // V2 §4 — deadline indicator on the card.
                 if (_poll.deadlineAt != null) ...[
                   const SizedBox(width: 12),
-                  Icon(Icons.schedule_rounded,
+                  const Icon(Icons.schedule_rounded,
                       size: 14, color: DesignTokens.textSecondary),
                   const SizedBox(width: 4),
                   Text(
@@ -435,9 +435,8 @@ class _CreatePollSheetState extends State<_CreatePollSheet> {
     final texts =
         _options.map((c) => c.text).where((t) => t.trim().isNotEmpty).toList();
     if (texts.length < 2) return;
-    final deadlineAt = _deadline == null
-        ? null
-        : _deadline!.toUtc().millisecondsSinceEpoch;
+    final deadlineAt =
+        _deadline?.toUtc().millisecondsSinceEpoch;
     try {
       await serviceLocator<PollRepository>().create(
         eventId: widget.eventId,
