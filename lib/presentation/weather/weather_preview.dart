@@ -1,5 +1,7 @@
-/// Weather preview — Open-Meteo (Rule 8). Free, no API key. Shown in activity
-/// details (FR-001 — Weather Preview) and maps.
+/// Weather preview — Open-Meteo (Rule 8). Free, no API key. Shown inside the
+/// weather glass block of the activity Main tab (FR-001 — Weather Preview,
+/// V2 GROUPS_AND_ACTIVITIES.md §13). Renders plain content — the surrounding
+/// GlassCard provides the surface.
 import 'package:flutter/material.dart';
 
 import 'package:pokatuha/core/errors/app_error.dart';
@@ -30,7 +32,6 @@ class _WeatherPreviewState extends State<WeatherPreview> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return FutureBuilder<WeatherSnapshot>(
       future: _future,
       builder: (context, snapshot) {
@@ -44,40 +45,38 @@ class _WeatherPreviewState extends State<WeatherPreview> {
           final msg = snapshot.error is AppError
               ? (snapshot.error as AppError).message
               : 'Weather unavailable';
-          return Card(
-            child: ListTile(
-              leading: const Icon(Icons.cloud_off_outlined),
-              title: Text(msg, style: theme.textTheme.bodyMedium),
-              dense: true,
-            ),
+          return Row(
+            children: [
+              const Icon(Icons.cloud_off_outlined),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(msg, style: Theme.of(context).textTheme.bodyMedium),
+              ),
+            ],
           );
         }
         final w = snapshot.data!;
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Icon(_icon(w.weatherCode),
-                    size: 40, color: theme.colorScheme.primary),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('${w.temperatureC.round()}°C',
-                          style: theme.textTheme.titleLarge),
-                      Text(w.description, style: theme.textTheme.bodyMedium),
-                      Text(
-                        '💨 ${w.windSpeedKmh.round()} km/h • 🌧 ${(w.rainProbability * 100).round()}%',
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ],
+        return Row(
+          children: [
+            Icon(_icon(w.weatherCode),
+                size: 40, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${w.temperatureC.round()}°C',
+                      style: Theme.of(context).textTheme.titleLarge),
+                  Text(w.description,
+                      style: Theme.of(context).textTheme.bodyMedium),
+                  Text(
+                    '💨 ${w.windSpeedKmh.round()} km/h • 🌧 ${(w.rainProbability * 100).round()}%',
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         );
       },
     );

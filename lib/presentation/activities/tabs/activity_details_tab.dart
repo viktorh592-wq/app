@@ -1,17 +1,26 @@
-/// Activity details tab — summary + lifecycle actions (UC-002..UC-004, BR-005).
-import 'package:collection/collection.dart';
+/// Activity Main tab — V2 structure (GROUPS_AND_ACTIVITIES.md §13,
+/// ARCHITECTURE_V2.md §8, FIX_PLAN S2-T1/S2-T9): exactly four glass blocks —
+/// Weather, Route summary, Participants, Actions — plus lifecycle buttons
+/// (Join / Leave / Start / Finish, UC-002..UC-004) below the glass cards.
+/// Activity type / date / meeting point live in the page header, not here.
+/// Every GlassCard is tinted with the activity accent color (V2 §11).
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
-import 'package:pokatuha/core/utils/timestamps.dart';
+import 'package:pokatuha/core/tokens/design_tokens.dart';
 import 'package:pokatuha/database/collections/event_collection.dart';
+import 'package:pokatuha/database/collections/route_collection.dart';
 import 'package:pokatuha/domain/enums/enums.dart';
-import 'package:pokatuha/domain/repositories/activity_type_repository.dart';
+import 'package:pokatuha/domain/repositories/route_repository.dart';
 import 'package:pokatuha/domain/services/service_locator.dart';
 import 'package:pokatuha/l10n/app_localizations.dart';
 import 'package:pokatuha/presentation/activities/activity_detail_page.dart';
+import 'package:pokatuha/presentation/activities/participants_block.dart';
 import 'package:pokatuha/presentation/app_view_model.dart';
+import 'package:pokatuha/presentation/map/map_page.dart';
 import 'package:pokatuha/presentation/weather/weather_preview.dart';
+import 'package:pokatuha/presentation/widgets/glass_card.dart';
 
 class ActivityDetailsTab extends StatelessWidget {
   const ActivityDetailsTab({
@@ -25,10 +34,15 @@ class ActivityDetailsTab extends StatelessWidget {
   final ValueChanged<EventAction> onAction;
   final VoidCallback onChanged;
 
+  /// Activity accent color (V2 §11) — tints every glass block.
+  Color get _accent {
+    final argb = event.accentColor;
+    return argb != null ? Color(argb) : ActivityColors.swatches.first;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
     final user = context.read<AppViewModel>().user;
     final isOrganizer = user?.id == event.organizerId;
     final status = EventStatus.values.firstWhere(
@@ -37,77 +51,126 @@ class ActivityDetailsTab extends StatelessWidget {
     );
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(DesignTokens.space4),
       children: [
-        if (event.description.isNotEmpty)
-          Text(event.description, style: theme.textTheme.bodyMedium),
-        const SizedBox(height: 16),
-        FutureBuilder<String>(
-          future: _activityLabel(),
-          builder: (context, s) => _row(
-            context,
-            icon: Icons.category_outlined,
-            label: l.activityType,
-            value: s.data ?? '',
+        if (event.description.isNotEmpty) ...[
+          Text(event.description,
+              style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: DesignTokens.space3),
+        ],
+
+        // 1. Weather glass block (V2 §13).
+        if (event.meetingPoint != null) ...[
+          GlassCard(
+            accentColor: _accent,
+            child: WeatherPreview(point: event.meetingPoint!),
+          ),
+          const SizedBox(height: DesignTokens.space3),
+        ],
+
+        // 2. Route summary block (V2 §13): distance / elevation / duration.
+        FutureBuilder<List<RouteCollection>>(
+          future: serviceLocator<RouteRepository>().byEvent(event.id),
+          builder: (context, s) => GlassCard(
+            accentColor: _accent,
+            child: _routeSummary(context, s.data, l),
           ),
         ),
-        _row(
-          context,
-          icon: Icons.event_outlined,
-          label: l.date,
-          value: Timestamps.formatLocalDateTime(event.startAt, 'en'),
+        const SizedBox(height: DesignTokens.space3),
+
+        // 3. Participants block (V2 §13): avatars + live sharing count.
+        GlassCard(
+          accentColor: _accent,
+          child: ParticipantsBlock(
+            eventId: event.id,
+            showInviteButton: isOrganizer,
+          ),
         ),
-        if (event.meetingPoint != null)
-          _row(
-            context,
-            icon: Icons.place_outlined,
-            label: l.meetingPoint,
-            value: event.meetingPointLabel ??
-                '${event.meetingPoint!.lat.toStringAsFixed(4)}, ${event.meetingPoint!.lng.toStringAsFixed(4)}',
+        const SizedBox(height: DesignTokens.space3),
+
+        // 4. Actions block (V2 §13): Open map / Share activity.
+        GlassCard(
+          accentColor: _accent,
+          child: Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () => _openMap(context),
+                  icon: const Icon(Icons.map_outlined),
+                  label: Text(l.openMap),
+                ),
+              ),
+              const SizedBox(width: DesignTokens.space3),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _shareActivity(),
+                  icon: const Icon(Icons.share_rounded),
+                  label: Text(l.shareActivity),
+                ),
+              ),
+            ],
           ),
-        if (event.maxParticipants != null)
-          _row(
-            context,
-            icon: Icons.group_outlined,
-            label: l.maxParticipants,
-            value: '${event.maxParticipants}',
-          ),
-        const SizedBox(height: 16),
-        if (event.meetingPoint != null)
-          WeatherPreview(point: event.meetingPoint!),
-        const SizedBox(height: 16),
+        ),
+        const SizedBox(height: DesignTokens.space4),
+
+        // Lifecycle actions stay OUTSIDE the glass cards (V2 §13).
         _actions(context, isOrganizer, status, l),
       ],
     );
   }
 
-  Future<String> _activityLabel() async {
-    final types = await serviceLocator<ActivityTypeRepository>().all();
-    final match = types.where((t) => t.id == event.activityTypeId).firstOrNull;
-    return match?.label ?? event.activityTypeId;
+  Widget _routeSummary(
+    BuildContext context,
+    List<RouteCollection>? routes,
+    AppLocalizations l,
+  ) {
+    if (routes == null || routes.isEmpty) {
+      return Row(
+        children: [
+          const Icon(Icons.route_outlined, size: 20),
+          const SizedBox(width: DesignTokens.space2),
+          Expanded(child: Text(l.noRouteYet)),
+        ],
+      );
+    }
+    final route = routes.first;
+    final distanceKm = route.distanceMeters / 1000;
+    // Rough estimate at 20 km/h average (route planning heuristic).
+    final minutes = (distanceKm / 20 * 60).round();
+    final duration = minutes >= 60
+        ? '${minutes ~/ 60} h ${minutes % 60} min'
+        : '$minutes min';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l.route, style: DesignTokens.title()),
+        const SizedBox(height: DesignTokens.space2),
+        _InfoRow(
+          icon: Icons.straighten_rounded,
+          text: '${l.distance}: ${distanceKm.toStringAsFixed(1)} ${l.kmUnit}',
+        ),
+        _InfoRow(
+          icon: Icons.terrain_rounded,
+          text:
+              '${l.elevation}: ↑ ${route.elevationGainMeters.round()} ${l.mUnit}',
+        ),
+        _InfoRow(
+          icon: Icons.access_time_rounded,
+          text: '${l.duration}: $duration',
+        ),
+      ],
+    );
   }
 
-  Widget _row(BuildContext context,
-      {required IconData icon, required String label, required String value}) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Icon(icon, color: theme.colorScheme.onSurfaceVariant, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: theme.textTheme.bodySmall),
-                Text(value, style: theme.textTheme.bodyLarge),
-              ],
-            ),
-          ),
-        ],
-      ),
+  void _openMap(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const MapPage()),
     );
+  }
+
+  void _shareActivity() {
+    // V2 §9 — activity share link (pokatuha://a/<id>).
+    Share.share('pokatuha://a/${event.id}', subject: event.title);
   }
 
   Widget _actions(
@@ -145,7 +208,7 @@ class ActivityDetailsTab extends StatelessWidget {
                 label: Text(l.join),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: DesignTokens.space3),
             if (isOrganizer) ...[
               Expanded(
                 child: OutlinedButton.icon(
@@ -172,5 +235,26 @@ class ActivityDetailsTab extends StatelessWidget {
           ],
         );
     }
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: DesignTokens.space1),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: DesignTokens.textPrimary),
+          const SizedBox(width: DesignTokens.space2),
+          Text(text, style: DesignTokens.body(color: DesignTokens.textPrimary)),
+        ],
+      ),
+    );
   }
 }
