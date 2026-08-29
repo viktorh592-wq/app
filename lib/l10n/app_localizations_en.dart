@@ -476,4 +476,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noParticipantsOnMap => 'No participants with live position';
+
+  @override
+  String get tabMain => 'Main';
+
+  @override
+  String get activityColor => 'Activity color';
+
+  @override
+  String get openMap => 'Open map';
+
+  @override
+  String get shareActivity => 'Share activity';
+
+  @override
+  String get noRouteYet => 'No route yet';
+
+  @override
+  String get kmUnit => 'km';
+
+  @override
+  String get mUnit => 'm';
+
+  @override
+  String get noParticipants => 'No participants yet';
+
+  @override
+  String liveSharingCount(int count) {
+    return '$count live';
+  }
+
+  @override
+  String get noMessagesYet => 'No messages yet';
+
+  @override
+  String get details => 'Details';
+
+  @override
+  String get menuEdit => 'Edit';
+
+  @override
+  String get menuDuplicate => 'Duplicate';
+
+  @override
+  String get menuShare => 'Share';
+
+  @override
+  String get menuPin => 'Pin in group';
+
+  @override
+  String get menuUnpin => 'Unpin from group';
+
+  @override
+  String get menuArchive => 'Archive';
+
+  @override
+  String get deleteActivityConfirm =>
+      'Delete this activity? The archive record is kept.';
+
+  @override
+  String get duplicated => 'Activity duplicated';
+
+  @override
+  String get pinned => 'Pinned in group';
+
+  @override
+  String get unpinned => 'Unpinned';
+
+  @override
+  String get archived => 'Activity moved to archive';
 }
