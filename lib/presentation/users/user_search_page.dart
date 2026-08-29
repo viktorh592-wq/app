@@ -12,6 +12,7 @@ import 'package:pokatuha/domain/services/service_locator.dart';
 import 'package:pokatuha/l10n/app_localizations.dart';
 import 'package:pokatuha/presentation/users/user_profile_page.dart';
 import 'package:pokatuha/presentation/widgets/empty_state.dart';
+import 'package:pokatuha/presentation/widgets/search_bar_v2.dart';
 
 class UserSearchPage extends StatefulWidget {
   const UserSearchPage({super.key, this.title, this.onUserSelected});
@@ -67,18 +68,11 @@ class _UserSearchPageState extends State<UserSearchPage> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(DesignTokens.space4),
-            child: TextField(
+            padding: const EdgeInsets.symmetric(vertical: DesignTokens.space2),
+            child: SearchBarV2(
               controller: _controller,
+              hintText: l.search,
               autofocus: true,
-              decoration: InputDecoration(
-                hintText: l.search,
-                prefixIcon: const Icon(Icons.search_rounded),
-                isDense: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
               onChanged: _onChanged,
             ),
           ),
