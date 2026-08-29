@@ -7,6 +7,11 @@ class EventCollection extends BaseEntity {
   String title = '';
   String description = '';
 
+  /// Group this activity belongs to (V2 Group-first model,
+  /// ARCHITECTURE_V2.md §2). null — legacy V1 activity created before
+  /// groups existed; kept readable for soft migration (FIX_PLAN S1-T4).
+  String? groupId;
+
   /// Activity type id (ActivityTypeCollection.id) — supports custom types (FR-002).
   String activityTypeId = '';
 
@@ -50,6 +55,7 @@ class EventCollection extends BaseEntity {
     ..addAll({
       'title': title,
       'description': description,
+      'groupId': groupId,
       'activityTypeId': activityTypeId,
       'status': status,
       'visibility': visibility,
@@ -73,6 +79,7 @@ class EventCollection extends BaseEntity {
     baseFromMap(m);
     title = m['title'] as String? ?? '';
     description = m['description'] as String? ?? '';
+    groupId = m['groupId'] as String?;
     activityTypeId = m['activityTypeId'] as String? ?? '';
     status = m['status'] as String? ?? 'preparation';
     visibility = m['visibility'] as String? ?? 'private';

@@ -46,10 +46,13 @@ class EventService {
 
   final List<TimelineEntry> _timelines = <TimelineEntry>[];
 
-  /// Create a new activity (UC-001). The organizer is auto-added as a
-  /// participant (BR-001 — every activity belongs to exactly one organizer).
+  /// Create a new activity (UC-001) inside a group — V2 Group-first model
+  /// (GROUPS_AND_ACTIVITIES.md §1: users never create standalone activities
+  /// from the main screen). The organizer is auto-added as a participant
+  /// (BR-001 — every activity belongs to exactly one organizer).
   Future<EventCollection> createActivity({
     required UserCollection organizer,
+    required String groupId,
     required String title,
     required String description,
     required int startAt,
@@ -61,6 +64,7 @@ class EventService {
     int? maxParticipants,
   }) async {
     final event = EventCollection()
+      ..groupId = groupId
       ..title = title
       ..description = description
       ..startAt = startAt
