@@ -1,9 +1,12 @@
 /// Polls tab — create and vote on polls (FR-007). Single / multiple choice,
-/// custom options, deadline, editable polls.
+/// custom options, deadline, editable polls. Progress bars, radio buttons
+/// and vote buttons use the activity accent color (V2 §11 — propagation,
+/// FIX_PLAN S2-T7).
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:pokatuha/core/errors/app_error.dart';
+import 'package:pokatuha/core/tokens/design_tokens.dart';
 import 'package:pokatuha/database/collections/poll_collection.dart';
 import 'package:pokatuha/domain/enums/enums.dart';
 import 'package:pokatuha/domain/repositories/poll_repository.dart';
@@ -13,9 +16,12 @@ import 'package:pokatuha/l10n/app_localizations.dart';
 import 'package:pokatuha/presentation/app_view_model.dart';
 
 class ActivityPollsTab extends StatefulWidget {
-  const ActivityPollsTab({super.key, required this.eventId});
+  const ActivityPollsTab({super.key, required this.eventId, this.accentColor});
 
   final String eventId;
+
+  /// Activity accent color (V2 §11).
+  final Color? accentColor;
 
   @override
   State<ActivityPollsTab> createState() => _ActivityPollsTabState();
@@ -86,6 +92,7 @@ class _ActivityPollsTabState extends State<ActivityPollsTab> {
             itemBuilder: (context, i) => _PollCard(
               poll: polls[i],
               eventId: widget.eventId,
+              accentColor: widget.accentColor,
               onChanged: () => setState(_load),
             ),
           );
@@ -96,12 +103,19 @@ class _ActivityPollsTabState extends State<ActivityPollsTab> {
 }
 
 class _PollCard extends StatefulWidget {
-  const _PollCard(
-      {required this.poll, required this.eventId, required this.onChanged});
+  const _PollCard({
+    required this.poll,
+    required this.eventId,
+    required this.onChanged,
+    this.accentColor,
+  });
 
   final PollCollection poll;
   final String eventId;
   final VoidCallback onChanged;
+
+  /// Activity accent color (V2 §11).
+  final Color? accentColor;
 
   @override
   State<_PollCard> createState() => _PollCardState();
@@ -142,6 +156,7 @@ class _PollCardState extends State<_PollCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final accent = widget.accentColor ?? DesignTokens.primary;
     final type = _poll.type == PollType.multipleChoice.name
         ? PollType.multipleChoice
         : PollType.singleChoice;
@@ -187,17 +202,37 @@ class _PollCardState extends State<_PollCard> {
                     : null,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                          selected
-                              ? Icons.radio_button_checked_rounded
-                              : Icons.radio_button_unchecked_rounded,
-                          size: 20,
-                          color: theme.colorScheme.primary),
-                      const SizedBox(width: 10),
-                      Expanded(child: Text(o.text)),
-                      Text('$pct%', style: theme.textTheme.bodySmall),
+                      Row(
+                        children: [
+                          Icon(
+                              selected
+                                  ? Icons.radio_button_checked_rounded
+                                  : Icons.radio_button_unchecked_rounded,
+                              size: 20,
+                              color: accent),
+                          const SizedBox(width: 10),
+                          Expanded(child: Text(o.text)),
+                          Text('$pct%', style: theme.textTheme.bodySmall),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      // Accent progress bar (V2 §11 — color propagation).
+                      ClipRRect(
+                        borderRadius:
+                            BorderRadius.circular(DesignTokens.radiusFull),
+                        child: SizedBox(
+                          height: 4,
+                          child: LinearProgressIndicator(
+                            value: total == 0 ? 0 : o.voteCount / total,
+                            minHeight: 4,
+                            color: accent,
+                            backgroundColor: accent.withValues(alpha: 0.18),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -206,6 +241,9 @@ class _PollCardState extends State<_PollCard> {
             if (_poll.status == PollStatus.open.name) ...[
               const SizedBox(height: 12),
               FilledButton(
+                style: FilledButton.styleFrom(
+                    backgroundColor: accent,
+                    foregroundColor: DesignTokens.textPrimary),
                 onPressed: _selected.isEmpty ? null : _vote,
                 child: Text(AppLocalizations.of(context)!.vote),
               ),

@@ -1,13 +1,16 @@
-/// Create activity form (UC-001 — Create Ride). Opens only from a group
-/// context — V2 Group-first model (GROUPS_AND_ACTIVITIES.md §1: users never
-/// create standalone activities from the main screen). Implements FR-001
-/// fields: title, description, date, time, meeting point, activity type,
-/// visibility, max participants. Uses the local EventService (BR-001).
+/// Create / edit activity form (UC-001 — Create Ride). Opens only from a
+/// group context — V2 Group-first model (GROUPS_AND_ACTIVITIES.md §1: users
+/// never create standalone activities from the main screen). Implements
+/// FR-001 fields plus the V2 §10 activity color picker (accent propagates to
+/// cards, chat, polls, route and map — S2-T6). When [event] is provided the
+/// form edits that activity instead of creating a new one (V2 §9 — Edit).
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:pokatuha/core/errors/app_error.dart';
+import 'package:pokatuha/core/tokens/design_tokens.dart';
 import 'package:pokatuha/database/collections/activity_type_collection.dart';
+import 'package:pokatuha/database/collections/event_collection.dart';
 import 'package:pokatuha/database/collections/group_collection.dart';
 import 'package:pokatuha/domain/enums/enums.dart';
 import 'package:pokatuha/domain/repositories/activity_type_repository.dart';
@@ -19,10 +22,13 @@ import 'package:pokatuha/l10n/app_localizations.dart';
 import 'package:pokatuha/presentation/app_view_model.dart';
 
 class CreateActivityPage extends StatefulWidget {
-  const CreateActivityPage({super.key, required this.groupId});
+  const CreateActivityPage({super.key, required this.groupId, this.event});
 
-  /// Group the new activity belongs to (required — V2 Group-first).
+  /// Group the activity belongs to (required — V2 Group-first).
   final String groupId;
+
+  /// Activity to edit (V2 §9 — activity menu → Edit); null = create.
+  final EventCollection? event;
 
   @override
   State<CreateActivityPage> createState() => _CreateActivityPageState();
@@ -42,6 +48,47 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
   double _meetingLng = 0;
   bool _hasMeeting = false;
   bool _saving = false;
+
+  /// Selected accent color ARGB (V2 §10, S2-T6). Defaults to violet;
+  /// overridden by the group default color when the form opens.
+  int _accentColor = EventCollection.defaultAccentColorArgb;
+
+  bool get _isEditing => widget.event != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.event;
+    if (e != null) {
+      _title.text = e.title;
+      _description.text = e.description;
+      _meetingLabel.text = e.meetingPointLabel ?? '';
+      _meetingLat = e.meetingPoint?.lat ?? 0;
+      _meetingLng = e.meetingPoint?.lng ?? 0;
+      _hasMeeting = e.meetingPoint != null;
+      _dateTime = DateTime.fromMillisecondsSinceEpoch(e.startAt).toLocal();
+      _activityTypeId = e.activityTypeId.isEmpty ? null : e.activityTypeId;
+      _visibility = EventVisibility.values.firstWhere(
+        (v) => v.name == e.visibility,
+        orElse: () => EventVisibility.private,
+      );
+      _maxParticipants.text = e.maxParticipants?.toString() ?? '';
+      _accentColor = e.accentColor ?? EventCollection.defaultAccentColorArgb;
+    } else {
+      _loadGroupDefaultColor();
+    }
+  }
+
+  /// New activities inherit the group default accent color when set
+  /// (GROUPS_AND_ACTIVITIES.md §3 — defaultAccentColor).
+  Future<void> _loadGroupDefaultColor() async {
+    final group =
+        await serviceLocator<GroupRepository>().getById(widget.groupId);
+    final argb = group?.defaultAccentColor;
+    if (argb != null && mounted) {
+      setState(() => _accentColor = argb);
+    }
+  }
 
   @override
   void dispose() {
@@ -86,23 +133,45 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
     setState(() => _saving = true);
     try {
       final user = context.read<AppViewModel>().user!;
-      await serviceLocator<EventService>().createActivity(
-        organizer: user,
-        groupId: widget.groupId,
-        title: _title.text,
-        description: _description.text,
-        startAt: _dateTime.toUtc().millisecondsSinceEpoch,
-        activityTypeId: _activityTypeId!,
-        meetingLat: _meetingLat,
-        meetingLng: _meetingLng,
-        meetingPointLabel: _meetingLabel.text.trim().isEmpty
-            ? null
-            : _meetingLabel.text.trim(),
-        visibility: _visibility,
-        maxParticipants: _maxParticipants.text.trim().isEmpty
-            ? null
-            : int.tryParse(_maxParticipants.text.trim()),
-      );
+      final service = serviceLocator<EventService>();
+      if (_isEditing) {
+        await service.editActivity(
+          event: widget.event!,
+          title: _title.text,
+          description: _description.text,
+          startAt: _dateTime.toUtc().millisecondsSinceEpoch,
+          activityTypeId: _activityTypeId!,
+          meetingLat: _hasMeeting ? _meetingLat : null,
+          meetingLng: _hasMeeting ? _meetingLng : null,
+          meetingPointLabel: _meetingLabel.text.trim().isEmpty
+              ? null
+              : _meetingLabel.text.trim(),
+          visibility: _visibility,
+          maxParticipants: _maxParticipants.text.trim().isEmpty
+              ? null
+              : int.tryParse(_maxParticipants.text.trim()),
+          accentColor: _accentColor,
+        );
+      } else {
+        await service.createActivity(
+          organizer: user,
+          groupId: widget.groupId,
+          title: _title.text,
+          description: _description.text,
+          startAt: _dateTime.toUtc().millisecondsSinceEpoch,
+          activityTypeId: _activityTypeId!,
+          meetingLat: _hasMeeting ? _meetingLat : null,
+          meetingLng: _hasMeeting ? _meetingLng : null,
+          meetingPointLabel: _meetingLabel.text.trim().isEmpty
+              ? null
+              : _meetingLabel.text.trim(),
+          visibility: _visibility,
+          maxParticipants: _maxParticipants.text.trim().isEmpty
+              ? null
+              : int.tryParse(_maxParticipants.text.trim()),
+          accentColor: _accentColor,
+        );
+      }
       if (mounted) Navigator.of(context).pop(true);
     } on AppError catch (e) {
       if (mounted) {
@@ -118,7 +187,8 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(l.createActivity)),
+      appBar:
+          AppBar(title: Text(_isEditing ? l.editActivity : l.createActivity)),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -249,7 +319,9 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+            _colorPicker(l),
+            const SizedBox(height: 16),
             FilledButton(
               onPressed: _saving ? null : _submit,
               child: _saving
@@ -262,6 +334,49 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
           ],
         ),
       ),
+    );
+  }
+
+  /// V2 §10 — activity color picker: horizontal row of swatches from
+  /// ActivityColors; the selected one gets a black outline. Default violet;
+  /// pre-set from group.defaultAccentColor for new activities.
+  Widget _colorPicker(AppLocalizations l) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l.activityColor, style: Theme.of(context).textTheme.bodyMedium),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 48,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: ActivityColors.swatches.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, i) {
+              final c = ActivityColors.swatches[i];
+              final selected = c.value == _accentColor;
+              return GestureDetector(
+                onTap: () => setState(() => _accentColor = c.value),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: c,
+                    shape: BoxShape.circle,
+                    border: selected
+                        ? Border.all(color: Colors.black, width: 3)
+                        : Border.all(color: Colors.transparent, width: 3),
+                  ),
+                  child: selected
+                      ? const Icon(Icons.check_rounded,
+                          color: Colors.black, size: 20)
+                      : null,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 

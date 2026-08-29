@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:pokatuha/core/tokens/design_tokens.dart';
 
-/// Telegram-style chat bubble.
-/// Outgoing = lime, incoming = yellow.
+/// Telegram-style chat bubble (TELEGRAM_STYLE_CHAT.md §3–§5).
+/// Outgoing = activity accent (V2 §11) or lime default, incoming = yellow.
+/// Incoming bubbles show the sender name and an avatar; only the last bubble
+/// of a group shows the timestamp (Telegram-like grouping).
 class ChatBubble extends StatelessWidget {
   final String text;
   final bool isOutgoing;
   final String? senderName;
   final DateTime? timestamp;
   final bool showAvatar;
+  final bool showTimestamp;
   final String? avatarUrl;
+  final Color? outgoingColor;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
@@ -20,7 +24,9 @@ class ChatBubble extends StatelessWidget {
     this.senderName,
     this.timestamp,
     this.showAvatar = true,
+    this.showTimestamp = true,
     this.avatarUrl,
+    this.outgoingColor,
     this.onTap,
     this.onLongPress,
   });
@@ -66,11 +72,13 @@ class ChatBubble extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: isOutgoing
-                          ? DesignTokens.limeAccent
+                          ? (outgoingColor ?? DesignTokens.limeAccent)
                           : DesignTokens.yellowAccent,
                       borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(DesignTokens.bubbleRadius),
-                        topRight: const Radius.circular(DesignTokens.bubbleRadius),
+                        topLeft:
+                            const Radius.circular(DesignTokens.bubbleRadius),
+                        topRight:
+                            const Radius.circular(DesignTokens.bubbleRadius),
                         bottomLeft: Radius.circular(
                           isOutgoing ? DesignTokens.bubbleRadius : 4,
                         ),
@@ -79,9 +87,39 @@ class ChatBubble extends StatelessWidget {
                         ),
                       ),
                     ),
-                    child: Text(
-                      text,
-                      style: DesignTokens.body(color: DesignTokens.textPrimary),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (!isOutgoing &&
+                            senderName != null &&
+                            senderName!.isNotEmpty) ...[
+                          Text(
+                            senderName!,
+                            style: DesignTokens.pin(
+                              color: DesignTokens.textSecondary,
+                            ).copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 2),
+                        ],
+                        Text(
+                          text,
+                          style: DesignTokens.body(
+                              color: DesignTokens.textPrimary),
+                        ),
+                        if (showTimestamp && timestamp != null) ...[
+                          const SizedBox(height: 2),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              _formatTime(timestamp!),
+                              style: DesignTokens.pin(
+                                color: DesignTokens.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                 ),
@@ -92,4 +130,7 @@ class ChatBubble extends StatelessWidget {
       ),
     );
   }
+
+  String _formatTime(DateTime t) =>
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 }

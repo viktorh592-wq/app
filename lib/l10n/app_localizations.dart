@@ -997,6 +997,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No participants with live position'**
   String get noParticipantsOnMap;
+
+  /// No description provided for @tabMain.
+  ///
+  /// In en, this message translates to:
+  /// **'Main'**
+  String get tabMain;
+
+  /// No description provided for @activityColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity color'**
+  String get activityColor;
+
+  /// No description provided for @openMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Open map'**
+  String get openMap;
+
+  /// No description provided for @shareActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Share activity'**
+  String get shareActivity;
+
+  /// No description provided for @noRouteYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No route yet'**
+  String get noRouteYet;
+
+  /// No description provided for @kmUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'km'**
+  String get kmUnit;
+
+  /// No description provided for @mUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'m'**
+  String get mUnit;
+
+  /// No description provided for @noParticipants.
+  ///
+  /// In en, this message translates to:
+  /// **'No participants yet'**
+  String get noParticipants;
+
+  /// No description provided for @liveSharingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} live'**
+  String liveSharingCount(int count);
+
+  /// No description provided for @noMessagesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet'**
+  String get noMessagesYet;
+
+  /// No description provided for @details.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get details;
+
+  /// No description provided for @menuEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get menuEdit;
+
+  /// No description provided for @menuDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get menuDuplicate;
+
+  /// No description provided for @menuShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get menuShare;
+
+  /// No description provided for @menuPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin in group'**
+  String get menuPin;
+
+  /// No description provided for @menuUnpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin from group'**
+  String get menuUnpin;
+
+  /// No description provided for @menuArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get menuArchive;
+
+  /// No description provided for @deleteActivityConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this activity? The archive record is kept.'**
+  String get deleteActivityConfirm;
+
+  /// No description provided for @duplicated.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity duplicated'**
+  String get duplicated;
+
+  /// No description provided for @pinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned in group'**
+  String get pinned;
+
+  /// No description provided for @unpinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpinned'**
+  String get unpinned;
+
+  /// No description provided for @archived.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity moved to archive'**
+  String get archived;
 }
 
 class _AppLocalizationsDelegate

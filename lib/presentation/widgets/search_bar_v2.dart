@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:pokatuha/core/tokens/design_tokens.dart';
 
-/// Lime search bar — matches screenshots.
+/// Lime search bar — matches screenshots (design_tokens.md).
 class SearchBarV2 extends StatelessWidget {
   final TextEditingController? controller;
   final String hintText;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onSearchTap;
+  final bool autofocus;
 
   const SearchBarV2({
     super.key,
@@ -14,6 +15,7 @@ class SearchBarV2 extends StatelessWidget {
     this.hintText = 'Введите для поиска',
     this.onChanged,
     this.onSearchTap,
+    this.autofocus = false,
   });
 
   @override
@@ -27,6 +29,7 @@ class SearchBarV2 extends StatelessWidget {
       ),
       child: TextField(
         controller: controller,
+        autofocus: autofocus,
         onChanged: onChanged,
         style: DesignTokens.body(),
         decoration: InputDecoration(

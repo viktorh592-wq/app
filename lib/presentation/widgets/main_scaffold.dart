@@ -6,11 +6,11 @@
 /// «Add Activity» FAB lives inside GroupDetailPage.
 import 'package:flutter/material.dart';
 
-import 'package:pokatuha/l10n/app_localizations.dart';
 import 'package:pokatuha/presentation/archive/archive_page.dart';
 import 'package:pokatuha/presentation/groups/groups_page.dart';
 import 'package:pokatuha/presentation/map/map_page.dart';
 import 'package:pokatuha/presentation/profile/profile_page.dart';
+import 'package:pokatuha/presentation/widgets/bottom_nav_bar.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -35,34 +35,13 @@ class _MainScaffoldState extends State<MainScaffold> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
     return Scaffold(
       body: IndexedStack(index: _index, children: _pages),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.group_outlined),
-            selectedIcon: const Icon(Icons.group_rounded),
-            label: l.tabGroups,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.map_outlined),
-            selectedIcon: const Icon(Icons.map_rounded),
-            label: l.tabMap,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.history_outlined),
-            selectedIcon: const Icon(Icons.history_rounded),
-            label: l.tabArchive,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.person_outline_rounded),
-            selectedIcon: const Icon(Icons.person_rounded),
-            label: l.tabProfile,
-          ),
-        ],
+      // V2 lime pill navigation bar (FIX_PLAN S2-T3) instead of the Material
+      // NavigationBar.
+      bottomNavigationBar: BottomNavBarV2(
+        currentIndex: _index,
+        onTap: (i) => setState(() => _index = i),
       ),
     );
   }

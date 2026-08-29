@@ -21,6 +21,16 @@ class EventCollection extends BaseEntity {
   /// Visibility (Privacy rules).
   String visibility = 'private';
 
+  /// Activity accent color (ARGB int) — V2 GROUPS_AND_ACTIVITIES.md §10, §11.
+  /// Propagates to cards, chat bubbles, polls, route polyline and map rings.
+  int? accentColor;
+
+  /// Whether the activity is pinned in its group (V2 §9 — activity menu).
+  bool pinnedInGroup = false;
+
+  /// Default accent color ARGB (violet) — matches ActivityColors.swatches.first.
+  static const int defaultAccentColorArgb = 0xFF9B8AFB;
+
   /// Organizer user id (BR-001).
   String organizerId = '';
 
@@ -56,6 +66,8 @@ class EventCollection extends BaseEntity {
       'title': title,
       'description': description,
       'groupId': groupId,
+      'accentColor': accentColor,
+      'pinnedInGroup': pinnedInGroup,
       'activityTypeId': activityTypeId,
       'status': status,
       'visibility': visibility,
@@ -80,6 +92,8 @@ class EventCollection extends BaseEntity {
     title = m['title'] as String? ?? '';
     description = m['description'] as String? ?? '';
     groupId = m['groupId'] as String?;
+    accentColor = (m['accentColor'] as num?)?.toInt();
+    pinnedInGroup = m['pinnedInGroup'] as bool? ?? false;
     activityTypeId = m['activityTypeId'] as String? ?? '';
     status = m['status'] as String? ?? 'preparation';
     visibility = m['visibility'] as String? ?? 'private';

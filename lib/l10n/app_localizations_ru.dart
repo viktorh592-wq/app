@@ -478,4 +478,73 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get noParticipantsOnMap => 'Нет участников с активной позицией';
+
+  @override
+  String get tabMain => 'Обзор';
+
+  @override
+  String get activityColor => 'Цвет активности';
+
+  @override
+  String get openMap => 'Открыть карту';
+
+  @override
+  String get shareActivity => 'Поделиться';
+
+  @override
+  String get noRouteYet => 'Маршрут ещё не добавлен';
+
+  @override
+  String get kmUnit => 'км';
+
+  @override
+  String get mUnit => 'м';
+
+  @override
+  String get noParticipants => 'Пока нет участников';
+
+  @override
+  String liveSharingCount(int count) {
+    return '$count в эфире';
+  }
+
+  @override
+  String get noMessagesYet => 'Сообщений пока нет';
+
+  @override
+  String get details => 'Подробности';
+
+  @override
+  String get menuEdit => 'Редактировать';
+
+  @override
+  String get menuDuplicate => 'Дублировать';
+
+  @override
+  String get menuShare => 'Поделиться';
+
+  @override
+  String get menuPin => 'Закрепить в группе';
+
+  @override
+  String get menuUnpin => 'Открепить в группе';
+
+  @override
+  String get menuArchive => 'В архив';
+
+  @override
+  String get deleteActivityConfirm =>
+      'Удалить эту активность? Запись в архиве сохранится.';
+
+  @override
+  String get duplicated => 'Активность продублирована';
+
+  @override
+  String get pinned => 'Закреплено в группе';
+
+  @override
+  String get unpinned => 'Откреплено';
+
+  @override
+  String get archived => 'Активность перемещена в архив';
 }
