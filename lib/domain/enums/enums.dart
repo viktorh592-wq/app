@@ -21,6 +21,15 @@ enum ParticipantStatus { invited, accepted, declined, left, removed }
 /// Participant roles (BR-004).
 enum ParticipantRole { organizer, moderator, member }
 
+/// Group types (V2 GROUPS_AND_ACTIVITIES.md §2).
+/// public — discoverable, join without approval (optional);
+/// private — not discoverable, join by invitation only;
+/// inviteOnly — optionally discoverable, requires admin approval.
+enum GroupType { public, private, inviteOnly }
+
+/// Group member roles (V2 GROUPS_AND_ACTIVITIES.md §4).
+enum GroupRole { owner, admin, member }
+
 /// Realtime communication mode (Communication.md).
 enum CommunicationMode { live, sleep, offline }
 

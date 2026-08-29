@@ -15,6 +15,8 @@ import 'package:pokatuha/database/collections/activity_type_collection.dart';
 import 'package:pokatuha/database/collections/archive_collection.dart';
 import 'package:pokatuha/database/collections/attachment_collection.dart';
 import 'package:pokatuha/database/collections/event_collection.dart';
+import 'package:pokatuha/database/collections/group_collection.dart';
+import 'package:pokatuha/database/collections/group_member_collection.dart';
 import 'package:pokatuha/database/collections/message_collection.dart';
 import 'package:pokatuha/database/collections/notification_collection.dart';
 import 'package:pokatuha/database/collections/participant_collection.dart';
@@ -94,6 +96,10 @@ class DatabaseService {
       TypedStore(_db, 'users', UserCollection.fromMap);
   late final TypedStore<EventCollection> eventsStore =
       TypedStore(_db, 'events', EventCollection.fromMap);
+  late final TypedStore<GroupCollection> groupsStore =
+      TypedStore(_db, 'groups', GroupCollection.fromMap);
+  late final TypedStore<GroupMemberCollection> groupMembersStore =
+      TypedStore(_db, 'group_members', GroupMemberCollection.fromMap);
   late final TypedStore<ParticipantCollection> participantsStore =
       TypedStore(_db, 'participants', ParticipantCollection.fromMap);
   late final TypedStore<MessageCollection> messagesStore =
