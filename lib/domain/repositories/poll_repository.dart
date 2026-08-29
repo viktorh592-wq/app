@@ -19,15 +19,40 @@ class PollRepository {
   TypedStore<PollCollection> get _store => _db.pollsStore;
   TypedStore<VoteCollection> get _votes => _db.votesStore;
 
-  Future<List<PollCollection>> byEvent(String eventId) async => _store.find(
-        filter: Filter.equals('eventId', eventId) &
-            Filter.equals('isDeleted', false),
-        sortOrders: [SortOrder('createdAt')],
-      );
+  Future<List<PollCollection>> byEvent(String eventId) async {
+    final polls = await _store.find(
+      filter: Filter.equals('eventId', eventId) &
+          Filter.equals('isDeleted', false),
+      sortOrders: [SortOrder('createdAt')],
+    );
+    // V2 POLLS.md §4 — auto-close when deadlineAt passed (FIX_PLAN S5-T2).
+    final now = Timestamps.nowUtc();
+    for (final p in polls) {
+      if (p.status == PollStatus.open.name &&
+          p.deadlineAt != null &&
+          p.deadlineAt! <= now) {
+        p
+          ..status = PollStatus.closed.name
+          ..touch(now);
+        await _store.put(p);
+      }
+    }
+    return polls;
+  }
 
   Future<PollCollection?> getById(String id) async {
     final p = await _store.getById(id);
-    return (p != null && !p.isDeleted) ? p : null;
+    if (p == null || p.isDeleted) return null;
+    // V2 POLLS.md §4 — auto-close when deadlineAt passed (FIX_PLAN S5-T2).
+    if (p.status == PollStatus.open.name &&
+        p.deadlineAt != null &&
+        p.deadlineAt! <= Timestamps.nowUtc()) {
+      p
+        ..status = PollStatus.closed.name
+        ..touch(Timestamps.nowUtc());
+      return _store.put(p);
+    }
+    return p;
   }
 
   Future<PollCollection> create({
@@ -35,6 +60,7 @@ class PollRepository {
     required String question,
     required List<String> optionTexts,
     required PollType type,
+    PollVisibility visibility = PollVisibility.public,
     int? deadlineAt,
     bool allowCustomOptions = false,
     bool editable = true,
@@ -46,6 +72,8 @@ class PollRepository {
     if (!Validators.isValidPollOptions(optionTexts)) {
       throw const ValidationError('Poll must contain at least two options');
     }
+    // V2 §4 — past deadlines are allowed; byEvent / getById auto-close the
+    // poll on first read so the UI can present a sensible "Closed" state.
     final now = Timestamps.nowUtc();
     final options = optionTexts
         .where((t) => t.trim().isNotEmpty)
@@ -61,6 +89,7 @@ class PollRepository {
       ..question = question.trim()
       ..type = type.name
       ..status = PollStatus.open.name
+      ..visibility = visibility.name
       ..options = options
       ..deadlineAt = deadlineAt
       ..allowCustomOptions = allowCustomOptions

@@ -2,6 +2,11 @@
 /// custom options, deadline, editable polls. Progress bars, radio buttons
 /// and vote buttons use the activity accent color (V2 §11 — propagation,
 /// FIX_PLAN S2-T7).
+///
+/// V3 Sprint 5 (FIX_PLAN S5-T3..T4) — extended to support V2 POLLS.md:
+///   • §3 visibility selector (anonymous / public) in the create sheet
+///   • §4 deadline picker; auto-close when deadline passed (PollRepository)
+///   • §5 closed-state final-results view (no vote UI, "Closed" badge)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -153,14 +158,37 @@ class _PollCardState extends State<_PollCard> {
     }
   }
 
+  Future<void> _close() async {
+    try {
+      await serviceLocator<PollRepository>().close(_poll);
+      widget.onChanged();
+    } on AppError catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context)!;
     final accent = widget.accentColor ?? DesignTokens.primary;
     final type = _poll.type == PollType.multipleChoice.name
         ? PollType.multipleChoice
         : PollType.singleChoice;
+    final visibility = _poll.visibility == PollVisibility.anonymous.name
+        ? PollVisibility.anonymous
+        : PollVisibility.public;
+    final isOpen = _poll.status == PollStatus.open.name;
     final total = _poll.options.fold<int>(0, (s, o) => s + o.voteCount);
+    final canClose = isOpen &&
+        _poll.createdByParticipantId != null &&
+        context.read<AppViewModel>().user != null;
+
+    // V2 POLLS.md §5 — closed-state shows only final tallies.
+    // Open state shows radio/checkbox selection + accent progress bars.
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -174,12 +202,58 @@ class _PollCardState extends State<_PollCard> {
                   child:
                       Text(_poll.question, style: theme.textTheme.titleMedium),
                 ),
-                Text(
-                  type == PollType.singleChoice
-                      ? AppLocalizations.of(context)!.singleChoice
-                      : AppLocalizations.of(context)!.multipleChoice,
-                  style: theme.textTheme.labelSmall,
+                // V2 §5 — Closed badge replaces the type label when closed.
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: isOpen
+                        ? accent.withValues(alpha: 0.18)
+                        : theme.colorScheme.errorContainer.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
+                  ),
+                  child: Text(
+                    !isOpen
+                        ? l.pollClosed
+                        : type == PollType.singleChoice
+                            ? l.singleChoice
+                            : l.multipleChoice,
+                    style: theme.textTheme.labelSmall,
+                  ),
                 ),
+              ],
+            ),
+            // V2 §3 — visibility label.
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  visibility == PollVisibility.anonymous
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  size: 14,
+                  color: DesignTokens.textSecondary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  visibility == PollVisibility.anonymous
+                      ? l.pollAnonymous
+                      : l.pollPublic,
+                  style: theme.textTheme.labelSmall
+                      ?.copyWith(color: DesignTokens.textSecondary),
+                ),
+                // V2 §4 — deadline indicator on the card.
+                if (_poll.deadlineAt != null) ...[
+                  const SizedBox(width: 12),
+                  const Icon(Icons.schedule_rounded,
+                      size: 14, color: DesignTokens.textSecondary),
+                  const SizedBox(width: 4),
+                  Text(
+                    _deadlineLabel(l),
+                    style: theme.textTheme.labelSmall
+                        ?.copyWith(color: DesignTokens.textSecondary),
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 12),
@@ -187,7 +261,7 @@ class _PollCardState extends State<_PollCard> {
               final pct = total == 0 ? 0 : (o.voteCount / total * 100).round();
               final selected = _selected.contains(o.id);
               return InkWell(
-                onTap: _poll.status == PollStatus.open.name
+                onTap: isOpen
                     ? () => setState(() {
                           if (type == PollType.singleChoice) {
                             _selected
@@ -208,9 +282,17 @@ class _PollCardState extends State<_PollCard> {
                       Row(
                         children: [
                           Icon(
-                              selected
-                                  ? Icons.radio_button_checked_rounded
-                                  : Icons.radio_button_unchecked_rounded,
+                              isOpen
+                                  ? (type == PollType.singleChoice
+                                      ? (selected
+                                          ? Icons.radio_button_checked_rounded
+                                          : Icons
+                                              .radio_button_unchecked_rounded)
+                                      : (selected
+                                          ? Icons.check_box_rounded
+                                          : Icons
+                                              .check_box_outline_blank_rounded))
+                                  : Icons.bar_chart_rounded,
                               size: 20,
                               color: accent),
                           const SizedBox(width: 10),
@@ -238,20 +320,59 @@ class _PollCardState extends State<_PollCard> {
                 ),
               );
             }),
-            if (_poll.status == PollStatus.open.name) ...[
+            if (isOpen) ...[
               const SizedBox(height: 12),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                    backgroundColor: accent,
-                    foregroundColor: DesignTokens.textPrimary),
-                onPressed: _selected.isEmpty ? null : _vote,
-                child: Text(AppLocalizations.of(context)!.vote),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                          backgroundColor: accent,
+                          foregroundColor: DesignTokens.textPrimary),
+                      onPressed: _selected.isEmpty ? null : _vote,
+                      child: Text(l.vote),
+                    ),
+                  ),
+                  if (canClose) ...[
+                    const SizedBox(width: 8),
+                    OutlinedButton(
+                      onPressed: _close,
+                      child: Text(l.closePoll),
+                    ),
+                  ],
+                ],
               ),
             ],
           ],
         ),
       ),
     );
+  }
+
+  /// V2 §4 — "Closes in 2h 30m" / "Closed 1h ago" / "Closes at HH:mm".
+  String _deadlineLabel(AppLocalizations l) {
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final dl = _poll.deadlineAt!;
+    final diff = dl - now;
+    if (diff <= 0) {
+      final abs = (-diff);
+      final hours = (abs / 3600000).floor();
+      if (hours >= 24) {
+        return l.closedDaysAgo('${(hours / 24).round()}');
+      }
+      if (hours >= 1) {
+        return l.closedHoursAgo('$hours');
+      }
+      return l.closedMinutesAgo('${(abs / 60000).round()}');
+    }
+    final hours = (diff / 3600000).floor();
+    if (hours >= 24) {
+      return l.closesInDays('${(hours / 24).round()}');
+    }
+    if (hours >= 1) {
+      return l.closesInHours('$hours');
+    }
+    return l.closesInMinutes('${(diff / 60000).round()}');
   }
 }
 
@@ -272,6 +393,12 @@ class _CreatePollSheetState extends State<_CreatePollSheet> {
   ];
   PollType _type = PollType.singleChoice;
 
+  // V2 §3 — visibility (anonymous / public) (FIX_PLAN S5-T3).
+  PollVisibility _visibility = PollVisibility.public;
+
+  // V2 §4 — deadline (nullable = no deadline) (FIX_PLAN S5-T3).
+  DateTime? _deadline;
+
   @override
   void dispose() {
     _question.dispose();
@@ -283,17 +410,41 @@ class _CreatePollSheetState extends State<_CreatePollSheet> {
 
   void _addOption() => setState(() => _options.add(TextEditingController()));
 
+  Future<void> _pickDeadline() async {
+    final now = DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: now.add(const Duration(hours: 1)),
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+    );
+    if (date == null) return;
+    if (!mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(now.add(const Duration(hours: 1))),
+    );
+    if (time == null) return;
+    setState(() {
+      _deadline = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    });
+  }
+
   Future<void> _save() async {
     if (_question.text.trim().isEmpty) return;
     final texts =
         _options.map((c) => c.text).where((t) => t.trim().isNotEmpty).toList();
     if (texts.length < 2) return;
+    final deadlineAt =
+        _deadline?.toUtc().millisecondsSinceEpoch;
     try {
       await serviceLocator<PollRepository>().create(
         eventId: widget.eventId,
         question: _question.text,
         optionTexts: texts,
         type: _type,
+        visibility: _visibility,
+        deadlineAt: deadlineAt,
       );
       if (mounted) Navigator.of(context).pop(true);
     } on AppError catch (e) {
@@ -334,11 +485,52 @@ class _CreatePollSheetState extends State<_CreatePollSheet> {
               onSelectionChanged: (s) => setState(() => _type = s.first),
             ),
             const SizedBox(height: 12),
+            // V2 §3 — visibility selector (FIX_PLAN S5-T3).
+            SegmentedButton<PollVisibility>(
+              segments: [
+                ButtonSegment(
+                  value: PollVisibility.public,
+                  icon: const Icon(Icons.visibility_outlined, size: 18),
+                  label: Text(l.pollPublic),
+                ),
+                ButtonSegment(
+                  value: PollVisibility.anonymous,
+                  icon: const Icon(Icons.visibility_off_outlined, size: 18),
+                  label: Text(l.pollAnonymous),
+                ),
+              ],
+              selected: {_visibility},
+              onSelectionChanged: (s) => setState(() => _visibility = s.first),
+            ),
+            const SizedBox(height: 12),
+            // V2 §4 — deadline picker (FIX_PLAN S5-T3).
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _pickDeadline,
+                    icon: const Icon(Icons.schedule_rounded),
+                    label: Text(
+                      _deadline == null
+                          ? l.pollDeadline
+                          : '${_deadline!.day}/${_deadline!.month} ${_deadline!.hour.toString().padLeft(2, '0')}:${_deadline!.minute.toString().padLeft(2, '0')}',
+                    ),
+                  ),
+                ),
+                if (_deadline != null)
+                  IconButton(
+                    tooltip: l.cancel,
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => setState(() => _deadline = null),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
             ..._options.map((c) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: TextField(
                     controller: c,
-                    decoration: const InputDecoration(labelText: 'Option'),
+                    decoration: InputDecoration(labelText: l.pollOption),
                   ),
                 )),
             Align(
@@ -346,7 +538,7 @@ class _CreatePollSheetState extends State<_CreatePollSheet> {
               child: TextButton.icon(
                 onPressed: _addOption,
                 icon: const Icon(Icons.add_rounded),
-                label: const Text('Add option'),
+                label: Text(l.addOption),
               ),
             ),
             const SizedBox(height: 8),

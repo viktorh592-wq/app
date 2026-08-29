@@ -1,5 +1,8 @@
 /// Route collection (FR-008). Route belongs to an event and contains
 /// waypoints + track points (Entity_Relationships.md).
+///
+/// V3 Sprint 5 (FIX_PLAN S5-T5) — added `durationSeconds` (V2 ROUTES_IMPORT.md
+/// §3 — route card in chat shows distance / elevation / duration).
 import 'package:pokatuha/database/base_entity.dart';
 import 'package:pokatuha/database/collections/embedded/geo_point.dart';
 
@@ -16,6 +19,10 @@ class RouteCollection extends BaseEntity {
 
   /// Total elevation gain in meters (computed).
   double elevationGainMeters = 0;
+
+  /// Total duration in seconds (V2 ROUTES_IMPORT.md §3 — computed from the
+  /// first and last waypoint timestamps when both are non-zero, otherwise 0).
+  int durationSeconds = 0;
 
   /// Original GPX file path (imported routes — UUID_Policy.md).
   String? gpxFilePath;
@@ -34,6 +41,7 @@ class RouteCollection extends BaseEntity {
       'waypoints': waypoints.map((w) => w.toMap()).toList(),
       'distanceMeters': distanceMeters,
       'elevationGainMeters': elevationGainMeters,
+      'durationSeconds': durationSeconds,
       'gpxFilePath': gpxFilePath,
       'originalGpxId': originalGpxId,
       'isRecorded': isRecorded,
@@ -53,6 +61,7 @@ class RouteCollection extends BaseEntity {
         : [];
     distanceMeters = (m['distanceMeters'] as num?)?.toDouble() ?? 0;
     elevationGainMeters = (m['elevationGainMeters'] as num?)?.toDouble() ?? 0;
+    durationSeconds = (m['durationSeconds'] as num?)?.toInt() ?? 0;
     gpxFilePath = m['gpxFilePath'] as String?;
     originalGpxId = m['originalGpxId'] as String?;
     isRecorded = m['isRecorded'] as bool? ?? false;

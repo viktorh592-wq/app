@@ -34,6 +34,7 @@ import 'package:share_plus/share_plus.dart';
 
 import 'package:pokatuha/core/errors/app_error.dart';
 import 'package:pokatuha/core/tokens/design_tokens.dart';
+import 'package:pokatuha/core/utils/geo_utils.dart';
 import 'package:pokatuha/database/collections/embedded/geo_point.dart';
 import 'package:pokatuha/database/collections/event_collection.dart';
 import 'package:pokatuha/database/collections/message_collection.dart';
@@ -262,14 +263,19 @@ class ActivityChatTabState extends State<ActivityChatTab> {
         'name': result.files.single.name,
         'size': size,
       };
-      // GPX/FIT/KML → parse to route preview card (S3-T8).
+      // GPX/FIT/KML → parse to route preview card (S3-T8, S5-T9).
+      // V2 §1 — KML is also a route format (FIX_PLAN S5-T6).
       if (ext == 'gpx' || ext == 'kml') {
         final content = await srcFile.readAsString();
-        if (ext == 'gpx') {
-          final points = serviceLocator<GpxService>().parse(content);
-          meta['waypoints'] =
-              points.map((g) => g.toMap()).toList();
-        }
+        // V2 §1 — unified parser dispatcher (S5-T6).
+        final points =
+            serviceLocator<GpxService>().parseForExtension(content, ext);
+        meta['waypoints'] = points.map((g) => g.toMap()).toList();
+        // V2 §3 — distance / elevation / duration for the route card (S5-T9).
+        final stats = _routeStats(points);
+        meta['distanceMeters'] = stats.distance;
+        meta['elevationGainMeters'] = stats.elevation;
+        meta['durationSeconds'] = stats.durationSeconds;
         await repo.sendAttachment(
           eventId: widget.eventId,
           authorId: user.id,
@@ -478,6 +484,8 @@ class ActivityChatTabState extends State<ActivityChatTab> {
         ),
       );
       if (selected == null) return;
+      // V2 §3 — include distance / elevation / duration in chat route card (S5-T9).
+      final stats = _routeStats(selected.waypoints);
       await serviceLocator<MessageRepository>().sendAttachment(
         eventId: widget.eventId,
         authorId: user.id,
@@ -486,6 +494,9 @@ class ActivityChatTabState extends State<ActivityChatTab> {
         meta: {
           'name': selected.name,
           'waypoints': selected.waypoints.map((g) => g.toMap()).toList(),
+          'distanceMeters': stats.distance,
+          'elevationGainMeters': stats.elevation,
+          'durationSeconds': stats.durationSeconds,
         },
       );
       if (mounted) setState(_load);
@@ -1230,6 +1241,42 @@ class ActivityChatTabState extends State<ActivityChatTab> {
     if (path.isEmpty) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${l.chatDocumentOpen}: ${p.basename(path)}')),
+    );
+  }
+
+  /// V2 §3 — distance / elevation / duration for a route card attached to
+  /// a chat message (FIX_PLAN S5-T9). Mirrors RouteRepository._computeStats
+  /// so the chat tab doesn't have to round-trip through the repository
+  /// just to compute preview stats for an unpersisted imported file.
+  ({double distance, double elevation, int durationSeconds})
+      _routeStats(List<GeoPoint> points) {
+    double distance = 0;
+    double elevation = 0;
+    for (var i = 1; i < points.length; i++) {
+      final a = points[i - 1];
+      final b = points[i];
+      distance += GeoUtils.distanceMeters(
+        lat1: a.lat,
+        lng1: a.lng,
+        lat2: b.lat,
+        lng2: b.lng,
+      );
+      if (b.elevation > a.elevation) {
+        elevation += b.elevation - a.elevation;
+      }
+    }
+    var durationSeconds = 0;
+    if (points.length >= 2) {
+      final first = points.first.timestamp;
+      final last = points.last.timestamp;
+      if (first > 0 && last > 0 && last >= first) {
+        durationSeconds = ((last - first) / 1000).round();
+      }
+    }
+    return (
+      distance: distance,
+      elevation: elevation,
+      durationSeconds: durationSeconds,
     );
   }
 }
