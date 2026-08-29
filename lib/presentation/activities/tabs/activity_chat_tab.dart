@@ -141,10 +141,8 @@ class ActivityChatTabState extends State<ActivityChatTab> {
             .markAllReadByUser(eventId: widget.eventId, userId: user.id);
       }
       // Lazily fetch the event for the read-only banner (S3-T14).
-      if (_event == null) {
-        _event = await serviceLocator<EventRepository>()
-            .getById(widget.eventId);
-      }
+      _event ??= await serviceLocator<EventRepository>()
+          .getById(widget.eventId);
       return (_ChatData(messages: messages, user: user), isParticipant);
     }();
   }
@@ -581,13 +579,12 @@ class ActivityChatTabState extends State<ActivityChatTab> {
               leading: const Icon(Icons.copy_rounded),
               title: Text(l.chatCopy),
               onTap: () async {
+                final messenger = ScaffoldMessenger.of(context);
                 Navigator.pop(sheetContext);
                 await Clipboard.setData(ClipboardData(text: m.text));
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l.copied)),
-                  );
-                }
+                messenger.showSnackBar(
+                  SnackBar(content: Text(l.copied)),
+                );
               },
             ),
           ],
@@ -603,7 +600,8 @@ class ActivityChatTabState extends State<ActivityChatTab> {
     try {
       final events = await serviceLocator<EventRepository>().all();
       final others = events
-          .where((e) => e.id != widget.eventId && !e.status.isArchived)
+          .where((e) =>
+              e.id != widget.eventId && e.status != EventStatus.archived.name)
           .toList();
       if (!mounted) return;
       if (others.isEmpty) {
@@ -1165,7 +1163,7 @@ class ActivityChatTabState extends State<ActivityChatTab> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text('OK'),
+            child: const Text('OK'),
           ),
         ],
       ),
@@ -1179,7 +1177,7 @@ class ActivityChatTabState extends State<ActivityChatTab> {
           .exportJson(widget.eventId);
       final dir = await getTemporaryDirectory();
       final safeId = widget.eventId.replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '_');
-      final file = File('${dir.path}/chat_${safeId}.json');
+      final file = File('${dir.path}/chat_$safeId.json');
       await file.writeAsString(json);
       await Share.shareXFiles([XFile(file.path)],
           text: '${_event?.title ?? widget.eventId} chat');

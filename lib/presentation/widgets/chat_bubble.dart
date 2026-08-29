@@ -238,7 +238,6 @@ class AttachmentPreview extends StatelessWidget {
   }
 
   Widget _videoPreview(BuildContext context) {
-    final path = message.attachmentPath;
     return GestureDetector(
       onTap: onTapMedia,
       child: Container(
@@ -713,7 +712,7 @@ class _ForwardedHeader extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
+        const Icon(
           Icons.shortcut_rounded,
           size: 14,
           color: DesignTokens.textSecondary,
