@@ -3,12 +3,25 @@
 
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- V2 MAPS_AND_GPS_FIX.md §2 — Android GPS permissions. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- Live tracking during an active activity, even when the app goes to
+         the background (BR-005, FR-005). -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    <!-- Android 13+ — required to post the foreground service notification. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Foreground service type declaration (Android 14+). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+
     <application
         android:label="Pokatuha"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher">
-        
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -17,12 +30,12 @@
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
-            
+
             <meta-data
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
-              
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -37,7 +50,16 @@
                 <data android:scheme="pokatuha"/>
             </intent-filter>
         </activity>
-        
+
+        <!-- V2 MAPS_AND_GPS_FIX.md §3 — foreground service for live location
+             tracking via flutter_foreground_task. Keeps the GPS stream
+             alive when the app goes to background during an active ride
+             (BR-005). -->
+        <service
+            android:name="com.pravera.flutter_foreground_task.ForegroundService"
+            android:foregroundServiceType="location"
+            android:exported="false" />
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />

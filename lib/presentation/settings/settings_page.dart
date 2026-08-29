@@ -139,6 +139,10 @@ class _SettingsPageState extends State<SettingsPage> {
   String _mapLabel(AppLocalizations l, MapProvider p) {
     return switch (p) {
       MapProvider.openStreetMap => l.openStreetMap,
+      MapProvider.cyclOSM => l.cyclOSM,
+      MapProvider.openTopoMap => l.openTopoMap,
+      MapProvider.esriSatellite => l.esriSatellite,
+      MapProvider.cartoVoyager => l.cartoVoyager,
       MapProvider.mapLibre => l.mapLibre,
       MapProvider.googleMaps => l.googleMaps,
       MapProvider.here => l.hereMaps,
