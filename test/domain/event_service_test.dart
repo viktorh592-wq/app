@@ -35,6 +35,7 @@ void main() {
     final now = DateTime.now().millisecondsSinceEpoch;
     final event = await service.createActivity(
       organizer: organizer,
+      groupId: 'group-1',
       title: 'Night Ride',
       description: '',
       startAt: now,
@@ -54,6 +55,7 @@ void main() {
         await users.createProfile(displayName: 'Alex', username: 'alex');
     final event = await service.createActivity(
       organizer: organizer,
+      groupId: 'group-1',
       title: 'Ride',
       description: '',
       startAt: DateTime.now().millisecondsSinceEpoch,
@@ -74,6 +76,7 @@ void main() {
         await users.createProfile(displayName: 'Alex', username: 'alex');
     final event = await service.createActivity(
       organizer: organizer,
+      groupId: 'group-1',
       title: 'Ride',
       description: '',
       startAt: DateTime.now().millisecondsSinceEpoch,
@@ -96,6 +99,7 @@ void main() {
         await users.createProfile(displayName: 'Alex', username: 'alex');
     final event = await service.createActivity(
       organizer: organizer,
+      groupId: 'group-1',
       title: 'Ride',
       description: '',
       startAt: DateTime.now().millisecondsSinceEpoch,

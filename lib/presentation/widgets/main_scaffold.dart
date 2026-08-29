@@ -1,13 +1,14 @@
-/// Main scaffold — bottom navigation with five tabs (Navigation.md):
-/// Home, Activities, Map, Archive, Profile. A floating action button for
-/// creating an activity is visible on Home and Activities.
+/// Main scaffold — bottom navigation with four tabs (V2
+/// ARCHITECTURE_V2.md §6): Groups / Map / Archive / Profile. The FAB
+/// depends on the active tab: «Add Group» on Groups, the map action menu on
+/// Map (handled inside MapPage), hidden elsewhere. Users never create
+/// standalone activities from here (GROUPS_AND_ACTIVITIES.md §1) — the
+/// «Add Activity» FAB lives inside GroupDetailPage.
 import 'package:flutter/material.dart';
 
 import 'package:pokatuha/l10n/app_localizations.dart';
-import 'package:pokatuha/presentation/activities/activities_page.dart';
-import 'package:pokatuha/presentation/activities/create_activity_page.dart';
 import 'package:pokatuha/presentation/archive/archive_page.dart';
-import 'package:pokatuha/presentation/home/home_page.dart';
+import 'package:pokatuha/presentation/groups/groups_page.dart';
 import 'package:pokatuha/presentation/map/map_page.dart';
 import 'package:pokatuha/presentation/profile/profile_page.dart';
 
@@ -21,41 +22,30 @@ class MainScaffold extends StatefulWidget {
 class _MainScaffoldState extends State<MainScaffold> {
   int _index = 0;
 
+  // Exactly four tabs (ARCHITECTURE_V2.md §6): Groups, Map, Archive,
+  // Profile. The FAB slot in the middle of the nav is represented by the
+  // per-tab FAB behaviour: Groups shows «Add Group»; Map shows the map
+  // action menu FAB (inside MapPage).
   static const _pages = <Widget>[
-    HomePage(),
-    ActivitiesPage(),
+    GroupsPage(),
     MapPage(),
     ArchivePage(),
     ProfilePage(),
   ];
-
-  bool get _showFab => _index == 0 || _index == 1;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
       body: IndexedStack(index: _index, children: _pages),
-      floatingActionButton: _showFab
-          ? FloatingActionButton.extended(
-              onPressed: () => _createActivity(context),
-              icon: const Icon(Icons.add_rounded),
-              label: Text(l.createActivity),
-            )
-          : null,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
         destinations: [
           NavigationDestination(
-            icon: const Icon(Icons.home_outlined),
-            selectedIcon: const Icon(Icons.home_rounded),
-            label: l.tabHome,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.event_outlined),
-            selectedIcon: const Icon(Icons.event_rounded),
-            label: l.tabActivities,
+            icon: const Icon(Icons.group_outlined),
+            selectedIcon: const Icon(Icons.group_rounded),
+            label: l.tabGroups,
           ),
           NavigationDestination(
             icon: const Icon(Icons.map_outlined),
@@ -74,12 +64,6 @@ class _MainScaffoldState extends State<MainScaffold> {
           ),
         ],
       ),
-    );
-  }
-
-  void _createActivity(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const CreateActivityPage()),
     );
   }
 }

@@ -34,6 +34,13 @@ class EventRepository {
         sortOrders: [SortOrder('startAt')],
       );
 
+  /// Activities of one group (V2 Group-first, ARCHITECTURE_V2.md §2).
+  Future<List<EventCollection>> byGroup(String groupId) async => _store.find(
+        filter: Filter.equals('groupId', groupId) &
+            Filter.equals('isDeleted', false),
+        sortOrders: [SortOrder('startAt', false)],
+      );
+
   Future<List<EventCollection>> upcoming() async {
     final now = Timestamps.nowUtc();
     return _store.find(

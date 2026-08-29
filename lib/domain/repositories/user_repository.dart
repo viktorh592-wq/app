@@ -13,6 +13,12 @@ class UserRepository {
 
   TypedStore<UserCollection> get _store => _db.usersStore;
 
+  /// A locally known user by id (null — unknown or deleted).
+  Future<UserCollection?> getById(String id) async {
+    final u = await _store.getById(id);
+    return (u != null && !u.isDeleted) ? u : null;
+  }
+
   /// The single local profile (local-first: there is one user on this device).
   Future<UserCollection?> getCurrent() async {
     final list = await _store.find(
@@ -56,5 +62,41 @@ class UserRepository {
   Future<UserCollection> updateProfile(UserCollection user) async {
     user.touch(Timestamps.nowUtc());
     return _store.put(user);
+  }
+
+  /// Search locally known users by nickname or display name
+  /// (V2 USER_DISCOVERY.md §2 — discovery by nickname). Local-First: only
+  /// users already known on this device (contacts, scanned profiles) are
+  /// returned; global search arrives with P2P gossip in a later sprint.
+  Future<List<UserCollection>> searchByNickname(String q) async {
+    final query = q.trim().toLowerCase();
+    if (query.isEmpty) return [];
+    final known = await _store.find(
+      filter: Filter.equals('isDeleted', false) &
+          Filter.equals('profileVisible', true),
+    );
+    return known
+        .where((u) =>
+            u.username.toLowerCase().contains(query) ||
+            u.displayName.toLowerCase().contains(query))
+        .toList()
+      ..sort((a, b) => a.username.toLowerCase().compareTo(
+            b.username.toLowerCase(),
+          ));
+  }
+
+  /// Find a user by the short public id used in `pokatuha://u/<ID>` links
+  /// (USER_DISCOVERY.md §1 — first 12 hex chars of the UUID).
+  Future<UserCollection?> findByPublicId(String shortId) async {
+    final wanted = shortId.trim().toUpperCase();
+    if (wanted.isEmpty) return null;
+    final all = await _store.find(
+      filter: Filter.equals('isDeleted', false),
+    );
+    for (final u in all) {
+      final short = u.id.replaceAll('-', '').substring(0, 12).toUpperCase();
+      if (short == wanted) return u;
+    }
+    return null;
   }
 }

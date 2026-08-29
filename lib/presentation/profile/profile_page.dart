@@ -1,15 +1,23 @@
 /// Profile tab — local profile (ADR-001) + entries to settings, themes and
 /// notifications (FR-010). User controls profile visibility (Privacy rules).
+/// Shows the personal QR code (V2 USER_DISCOVERY.md §1–§2) and offers QR
+/// scanning for discovery.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:pokatuha/core/tokens/design_tokens.dart';
+import 'package:pokatuha/database/collections/user_collection.dart';
 import 'package:pokatuha/domain/repositories/notification_repository.dart';
+import 'package:pokatuha/domain/services/identity_service.dart';
 import 'package:pokatuha/domain/services/service_locator.dart';
 import 'package:pokatuha/l10n/app_localizations.dart';
 import 'package:pokatuha/presentation/app_view_model.dart';
+import 'package:pokatuha/presentation/deep_links/deep_link_dispatcher.dart';
 import 'package:pokatuha/presentation/notifications/notifications_page.dart';
 import 'package:pokatuha/presentation/settings/settings_page.dart';
 import 'package:pokatuha/presentation/settings/themes_page.dart';
+import 'package:pokatuha/presentation/users/qr_scanner_page.dart';
+import 'package:pokatuha/presentation/widgets/qr_code_dialog.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -63,6 +71,34 @@ class ProfilePage extends StatelessWidget {
                   ),
                 ),
               ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: DesignTokens.space4),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.tonalIcon(
+                          onPressed: user == null
+                              ? null
+                              : () => _showMyQr(context, user),
+                          icon: const Icon(Icons.qr_code_rounded),
+                          label: Text(l.showMyQr),
+                        ),
+                      ),
+                      const SizedBox(width: DesignTokens.space2),
+                      FilledButton.tonalIcon(
+                        onPressed: () => _scanQr(context),
+                        icon: const Icon(Icons.qr_code_scanner_rounded),
+                        label: Text(l.scanQr),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: DesignTokens.space3),
+              ),
               SliverList(
                 delegate: SliverChildListDelegate([
                   _entry(
@@ -94,6 +130,28 @@ class ProfilePage extends StatelessWidget {
         );
       },
     );
+  }
+
+  void _showMyQr(BuildContext context, UserCollection user) {
+    final l = AppLocalizations.of(context)!;
+    final uri = serviceLocator<IdentityService>().userUri(user.id);
+    showDialog(
+      context: context,
+      builder: (_) => QrCodeDialog(
+        title: l.yourQrCode,
+        subtitle:
+            user.username.isEmpty ? user.displayName : '@${user.username}',
+        uri: uri,
+      ),
+    );
+  }
+
+  Future<void> _scanQr(BuildContext context) async {
+    final raw = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const QrScannerPage()),
+    );
+    if (raw == null || !context.mounted) return;
+    await serviceLocator<DeepLinkDispatcher>().handle(raw);
   }
 
   Widget _entry(

@@ -81,4 +81,23 @@ void main() {
     expect(list.length, 1);
     expect(list.first.id, future.id);
   });
+
+  test('byGroup returns only the group activities (V2 Group-first)', () async {
+    final mine =
+        await repo.create(makeEvent(title: 'In group')..groupId = 'group-1');
+    await repo.create(makeEvent(title: 'Other group')..groupId = 'group-2');
+    await repo.create(makeEvent(title: 'Legacy V1'));
+    final list = await repo.byGroup('group-1');
+    expect(list.length, 1);
+    expect(list.first.id, mine.id);
+    expect(list.first.groupId, 'group-1');
+  });
+
+  test('legacy events without groupId are still readable (soft migration)',
+      () async {
+    final legacy = await repo.create(makeEvent(title: 'Legacy'));
+    final loaded = await repo.getById(legacy.id);
+    expect(loaded, isNotNull);
+    expect(loaded!.groupId, isNull);
+  });
 }
