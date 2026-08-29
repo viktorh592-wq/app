@@ -5,6 +5,10 @@
 /// (V2 §13); actions: join / leave / start / finish (UC-001..UC-004) via
 /// EventService. The activity accent color (V2 §11) propagates to chat
 /// bubbles, polls and route polyline.
+///
+/// V3 Sprint 3 — the AppBar hosts a chat-only three-dot menu (S3-T13) when
+/// the Chat tab is active, surfacing exactly the seven V2 entries: Search /
+/// Media / Pinned / Shared routes / Files / Mute / Export.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pokatuha/core/errors/app_error.dart';
@@ -39,10 +43,21 @@ class _ActivityDetailPageState extends State<ActivityDetailPage>
   bool _loading = true;
   String _activityLabel = '';
 
+  /// S3-T13 — chat tab key so the AppBar overflow menu can drive chat menu
+  /// actions (Search / Media / Pinned / Shared routes / Files / Mute /
+  /// Export).
+  final GlobalKey<ActivityChatTabState> _chatKey =
+      GlobalKey<ActivityChatTabState>();
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() {});
+      }
+    });
     _load();
   }
 
@@ -94,6 +109,8 @@ class _ActivityDetailPageState extends State<ActivityDetailPage>
     final accentColor = Color(
       event.accentColor ?? EventCollection.defaultAccentColorArgb,
     );
+    // S3-T13 — chat menu only visible on the Chat tab.
+    final onChatTab = _tabController.index == 1;
     return Scaffold(
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
@@ -113,6 +130,15 @@ class _ActivityDetailPageState extends State<ActivityDetailPage>
               ],
             ),
             actions: [
+              if (onChatTab)
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert_rounded),
+                  onSelected: (value) =>
+                      _chatKey.currentState?.onChatMenu(value),
+                  itemBuilder: (_) =>
+                      _chatKey.currentState?.chatMenuItems(l) ??
+                      const <PopupMenuEntry<String>>[],
+                ),
               Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: Center(child: StatusChip(status: status)),
@@ -139,7 +165,12 @@ class _ActivityDetailPageState extends State<ActivityDetailPage>
               onAction: _handleAction,
               onChanged: _load,
             ),
-            ActivityChatTab(eventId: event.id, accentColor: accentColor),
+            ActivityChatTab(
+              key: _chatKey,
+              eventId: event.id,
+              accentColor: accentColor,
+              event: event,
+            ),
             ActivityPollsTab(eventId: event.id, accentColor: accentColor),
             ActivityRouteTab(eventId: event.id, accentColor: accentColor),
           ],
