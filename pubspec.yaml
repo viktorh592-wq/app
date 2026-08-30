@@ -1,7 +1,7 @@
 name: pokatuha
 description: "Pokatuha — privacy-first, local-first P2P activity coordination platform for cyclists, hikers and outdoor communities."
 publish_to: "none"
-version: 1.0.0+1
+version: 3.0.0+1
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
@@ -64,6 +64,14 @@ dependencies:
 
 dependency_overrides:
   intl: 0.19.0
+  # S6-T1: pin record_platform_interface to 1.5.0 to avoid the
+  # hasPermission signature breakage introduced in 1.6.0 — record_linux
+  # 0.7.2 (the only 0.x release, transitively pulled by `record: ^5.1.2`)
+  # has not been updated to implement the new abstract member. 1.5.0 is
+  # the last version all federated implementations (record_android ^1.5.0,
+  # record_darwin ^1.2.0, record_web ^1.5.0, record_windows ^1.4.0,
+  # record_linux ^1.0.2) accept.
+  record_platform_interface: 1.5.0
 
 dev_dependencies:
   flutter_test:
