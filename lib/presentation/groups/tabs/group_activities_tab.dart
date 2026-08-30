@@ -25,6 +25,7 @@ import 'package:pokatuha/l10n/app_localizations.dart';
 import 'package:pokatuha/presentation/activities/activity_detail_page.dart';
 import 'package:pokatuha/presentation/activities/create_activity_page.dart';
 import 'package:pokatuha/presentation/app_view_model.dart';
+import 'package:pokatuha/presentation/map/map_page.dart';
 import 'package:pokatuha/presentation/widgets/activity_card.dart';
 import 'package:pokatuha/presentation/widgets/activity_menu_sheet.dart';
 import 'package:pokatuha/presentation/widgets/empty_state.dart';
@@ -199,11 +200,23 @@ class _GroupActivitiesTabState extends State<GroupActivitiesTab>
         onEdit: () => _edit(event),
         onDuplicate: () => _duplicate(event),
         onShare: () => _share(event),
+        onShowOnMap: () => _showOnMap(event),
         onPin: () => _togglePin(event),
         onArchive: () => _archive(event),
         onDelete: () => _delete(event),
       ),
     );
+  }
+
+  /// S6-T6 (S4-T10) — opens the standalone MapPage centered on this
+  /// activity with its first route pre-drawn as a polyline. Pushed as a
+  /// full-screen route on top of the current navigator (does not switch
+  /// the bottom-nav tab — that requires lifting MainScaffold state, which
+  /// is a larger follow-up).
+  void _showOnMap(EventCollection event) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => MapPage(initialEventId: event.id),
+    ));
   }
 
   Future<void> _edit(EventCollection event) async {

@@ -538,6 +538,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menuArchive => 'В архив';
 
   @override
+  String get menuShowOnMap => 'Показать на карте';
+
+  @override
   String get deleteActivityConfirm => 'Удалить эту активность? Запись в архиве сохранится.';
 
   @override

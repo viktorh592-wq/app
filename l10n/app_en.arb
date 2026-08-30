@@ -187,6 +187,7 @@
   "menuPin": "Pin in group",
   "menuUnpin": "Unpin from group",
   "menuArchive": "Archive",
+  "menuShowOnMap": "Show on map",
   "deleteActivityConfirm": "Delete this activity? The archive record is kept.",
   "duplicated": "Activity duplicated",
   "pinned": "Pinned in group",

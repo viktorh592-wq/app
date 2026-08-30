@@ -28,9 +28,18 @@ import 'package:pokatuha/presentation/activities/tabs/activity_route_tab.dart';
 import 'package:pokatuha/presentation/widgets/status_chip.dart';
 
 class ActivityDetailPage extends StatefulWidget {
-  const ActivityDetailPage({super.key, required this.eventId});
+  const ActivityDetailPage({
+    super.key,
+    required this.eventId,
+    this.initialTabIndex = 0,
+  });
 
   final String eventId;
+
+  /// S6-T6 (S4-T10) — initially selected sub-tab. The Map tab passes
+  /// `2` (Route) so tapping a meeting marker opens the activity directly
+  /// on its route map (FIX_PLAN §S4-T10 step 1).
+  final int initialTabIndex;
 
   @override
   State<ActivityDetailPage> createState() => _ActivityDetailPageState();
@@ -52,7 +61,11 @@ class _ActivityDetailPageState extends State<ActivityDetailPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(
+      length: 4,
+      initialIndex: widget.initialTabIndex.clamp(0, 3),
+      vsync: this,
+    );
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         setState(() {});

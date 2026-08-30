@@ -1,7 +1,7 @@
 name: pokatuha
 description: "Pokatuha — privacy-first, local-first P2P activity coordination platform for cyclists, hikers and outdoor communities."
 publish_to: "none"
-version: 1.0.0+1
+version: 3.0.0+1
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
@@ -53,14 +53,24 @@ dependencies:
   # share_plus — share invite links / exported GPX (USER_DISCOVERY.md §2)
   # url_launcher — open external https links from invite QR payloads
   # flutter_foreground_task — background location service (MAPS_AND_GPS_FIX.md §3)
-  # record / just_audio — voice messages (TELEGRAM_STYLE_CHAT.md §9)
+  #
+  # S6-T1 (ADR-006): `record` and `just_audio` were removed from
+  # pubspec.yaml. They were declared for the future voice-message feature
+  # (TELEGRAM_STYLE_CHAT.md §9) but never actually imported by any lib/
+  # or test/ file. The `record 5.x` family is unsatisfiable on Linux:
+  # `record_android ^1.5.0` and `record_web ^1.5.0` require
+  # `record_platform_interface >= 1.5.0`, but `record_linux 0.7.2` (the
+  # only 0.x release) is incompatible with `>= 1.2.0` (the abstract
+  # member `startStream` moved to a new interface class). No version of
+  # `record_platform_interface` satisfies both constraints, so the
+  # release APK build failed on Linux. When S3-T6 voice messages are
+  # actually implemented, a future sprint should re-add a maintained
+  # version (likely `record: ^7.x` which pulls `record_linux ^1.x`).
   qr_flutter: ^4.1.0
   mobile_scanner: ^5.2.3
   share_plus: ^10.1.2
   url_launcher: ^6.3.1
   flutter_foreground_task: ^8.10.0
-  record: ^5.1.2
-  just_audio: ^0.9.40
 
 dependency_overrides:
   intl: 0.19.0

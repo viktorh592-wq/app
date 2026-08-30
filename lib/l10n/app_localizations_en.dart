@@ -538,6 +538,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuArchive => 'Archive';
 
   @override
+  String get menuShowOnMap => 'Show on map';
+
+  @override
   String get deleteActivityConfirm => 'Delete this activity? The archive record is kept.';
 
   @override
