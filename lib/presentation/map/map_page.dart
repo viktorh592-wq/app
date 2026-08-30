@@ -46,7 +46,12 @@ import 'package:pokatuha/presentation/activities/activity_detail_page.dart';
 import 'package:pokatuha/presentation/app_view_model.dart';
 
 class MapPage extends StatefulWidget {
-  const MapPage({super.key});
+  const MapPage({super.key, this.initialEventId});
+
+  /// S6-T6 (S4-T10) — when set, the map opens pre-centered on this activity
+  /// with its first route drawn as a polyline (FIX_PLAN §S4-T10 step 2).
+  /// Null is the default bottom-nav Map tab behaviour (all events shown).
+  final String? initialEventId;
 
   @override
   State<MapPage> createState() => _MapPageState();
@@ -93,7 +98,9 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
       final participants = serviceLocator<ParticipantRepository>();
       final liveEvents = <EventCollection>[];
       final liveParticipants = <_LiveParticipant>[];
+      EventCollection? initialEvent;
       for (final e in events) {
+        if (e.id == widget.initialEventId) initialEvent = e;
         if (e.meetingPoint != null) liveEvents.add(e);
         if (e.status == EventStatus.ride.name) {
           // V2 §11 — each live participant is ringed with its activity color.
@@ -105,7 +112,23 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
           }
         }
       }
-      return _MapData(events: liveEvents, participants: liveParticipants);
+      // S6-T6 (S4-T10) — pre-load the initialEvent's first route so the
+      // PolylineLayer renders it immediately and the camera can center on
+      // its first waypoint. Mirrors MiniMapPreview's centering logic.
+      if (widget.initialEventId != null && _selectedRoutePoints.isEmpty) {
+        final routes = await serviceLocator<RouteRepository>()
+            .byEvent(widget.initialEventId!);
+        if (routes.isNotEmpty) {
+          _selectedRoutePoints = routes.first.waypoints
+              .map((w) => LatLng(w.lat, w.lng))
+              .toList();
+        }
+      }
+      return _MapData(
+        events: liveEvents,
+        participants: liveParticipants,
+        initialEvent: initialEvent,
+      );
     }();
   }
 
@@ -180,6 +203,15 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
   }
 
   LatLng _initialCenter(_MapData data) {
+    // S6-T6 (S4-T10) — when opened with initialEventId, center on the
+    // pre-loaded route or the event's meeting point.
+    if (data.initialEvent != null) {
+      if (_selectedRoutePoints.isNotEmpty) {
+        return _selectedRoutePoints.first;
+      }
+      final mp = data.initialEvent!.meetingPoint;
+      if (mp != null) return LatLng(mp.lat, mp.lng);
+    }
     for (final e in data.events) {
       if (e.meetingPoint != null) {
         return LatLng(e.meetingPoint!.lat, e.meetingPoint!.lng);
@@ -199,8 +231,13 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
       width: 48,
       height: 48,
       child: GestureDetector(
+        // S6-T6 (S4-T10) — open ActivityDetailPage directly on the Route
+        // tab (index 2) so the user lands on the activity's map view.
         onTap: () => Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => ActivityDetailPage(eventId: e.id))),
+            builder: (_) => ActivityDetailPage(
+                  eventId: e.id,
+                  initialTabIndex: 2,
+                ))),
         child: const Icon(Icons.place_rounded, color: Colors.red, size: 36),
       ),
     );
@@ -853,10 +890,18 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
 }
 
 class _MapData {
-  _MapData({required this.events, required this.participants});
+  _MapData({
+    required this.events,
+    required this.participants,
+    this.initialEvent,
+  });
 
   final List<EventCollection> events;
   final List<_LiveParticipant> participants;
+
+  /// S6-T6 — event matched by `MapPage.initialEventId`, if any. Used by
+  /// `_initialCenter` to bias the camera toward the requested activity.
+  final EventCollection? initialEvent;
 }
 
 /// A live participant together with its activity accent color (V2 §11).

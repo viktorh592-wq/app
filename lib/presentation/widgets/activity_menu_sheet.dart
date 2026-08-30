@@ -1,6 +1,8 @@
 /// Activity three-dot menu (V2 GROUPS_AND_ACTIVITIES.md §9, FIX_PLAN S2-T8).
-/// Exactly six actions: Edit / Duplicate / Share / Pin in group / Archive /
-/// Delete. Opened from ActivityCard's more_vert button.
+/// Exactly seven actions: Edit / Duplicate / Share / Show on map /
+/// Pin in group / Archive / Delete. Opened from ActivityCard's more_vert
+/// button. The "Show on map" entry was added in Sprint 6 (S6-T6 / S4-T10)
+/// to wire the activity card to the standalone Map tab.
 import 'package:flutter/material.dart';
 
 import 'package:pokatuha/core/tokens/design_tokens.dart';
@@ -14,6 +16,7 @@ class ActivityMenuSheet extends StatelessWidget {
     required this.onEdit,
     required this.onDuplicate,
     required this.onShare,
+    required this.onShowOnMap,
     required this.onPin,
     required this.onArchive,
     required this.onDelete,
@@ -23,6 +26,11 @@ class ActivityMenuSheet extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onDuplicate;
   final VoidCallback onShare;
+
+  /// S6-T6 (S4-T10) — opens the standalone MapPage centered on this
+  /// activity with its route pre-drawn (FIX_PLAN §S4-T10 step 2).
+  final VoidCallback onShowOnMap;
+
   final VoidCallback onPin;
   final VoidCallback onArchive;
   final VoidCallback onDelete;
@@ -66,6 +74,14 @@ class ActivityMenuSheet extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
               onShare();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.map_outlined),
+            title: Text(l.menuShowOnMap),
+            onTap: () {
+              Navigator.pop(context);
+              onShowOnMap();
             },
           ),
           ListTile(

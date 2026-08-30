@@ -1137,6 +1137,12 @@ abstract class AppLocalizations {
   /// **'Archive'**
   String get menuArchive;
 
+  /// No description provided for @menuShowOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on map'**
+  String get menuShowOnMap;
+
   /// No description provided for @deleteActivityConfirm.
   ///
   /// In en, this message translates to:
