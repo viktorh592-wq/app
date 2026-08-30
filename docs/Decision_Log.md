@@ -281,4 +281,76 @@ by S4-T9 local periodic fallback for now.)
 
 ---
 
+## 2026-08-30 — Sprint 6 — V3.0.0 Release Hardening
+
+Status
+
+Accepted
+
+Description
+
+Sprint 6 is the release-hardening sprint that closes the V2 specification
+work and prepares the project for the V3.0.0 release. Full architectural
+record: adr/ADR-006-Sprint-6-Release-Hardening.md.
+
+Tasks (S6-T1..T7):
+
+- S6-T1 — Build Flutter APK CI fix. Root cause: `record 5.2.1` (what
+  `^5.1.2` resolves to) declares `record_platform_interface: ^1.2.0` and
+  `record_linux: >=0.5.0 <1.0.0`; pub resolved them to `1.6.0` and
+  `0.7.2`, which are mutually incompatible (1.6.0 added a new abstract
+  member on `RecordMethodChannelPlatformInterface.hasPermission` that
+  `record_linux 0.7.2` does not implement). Fix: pin
+  `record_platform_interface: 1.5.0` via `dependency_overrides` (last
+  version all federated implementations accept). pubspec.lock updated
+  to match.
+- S6-T2 — `pubspec.yaml` version bumped `1.0.0+1` -> `3.0.0+1` to
+  signal the V3.0.0 release milestone.
+- S6-T3 (S5-T5) — README updated (Version 3.0.0, sprint status table,
+  expanded repository structure); this Decision_Log entry; new
+  `adr/ADR-006-Sprint-6-Release-Hardening.md` recording the
+  architectural decisions for the sprint.
+- S6-T4 (S5-T6) — Dead code removal. Two unreferenced library files
+  deleted: `lib/core/errors/result.dart` (Result/Failure/Success sealed
+  type, no call site) and `lib/core/extensions/iterable_extensions.dart`
+  (mapIndexed/firstWhereOrNull, no call site; codebase uses Dart 3.0+
+  `Iterable.firstOrNull` instead).
+- S6-T5 (S4-T6) — Marker clustering. Already implemented in
+  `MapPage._participantMarkers` as a custom distance-based greedy
+  algorithm (zoom < 14, threshold 1 km, count badge with tap-to-zoom).
+  Deviates from the prescribed `flutter_map_marker_cluster` package —
+  the custom implementation meets the V2 §6 acceptance criteria without
+  introducing a new pub dependency. FIX_PLAN §9.3 checkbox is now ☑.
+- S6-T6 (S4-T10) — Map tab ↔ activity map bidirectional integration.
+  `ActivityDetailPage` gains `initialTabIndex` parameter;
+  `MapPage._meetingMarker` passes `initialTabIndex: 2` so tapping a
+  meeting pin on the Map tab opens the activity directly on its Route
+  sub-tab. `MapPage` gains `initialEventId` constructor parameter;
+  `ActivityMenuSheet` gains a seventh action `onShowOnMap` that pushes
+  `MapPage(initialEventId: event.id)` as a full-screen route centred on
+  the activity's first route. Two sub-steps deferred to a future sprint
+  (bottom-nav tab switch requires lifting MainScaffold state;
+  participant popup swipe-up -> UserProfilePage pending route
+  finalization). See ADR-006 for details.
+- S6-T7 (S3-T13) — Chat menu with 7 items. Already implemented in
+  `activity_chat_tab.dart` (`chatMenuItems` + `onChatMenu` hosting
+  Search / Media / Pinned / Shared routes / Files / Mute / Export via a
+  `PopupMenuButton` in `activity_detail_page.dart`'s SliverAppBar).
+  Minor follow-ups noted: persist Mute flag to `GroupMember.muted`
+  (currently in-memory); align "Files" label with spec wording
+  "Shared files" if strict adherence is desired. FIX_PLAN §9.3 checkbox
+  is now ☑.
+- Stale PRs #2, #3, #4 closed without merge; their respective branches
+  deleted from origin.
+
+Reference
+
+FIX_PLAN.md §9.3 (P2 checklist), §9.4 (verify commands)
+
+adr/ADR-006-Sprint-6-Release-Hardening.md
+
+AGENTS.md (one PR per task; CI must be green before merge)
+
+---
+
 End of document.

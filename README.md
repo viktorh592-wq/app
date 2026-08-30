@@ -7,9 +7,9 @@
 
 # Status
 
-Version: 1.0.0
+Version: 3.0.0
 
-Status: Approved
+Status: Approved — V3.0.0 release-hardened (Sprint 6)
 
 Project Type: AI-Ready Documentation
 
@@ -219,13 +219,23 @@ User controls:
 # Repository Structure
 
 ```
-docs/
-architecture/
-adr/
-prompts/
-schemas/
-diagrams/
-assets/
+docs/              V2 spec (docs/v2/*), Decision_Log, ADR index
+architecture/      V1 architecture reference (Architecture.md)
+adr/               Architectural Decision Records (ADR-001..006)
+prompts/           AI prompts (MasterPrompt, etc.)
+schemas/           JSON / data schemas
+diagrams/          Diagrams
+assets/            Icons, fonts (Inter), images
+lib/               Flutter application source
+  core/            utils, constants, errors, extensions
+  database/        Sembast collections + DatabaseService (ADR-005)
+  domain/          enums, repositories, services (business layer)
+  presentation/    theme, widgets, 5-tab navigation + feature screens
+  l10n/            generated localizations (en, ru)
+  main.dart / app.dart
+android/           Android config + permissions + FCM wake-up service
+test/              unit tests (utils, GPX, repositories, event service)
+.github/workflows/ CI: flutter.yml (analyze+test), build-apk.yml (release APK)
 ```
 
 ---
@@ -308,6 +318,10 @@ flutter analyze   # static analysis (0 issues)
 flutter test      # unit tests
 ```
 
+CI runs both checks on every push (`flutter.yml`) plus a release APK
+build (`build-apk.yml`) on pushes to `main`. Both must be green before
+merge.
+
 ## Localization
 
 Generate localization files after editing `l10n/*.arb`:
@@ -315,6 +329,27 @@ Generate localization files after editing `l10n/*.arb`:
 ```bash
 flutter gen-l10n
 ```
+
+The generated `lib/l10n/app_localizations*.dart` files are committed
+per `l10n.yaml`'s `output-dir: lib/l10n` convention so the project
+builds without a `gen-l10n` step on the CI runner.
+
+---
+
+# Sprint status (V3.0.0)
+
+| Sprint | Scope | Status |
+|--------|-------|--------|
+| 1 | Groups, Invite/QR, Map FAB (P0) | merged (PR #8) |
+| 2 | Design system, activity menu, accent color (P0/P1) | merged (PR #9) |
+| 3 | Telegram-style chat (P1) | merged (PR #10) |
+| 4 | Map layers, Live GPS, clustering (P1/P2) | merged (PR #11) |
+| 5 | Polls, routes, chat cards (P2) | merged (PR #12) |
+| 6 | CI stabilization, dead code, Map↔activity integration, docs (release hardening) | this PR |
+
+See `docs/Decision_Log.md` for per-sprint acceptance records and
+`adr/ADR-006-Sprint-6-Release-Hardening.md` for the Sprint 6
+architectural decisions.
 
 ---
 
