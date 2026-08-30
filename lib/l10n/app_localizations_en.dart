@@ -619,7 +619,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatMenuSharedRoutes => 'Shared routes';
 
   @override
-  String get chatMenuFiles => 'Files';
+  String get chatMenuFiles => 'Shared files';
 
   @override
   String get chatMenuMute => 'Mute';
