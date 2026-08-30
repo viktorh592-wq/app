@@ -75,6 +75,12 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
   /// Current map zoom — used to decide clustering threshold.
   double _currentZoom = 12;
 
+  /// S6-T6 follow-up — guards the post-frame fitCamera call so it only
+  /// runs once per `initialEventId` lifecycle. Without this guard, every
+  /// rebuild (e.g. on zoom change) would re-fit the camera and override
+  /// the user's manual pan/zoom.
+  bool _initialFitDone = false;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -145,6 +151,24 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
           }
           final data = snapshot.data!;
           final center = _initialCenter(data);
+          // S6-T6 follow-up — after the first frame, fit the camera to the
+          // pre-loaded route bounds for a tighter view than the default
+          // `initialCenter: route.first, initialZoom: 12`. Mirrors the
+          // existing fitCamera call in `_showRoute` (line 547). Runs once.
+          if (widget.initialEventId != null &&
+              !_initialFitDone &&
+              _selectedRoutePoints.length >= 2) {
+            _initialFitDone = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              _mapController.fitCamera(
+                CameraFit.bounds(
+                  bounds: LatLngBounds.fromPoints(_selectedRoutePoints),
+                  padding: const EdgeInsets.all(48),
+                ),
+              );
+            });
+          }
           return FlutterMap(
             key: ValueKey('map-${serviceLocator<MapService>().provider.name}'),
             mapController: _mapController,

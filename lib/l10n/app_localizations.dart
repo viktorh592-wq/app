@@ -1302,7 +1302,7 @@ abstract class AppLocalizations {
   /// No description provided for @chatMenuFiles.
   ///
   /// In en, this message translates to:
-  /// **'Files'**
+  /// **'Shared files'**
   String get chatMenuFiles;
 
   /// No description provided for @chatMenuMute.
