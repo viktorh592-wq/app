@@ -296,14 +296,27 @@ record: adr/ADR-006-Sprint-6-Release-Hardening.md.
 Tasks (S6-T1..T7):
 
 - S6-T1 — Build Flutter APK CI fix. Root cause: `record 5.2.1` (what
-  `^5.1.2` resolves to) declares `record_platform_interface: ^1.2.0` and
-  `record_linux: >=0.5.0 <1.0.0`; pub resolved them to `1.6.0` and
-  `0.7.2`, which are mutually incompatible (1.6.0 added a new abstract
-  member on `RecordMethodChannelPlatformInterface.hasPermission` that
-  `record_linux 0.7.2` does not implement). Fix: pin
-  `record_platform_interface: 1.5.0` via `dependency_overrides` (last
-  version all federated implementations accept). pubspec.lock updated
-  to match.
+  `^5.1.2` resolves to) declares `record_platform_interface: ^1.2.0`
+  and `record_linux: >=0.5.0 <1.0.0`; pub resolved them to `1.6.0`
+  and `0.7.2`. Empirical verification showed the breakage is older
+  than initially supposed: `record_platform_interface 1.5.0` already
+  moved `startStream` into a new abstract class
+  `RecordMethodChannelPlatformInterface` and changed the
+  `hasPermission` signature; `record_linux 0.7.2` (last touched
+  2024-06-26) does not implement either. Since `record_android ^1.5.0`
+  and `record_web ^1.5.0` require `>= 1.5.0` but `record_linux 0.7.2`
+  is only compatible with `<= 1.1.0`, the dependency graph is
+  genuinely unsatisfiable within `record 5.x`. Fix: remove `record`
+  and `just_audio` from `pubspec.yaml` entirely — both packages were
+  declared for the future voice-message feature (TELEGRAM_STYLE_CHAT.md
+  §9) but never actually imported by any `lib/` or `test/` file. The
+  12 transitive entries (`record_android`, `record_darwin`,
+  `record_linux`, `record_platform_interface`, `record_web`,
+  `record_windows`, `just_audio_platform_interface`, `just_audio_web`,
+  `audio_session`, `rxdart`) were pruned from `pubspec.lock`.
+  `crypto` is kept because `uuid 4.6.0` still pulls it. When S3-T6
+  voice messages are actually implemented, a future sprint should
+  re-add `record: ^7.x` (which pulls the maintained `record_linux 1.x`).
 - S6-T2 — `pubspec.yaml` version bumped `1.0.0+1` -> `3.0.0+1` to
   signal the V3.0.0 release milestone.
 - S6-T3 (S5-T5) — README updated (Version 3.0.0, sprint status table,
