@@ -9,12 +9,19 @@ import 'package:pokatuha/database/collections/user_collection.dart';
 import 'package:pokatuha/domain/enums/enums.dart';
 import 'package:pokatuha/domain/repositories/group_member_repository.dart';
 import 'package:pokatuha/domain/repositories/group_repository.dart';
+import 'package:pokatuha/domain/repositories/user_repository.dart';
 
 class GroupService {
-  GroupService(this._groupRepository, this._memberRepository);
+  GroupService(this._groupRepository, this._memberRepository, [this._userRepository]);
 
   final GroupRepository _groupRepository;
   final GroupMemberRepository _memberRepository;
+
+  /// V3.0.1 — Optional [UserRepository] used by `inviteByPublicId` to create a
+  /// stub user record on the inviter's device when the scanned public ID does
+  /// not match any locally-known user. Injected (not required) so existing
+  /// tests that construct `GroupService` with two args keep working.
+  final UserRepository? _userRepository;
 
   /// Create a group (GROUPS_AND_ACTIVITIES.md §3). The owner automatically
   /// joins as a member with the `owner` role (§4).
@@ -98,6 +105,32 @@ class GroupService {
       role: GroupRole.member.name,
       addedBy: addedBy,
     );
+  }
+
+  /// V3.0.1 — Invite a user to a group by their short public id (the value
+  /// carried in a `pokatuha://u/<ID>` link). When the user is not yet known
+  /// on the inviter's device, a stub user record is created via
+  /// [UserRepository.getOrCreateStubFromPublicId] so the member appears in
+  /// the group's member list immediately (USER_DISCOVERY.md §2 — discovery
+  /// by QR, and the user-reported bug: «нет возможности добавить участника
+  /// в группу, при наведении курсора на QR-код появляется сообщение
+  /// «Участник не найден»»).
+  ///
+  /// Returns the (existing or stub) [UserCollection] so the UI can show the
+  /// localized "member added" snackbar with the user's display name.
+  Future<UserCollection> inviteByPublicId({
+    required GroupCollection group,
+    required String publicId,
+    required String addedBy,
+  }) async {
+    final users = _userRepository;
+    if (users == null) {
+      throw const BusinessRuleError(
+          'UserRepository not wired to GroupService — invite by public id unavailable');
+    }
+    final user = await users.getOrCreateStubFromPublicId(publicId);
+    await inviteMember(group: group, user: user, addedBy: addedBy);
+    return user;
   }
 
   /// Leave a group. The owner must transfer ownership first (§4).

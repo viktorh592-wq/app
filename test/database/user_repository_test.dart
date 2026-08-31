@@ -1,6 +1,7 @@
 /// Tests for local user discovery (V2 USER_DISCOVERY.md §1–§2):
 /// nickname search and lookup by short public id.
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pokatuha/core/errors/app_error.dart';
 import 'package:pokatuha/core/utils/timestamps.dart';
 import 'package:pokatuha/core/utils/uuid.dart';
 import 'package:pokatuha/database/collections/user_collection.dart';
@@ -75,5 +76,55 @@ void main() {
     expect(found?.id, user.id);
     expect(await repo.findByPublicId('FFFFFFFFFF00'), isNull);
     expect(await repo.findByPublicId(''), isNull);
+  });
+
+  group('V3.0.1 — getOrCreateStubFromPublicId (bug fix for QR discovery)', () {
+    test('creates a stub user with a stable 12-char id', () async {
+      const publicId = 'ABCDEF123456';
+      final stub = await repo.getOrCreateStubFromPublicId(publicId);
+      expect(stub.id, publicId);
+      expect(stub.displayName, 'User ABCD');
+      expect(stub.username, 'user_abcdef123456');
+      expect(stub.profileVisible, isTrue);
+      expect(stub.isDeleted, isFalse);
+    });
+
+    test('is idempotent — re-uses the existing record on the second call',
+        () async {
+      const publicId = 'CAFEBABE1234';
+      final first = await repo.getOrCreateStubFromPublicId(publicId);
+      final second = await repo.getOrCreateStubFromPublicId(publicId);
+      expect(first.id, second.id);
+      expect(first.id, publicId);
+      // No duplicate stub users created.
+      expect(await db.usersStore.count(), 1);
+    });
+
+    test('lowercased input is normalized to upper-case', () async {
+      const publicId = 'abcdef123456';
+      final stub = await repo.getOrCreateStubFromPublicId(publicId);
+      expect(stub.id, publicId.toUpperCase());
+    });
+
+    test('rejects an empty public id', () async {
+      expect(() => repo.getOrCreateStubFromPublicId(''),
+          throwsA(isA<BusinessRuleError>()));
+      expect(() => repo.getOrCreateStubFromPublicId('   '),
+          throwsA(isA<BusinessRuleError>()));
+    });
+
+    test('subsequent findByPublicId finds the stub', () async {
+      const publicId = 'DEADBEEF1234';
+      await repo.getOrCreateStubFromPublicId(publicId);
+      final found = await repo.findByPublicId(publicId.toLowerCase());
+      expect(found?.id, publicId);
+    });
+
+    test('stub user is visible to nickname search', () async {
+      const publicId = 'CAFEBABE1234';
+      await repo.getOrCreateStubFromPublicId(publicId);
+      final results = await repo.searchByNickname('cafe');
+      expect(results.any((u) => u.id == publicId), isTrue);
+    });
   });
 }

@@ -169,44 +169,79 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
               );
             });
           }
-          return FlutterMap(
-            key: ValueKey('map-${serviceLocator<MapService>().provider.name}'),
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: center,
-              initialZoom: _currentZoom,
-              minZoom: 3,
-              maxZoom: 19,
-              onPositionChanged: (position, hasGesture) {
-                final z = position.zoom;
-                if (z != _currentZoom) {
-                  setState(() => _currentZoom = z);
-                }
-              },
-            ),
+          return Stack(
             children: [
-              serviceLocator<MapService>().tileLayer(),
-              if (_selectedRoutePoints.length >= 2)
-                PolylineLayer(
-                  polylines: [
-                    Polyline(
-                      points: _selectedRoutePoints,
-                      strokeWidth: 4,
-                      color: DesignTokens.primary,
+              FlutterMap(
+                key: ValueKey(
+                    'map-${serviceLocator<MapService>().provider.name}'),
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: center,
+                  initialZoom: _currentZoom,
+                  minZoom: 3,
+                  maxZoom: 19,
+                  onPositionChanged: (position, hasGesture) {
+                    final z = position.zoom;
+                    if (z != _currentZoom) {
+                      setState(() => _currentZoom = z);
+                    }
+                  },
+                ),
+                children: [
+                  serviceLocator<MapService>().tileLayer(),
+                  if (_selectedRoutePoints.length >= 2)
+                    PolylineLayer(
+                      polylines: [
+                        Polyline(
+                          points: _selectedRoutePoints,
+                          strokeWidth: 4,
+                          color: DesignTokens.primary,
+                        ),
+                      ],
+                    ),
+                  MarkerLayer(
+                    markers: [
+                      ...data.events.map(_meetingMarker),
+                      ..._participantMarkers(data.participants),
+                    ],
+                  ),
+                  RichAttributionWidget(
+                    attributions: [
+                      TextSourceAttribution('OpenStreetMap contributors',
+                          onTap: () {}),
+                    ],
+                  ),
+                ],
+              ),
+              // V3.0.1 — Google-Maps-style zoom controls (+ / −) on the
+              // right edge of the map, with the «my location» button just
+              // below them. The existing bottom-right FAB still opens the
+              // full action sheet.
+              Positioned(
+                right: 12,
+                top: 12,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _MapOverlayButton(
+                      icon: Icons.add_rounded,
+                      tooltip: l.zoomIn,
+                      onTap: _zoomIn,
+                    ),
+                    const SizedBox(height: 8),
+                    _MapOverlayButton(
+                      icon: Icons.remove_rounded,
+                      tooltip: l.zoomOut,
+                      onTap: _zoomOut,
+                    ),
+                    const SizedBox(height: 12),
+                    _MapOverlayButton(
+                      icon: Icons.my_location_rounded,
+                      tooltip: l.findMe,
+                      onTap: _findMe,
                     ),
                   ],
                 ),
-              MarkerLayer(
-                markers: [
-                  ...data.events.map(_meetingMarker),
-                  ..._participantMarkers(data.participants),
-                ],
-              ),
-              RichAttributionWidget(
-                attributions: [
-                  TextSourceAttribution('OpenStreetMap contributors',
-                      onTap: () {}),
-                ],
               ),
             ],
           );
@@ -466,6 +501,9 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
   }
 
   /// «Найти меня» — center on the current GPS position.
+  /// V3.0.1 — also wired to the dedicated overlay button next to the
+  /// zoom controls (Google-Maps-style), in addition to the existing action
+  /// sheet entry.
   Future<void> _findMe() async {
     try {
       final sample = await serviceLocator<GpsService>().current();
@@ -473,6 +511,20 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
     } on AppError catch (e) {
       _toast(e.message);
     }
+  }
+
+  /// V3.0.1 — Zoom in / out for the dedicated overlay buttons. Uses the
+  /// current map zoom (kept in sync via `onPositionChanged`). Step is 1.0
+  /// (matches Google Maps default). Clamped to the [minZoom, maxZoom] range
+  /// from `MapOptions` (3..19).
+  void _zoomIn() {
+    final next = (_currentZoom + 1.0).clamp(3.0, 19.0).toDouble();
+    _mapController.move(_mapController.camera.center, next);
+  }
+
+  void _zoomOut() {
+    final next = (_currentZoom - 1.0).clamp(3.0, 19.0).toDouble();
+    _mapController.move(_mapController.camera.center, next);
   }
 
   /// «Поделиться местоположением» — stream GPS into my participant records
@@ -1108,6 +1160,56 @@ class _PopupRow extends StatelessWidget {
               style: theme.textTheme.bodyMedium
                   ?.copyWith(fontWeight: FontWeight.w600)),
         ],
+      ),
+    );
+  }
+}
+
+/// V3.0.1 — Google-Maps-style overlay button used on the right edge of the
+/// map for `+` / `−` zoom and the «my location» button. White rounded
+/// square with subtle shadow + dark icon, so it stays legible on any tile
+/// provider (light satellite, dark OSM, etc.).
+class _MapOverlayButton extends StatelessWidget {
+  const _MapOverlayButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return Material(
+      color: isDark ? Colors.white.withValues(alpha: 0.95) : Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      elevation: 2,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Tooltip(
+          message: tooltip,
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Icon(
+              icon,
+              size: 22,
+              color: isDark ? Colors.black87 : Colors.black87,
+            ),
+          ),
+        ),
       ),
     );
   }

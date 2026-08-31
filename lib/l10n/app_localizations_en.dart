@@ -833,4 +833,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get download => 'Download';
+
+  @override
+  String get scanUserQrToInvite => 'Scan user QR to invite';
+
+  @override
+  String get inviteFailed => 'Invite failed';
+
+  @override
+  String get zoomIn => 'Zoom in';
+
+  @override
+  String get zoomOut => 'Zoom out';
 }

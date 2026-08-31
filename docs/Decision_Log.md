@@ -366,4 +366,224 @@ AGENTS.md (one PR per task; CI must be green before merge)
 
 ---
 
+## 2026-09-01
+
+### V3.0.1 — User-feedback bug fixes
+
+Status
+
+Accepted
+
+Branch
+
+`fix/user-feedback-bugs-v3.0.1`
+
+Description
+
+Four bugs reported by a v3.0.0 user during real-device testing were
+fixed in a single PR. Each fix is isolated to its layer (presentation /
+domain / data) and keeps the Local-First / Privacy-First invariants
+intact — no new pub dependencies, no cloud calls, no architectural
+redesign.
+
+Bug 1 — «Участник не найден» when inviting a user by their personal QR
+
+Cause
+
+`DeepLinkDispatcher.handle` and the group invite flow called
+`UserRepository.findByPublicId`, which only returns users already known
+on the device. In a server-less, P2P-not-yet-shipped app the scanned
+user is almost always unknown locally, so every scan rejected the
+invite with the localized «Участник не найден» toast.
+
+Fix
+
+- `UserRepository.getOrCreateStubFromPublicId(String publicId)` —
+  idempotent creation of a stub `UserCollection` whose `id` equals the
+  12-char public id (stable so subsequent scans of the same QR return
+  the same record instead of creating duplicates).
+- `GroupService.inviteByPublicId(...)` — looks the user up via
+  `getOrCreateStubFromPublicId`, then calls the existing
+  `inviteMember` (re-uses the 30-member cap and duplicate guards).
+  `GroupService`'s constructor gets an optional `UserRepository`
+  parameter so existing tests keep passing.
+- New invite-sheet entry «Сканировать QR участника» on the group
+  members tab opens `QrScannerPage` and routes a parsed
+  `pokatuha://u/<ID>` link through `GroupService.inviteByPublicId`.
+- `DeepLinkDispatcher` no longer bails out on an unknown user — it
+  creates a stub and opens the (mostly empty) profile page so the
+  user can still interact (add to contacts, invite to another
+  group, etc.).
+
+Tests
+
+`test/database/user_repository_test.dart` — six new tests for
+`getOrCreateStubFromPublicId` (creation, idempotency, case
+normalization, empty rejection, lookup by public id, nickname-search
+visibility).
+
+`test/domain/group_service_test.dart` — four new tests for
+`inviteByPublicId` (stub creation + membership, record reuse,
+duplicate rejection, no-UserRepository wiring rejection).
+
+Bug 2 — File picker can't select a GPX/KML file from phone storage
+
+Cause
+
+`activity_route_tab.dart` used `FilePicker.platform.pickFiles(type:
+FileType.custom, allowedExtensions: ['gpx','kml','fit'])`. Android's
+Storage Access Framework picker filters by MIME type when an explicit
+extension list is passed, and `.gpx` / `.kml` typically have no
+registered MIME entry on the device — the file appears greyed out or
+silently does nothing when tapped.
+
+Fix
+
+Changed to `type: FileType.any` so the picker shows every file SAF
+exposes, then validate the extension ourselves after the pick. `.fit`
+is still detected and rejected with the existing localized
+`fitNotSupported` message; unsupported extensions get
+`unsupportedFormat`. Falls back to parsing the file name when the
+picker does not populate `PlatformFile.extension` (some SAF sources
+return null for it).
+
+Tests
+
+No new test added — the picker is an OS-level integration that
+cannot be unit-tested without mocking `FilePicker.channel`. The
+fallback parsing path is covered by code inspection; the change is
+small enough to be visually reviewable.
+
+Bug 3 — Map page: missing zoom + my-location buttons, only 2 of 5
+providers render
+
+Cause
+
+Two separate root causes:
+
+1. `MapService._urlTemplate` used `{a-c}` and `{a-d}` placeholders for
+   the subdomain rotation. `flutter_map` 7.x only expands the `{s}`
+   placeholder (with the `subdomains` parameter); `{a-c}` etc. are
+   passed literally to the tile server, producing 404s. Result: only
+   OSM (no subdomain) and Esri (single origin) rendered — CyclOSM,
+   OpenTopoMap and Carto Voyager were silently broken.
+2. The Map page had no zoom in/out buttons or "my location" button.
+   `flutter_map` does not include these by default; they need to be
+   added as overlay widgets.
+
+Fix
+
+- `MapService._tileConfig(p)` returns a `_TileConfig(urlTemplate,
+  subdomains)` pair per provider; `tileLayer()` passes both to the
+  `TileLayer` widget. CyclOSM and OpenTopoMap use `['a','b','c']`,
+  Carto Voyager uses `['a','b','c','d']`, the rest use an empty list.
+- `urlTemplateFor(p)` and a new `subdomainsFor(p)` are exposed for
+  tests.
+- `MapPage` now wraps `FlutterMap` in a `Stack` with a `Positioned`
+  column on the right edge containing three `_MapOverlayButton`s:
+  zoom in (+), zoom out (−) and «Find me» (my location). The existing
+  bottom-right FAB still opens the action sheet with the full menu
+  (share location, route, GPX, layer switcher, participants list).
+- `_zoomIn` / `_zoomOut` use `MapController.camera.center` + a 1.0
+  zoom step, clamped to the [3, 19] range declared in `MapOptions`.
+- `_MapOverlayButton` — white rounded square with shadow + dark icon,
+  legible on any tile provider.
+
+Tests
+
+`test/domain/map_service_test.dart` — updated URL assertions to
+expect `{s}` instead of `{a-c}` / `{a-d}`, and added subdomain-list
+assertions (`subdomainsFor`). All five V2 providers are now covered.
+
+Bug 4 — FAB «Add group» / «Add activity» text is clipped
+
+Cause
+
+`app_theme.dart` set `floatingActionButtonTheme.shape = CircleBorder()`
+globally, so every `FloatingActionButton.extended` (which is supposed
+to use the stadium-shaped pill background for its text label) was
+forced into a circular shape and the text label overflowed outside
+the background — exactly the user-reported "подложка у текста не под
+всем текстом".
+
+Fix
+
+- Removed the global `shape: CircleBorder()` from the FAB theme.
+  `FloatingActionButton.extended` now uses the Material 3 default
+  stadium shape; plain round FABs (the Map action sheet FAB, the
+  `MorphingFab` collapsed state) keep their circular shape via an
+  explicit `shape: CircleBorder()` on the widget itself.
+- New `MorphingFab` widget (V3.0.1) implements the user-requested UX:
+  round "+" first, expands to a labeled pill on the first tap, fires
+  the action on the second tap. Auto-collapses after 3.5 s of
+  inactivity. Used by `GroupsPage` ("Add group") and
+  `GroupDetailPage` ("Add activity").
+
+Tests
+
+No unit tests — `MorphingFab` is a small stateful widget whose
+behaviour (tap-to-expand, tap-to-fire) is verified by manual
+inspection. The `AnimatedSwitcher` + `setState` pattern is standard.
+
+Verification (cannot be run in this environment — Flutter SDK is not
+installed here; the CI workflow `flutter.yml` runs `flutter analyze`
+and `flutter test` on push):
+
+- `flutter pub get` — regenerates l10n; `lib/l10n/*` files were
+  patched by hand to match the gen-l10n output (added 4 getters
+  `scanUserQrToInvite`, `inviteFailed`, `zoomIn`, `zoomOut` in
+  `app_localizations.dart`, `app_localizations_ru.dart` and
+  `app_localizations_en.dart`).
+- `flutter analyze` — expected "No issues found!". Code was written
+  against the existing lint set (`prefer_const_constructors`,
+  `prefer_const_literals_to_create_immutables`, `strict-casts`,
+  `strict-raw-types`).
+- `flutter test` — expected all green; the existing test set plus
+  the 10 new tests (6 on `UserRepository`, 4 on `GroupService`) plus
+  the 5 updated `MapService` URL tests should pass.
+
+Localisation
+
+Four new ARB keys added to both `l10n/app_ru.arb` and
+`l10n/app_en.arb`: `scanUserQrToInvite`, `inviteFailed`, `zoomIn`,
+`zoomOut`. The corresponding abstract getters and concrete
+`@override` implementations were hand-edited in the generated
+`lib/l10n/app_localizations*.dart` files because the Flutter SDK
+needed for `flutter gen-l10n` is not available in this environment.
+
+Files touched (16)
+
+- `lib/presentation/theme/app_theme.dart`
+- `lib/presentation/widgets/morphing_fab.dart` (new)
+- `lib/presentation/groups/groups_page.dart`
+- `lib/presentation/groups/group_detail_page.dart`
+- `lib/domain/services/map_service.dart`
+- `lib/presentation/map/map_page.dart`
+- `lib/presentation/activities/tabs/activity_route_tab.dart`
+- `lib/domain/repositories/user_repository.dart`
+- `lib/domain/services/group_service.dart`
+- `lib/domain/services/service_locator.dart`
+- `lib/presentation/groups/tabs/group_members_tab.dart`
+- `lib/presentation/deep_links/deep_link_dispatcher.dart`
+- `l10n/app_ru.arb`, `l10n/app_en.arb`
+- `lib/l10n/app_localizations.dart`, `lib/l10n/app_localizations_ru.dart`,
+  `lib/l10n/app_localizations_en.dart`
+- `test/domain/map_service_test.dart`
+- `test/domain/group_service_test.dart`
+- `test/database/user_repository_test.dart`
+- `docs/Decision_Log.md` (this entry)
+
+Reference
+
+ADR-001 (Local-First — no cloud storage introduced)
+
+ADR-005 (Sembast storage — no engine change)
+
+AI_RULES Rule 4 — storage engine unchanged
+
+AGENTS.md — one branch + one PR per logical change; CI must be green
+before merge; do not push to `main`
+
+---
+
 End of document.

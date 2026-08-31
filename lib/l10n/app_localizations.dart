@@ -1730,6 +1730,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Download'**
   String get download;
+
+  /// No description provided for @scanUserQrToInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan user QR to invite'**
+  String get scanUserQrToInvite;
+
+  /// No description provided for @inviteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite failed'**
+  String get inviteFailed;
+
+  /// No description provided for @zoomIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in'**
+  String get zoomIn;
+
+  /// No description provided for @zoomOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom out'**
+  String get zoomOut;
 }
 
 class _AppLocalizationsDelegate

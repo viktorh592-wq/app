@@ -33,10 +33,19 @@ class MapService {
   /// V2 tile layer for the active provider. All five V2 providers are rendered
   /// natively via flutter_map. Non-V2 providers fall back to OSM tiles
   /// (No Vendor Lock-In — selection is still persisted).
+  ///
+  /// V3.0.1 bug fix — flutter_map 7.x only expands the `{s}` placeholder
+  /// (with the `subdomains` parameter). The previous code used `{a-c}` /
+  /// `{a-d}` ranges which were never expanded, so the URL was passed
+  /// literally to the tile server and produced 404s for CyclOSM,
+  /// OpenTopoMap and Carto Voyager. The URLs are now `{s}`-based and each
+  /// provider gets its own `subdomains` list (CyclOSM/OpenTopoMap share
+  /// `a/b/c`, Carto Voyager uses `a/b/c/d`).
   TileLayer tileLayer() {
-    final url = _urlTemplate(_provider);
+    final cfg = _tileConfig(_provider);
     return TileLayer(
-      urlTemplate: url,
+      urlTemplate: cfg.urlTemplate,
+      subdomains: cfg.subdomains,
       userAgentPackageName: 'com.pokatuha.app',
       maxZoom: 19,
     );
@@ -44,32 +53,65 @@ class MapService {
 
   /// Tile URL template for the given provider. Public so tests can assert on
   /// exact URLs without instantiating a [TileLayer] (which requires Flutter).
-  String urlTemplateFor(MapProvider provider) => _urlTemplate(provider);
+  String urlTemplateFor(MapProvider provider) => _tileConfig(provider).urlTemplate;
 
-  String _urlTemplate(MapProvider p) {
+  /// Subdomains for the `{s}` placeholder of the given provider. Public so
+  /// tests can assert on the subdomain list (V3.0.1 fix).
+  List<String> subdomainsFor(MapProvider provider) => _tileConfig(provider).subdomains;
+
+  /// Tile URL + subdomain list for a provider (V3.0.1 fix).
+  _TileConfig _tileConfig(MapProvider p) {
     switch (p) {
       case MapProvider.openStreetMap:
-        return 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+        // No CDN subdomains — single origin.
+        return const _TileConfig(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          subdomains: _noSubdomains,
+        );
       case MapProvider.cyclOSM:
-        return 'https://{a-c}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png';
+        return const _TileConfig(
+          urlTemplate:
+              'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
+          subdomains: _abcSubdomains,
+        );
       case MapProvider.openTopoMap:
-        return 'https://{a-c}.tile.opentopomap.org/{z}/{x}/{y}.png';
+        return const _TileConfig(
+          urlTemplate: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+          subdomains: _abcSubdomains,
+        );
       case MapProvider.esriSatellite:
-        return 'https://server.arcgisonline.com/ArcGIS/rest/services/'
-            'World_Imagery/MapServer/tile/{z}/{y}/{x}';
+        // ArcGIS World Imagery — single origin (no CDN subdomain), Y/X tile
+        // order is the ArcGIS convention. flutter_map's URL templating is
+        // placeholder-based, so `{z}/{y}/{x}` works verbatim.
+        return const _TileConfig(
+          urlTemplate:
+              'https://server.arcgisonline.com/ArcGIS/rest/services/'
+              'World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          subdomains: _noSubdomains,
+        );
       case MapProvider.cartoVoyager:
-        return 'https://{a-d}.basemaps.cartocdn.com/rastertiles/'
-            'voyager/{z}/{x}/{y}.png';
+        return const _TileConfig(
+          urlTemplate:
+              'https://{s}.basemaps.cartocdn.com/rastertiles/'
+              'voyager/{z}/{x}/{y}.png',
+          subdomains: _abcdSubdomains,
+        );
       case MapProvider.mapLibre:
-        return _customStyleUrl ??
-            'https://demotiles.maplibre.org/style/{z}/{x}/{y}.png';
+        return _TileConfig(
+          urlTemplate: _customStyleUrl ??
+              'https://demotiles.maplibre.org/style/{z}/{x}/{y}.png',
+          subdomains: _noSubdomains,
+        );
       // Deprecated non-V2 providers — spec forbids Google Maps; others stay
       // selectable for back-compat but render OSM tiles.
       case MapProvider.googleMaps:
       case MapProvider.here:
       case MapProvider.twoGis:
       case MapProvider.yandexMaps:
-        return 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+        return const _TileConfig(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          subdomains: _noSubdomains,
+        );
     }
   }
 
@@ -176,4 +218,27 @@ class MapService {
   ];
 
   static const List<MapProvider> availableProviders = MapProvider.values;
+
+  /// Empty subdomain list — used by single-origin providers (OSM, Esri,
+  /// MapLibre demotiles). flutter_map's `TileLayer` accepts an empty list
+  /// and skips the `{s}` expansion in that case (the URL template must not
+  /// contain `{s}` either).
+  static const List<String> _noSubdomains = [];
+
+  /// `a` / `b` / `c` subdomain rotation — used by CyclOSM and OpenTopoMap.
+  static const List<String> _abcSubdomains = ['a', 'b', 'c'];
+
+  /// `a` / `b` / `c` / `d` subdomain rotation — used by Carto Voyager.
+  static const List<String> _abcdSubdomains = ['a', 'b', 'c', 'd'];
+}
+
+/// Tile URL + subdomains for a single provider (V3.0.1 fix).
+class _TileConfig {
+  const _TileConfig({
+    required this.urlTemplate,
+    required this.subdomains,
+  });
+
+  final String urlTemplate;
+  final List<String> subdomains;
 }

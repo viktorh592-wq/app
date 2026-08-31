@@ -318,5 +318,10 @@
   "openInNavigator": "Навигатор",
   "noNavigatorApp": "Не найдено приложение-навигатор",
   "shareFailed": "Не удалось поделиться",
-  "download": "Скачать"
+  "download": "Скачать",
+
+  "scanUserQrToInvite": "Сканировать QR участника",
+  "inviteFailed": "Ошибка приглашения",
+  "zoomIn": "Увеличить",
+  "zoomOut": "Уменьшить"
 }

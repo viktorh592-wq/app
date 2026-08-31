@@ -137,10 +137,16 @@ class AppTheme {
           ),
         ),
       ),
+      // V3.0.1 bug fix — do NOT force `shape: CircleBorder()` on the global
+      // FAB theme. Doing so makes `FloatingActionButton.extended` render as a
+      // circle, cutting off its text label (the text background does not span
+      // the whole label). Leave the default shape so extended FABs use the
+      // Material 3 stadium shape, while plain round FABs (used inside
+      // `MorphingFab` and the Map action sheet) keep their circular shape via
+      // the explicit `shape: CircleBorder()` on the widget itself.
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: DesignTokens.limeAccent,
         foregroundColor: DesignTokens.textPrimary,
-        shape: CircleBorder(),
         elevation: 4,
       ),
       navigationBarTheme: NavigationBarThemeData(

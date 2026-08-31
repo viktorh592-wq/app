@@ -54,17 +54,33 @@ class _ActivityRouteTabState extends State<ActivityRouteTab> {
   }
 
   /// V2 §1 — accept .gpx and .kml; reject .fit with a localized message.
+  ///
+  /// V3.0.1 bug fix — Android's Storage Access Framework picker (used by
+  /// `file_picker` when `type: FileType.custom` + `allowedExtensions` is
+  /// passed) hides files whose extension has no registered MIME type on
+  /// the device. `.gpx` and `.kml` typically have no MIME entry, so the
+  /// files appear greyed out or are silently unselectable. The fix is to
+  /// open the picker with `FileType.any` (which shows every file the SAF
+  /// exposes) and validate the extension ourselves after the user picks.
+  /// `.fit` is still detected and rejected with the same localized message.
   Future<void> _importFile() async {
     final l = AppLocalizations.of(context)!;
     try {
       final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: const ['gpx', 'kml', 'fit'],
+        type: FileType.any,
         withData: true,
       );
       if (result == null || result.files.isEmpty) return;
       final file = result.files.single;
-      final ext = (file.extension ?? '').toLowerCase();
+      var ext = (file.extension ?? '').toLowerCase();
+      if (ext.isEmpty) {
+        // The picker does not always populate `extension` for files picked
+        // from SAF — fall back to parsing the file name.
+        final dot = file.name.lastIndexOf('.');
+        if (dot >= 0 && dot < file.name.length - 1) {
+          ext = file.name.substring(dot + 1).toLowerCase();
+        }
+      }
       if (ext == 'fit') {
         if (mounted) {
           ScaffoldMessenger.of(context)
@@ -82,11 +98,12 @@ class _ActivityRouteTabState extends State<ActivityRouteTab> {
       final content = file.bytes != null
           ? String.fromCharCodes(file.bytes!)
           : await File(file.path!).readAsString();
-      final points = serviceLocator<GpxService>()
-          .parseForExtension(content, ext);
+      final points =
+          serviceLocator<GpxService>().parseForExtension(content, ext);
       await serviceLocator<RouteRepository>().importGpx(
         eventId: widget.eventId,
-        name: file.name.replaceAll(RegExp(r'\.(gpx|kml)$', caseSensitive: false), ''),
+        name: file.name.replaceAll(
+            RegExp(r'\.(gpx|kml)$', caseSensitive: false), ''),
         waypoints: points,
         gpxFilePath: file.path ?? file.name,
       );

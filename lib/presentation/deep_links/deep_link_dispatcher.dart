@@ -4,9 +4,16 @@
 ///   `pokatuha://g/<code>` → join group by invite code → group details
 /// Owns the app [NavigatorState] key so links can be handled from outside
 /// the widget tree (cold start, background links, QR scanner).
+///
+/// V3.0.1 — when a personal `pokatuha://u/<ID>` link is scanned for a user
+/// not yet known on this device, a stub [UserCollection] is created via
+/// `UserRepository.getOrCreateStubFromPublicId` and the profile page is
+/// opened with it (bug fix for the user-reported «Участник не найден»
+/// toast that blocked discovery of any new user).
 import 'package:flutter/material.dart';
 
 import 'package:pokatuha/core/errors/app_error.dart';
+import 'package:pokatuha/database/collections/user_collection.dart';
 import 'package:pokatuha/domain/repositories/user_repository.dart';
 import 'package:pokatuha/domain/services/auth_service.dart';
 import 'package:pokatuha/domain/services/group_service.dart';
@@ -33,12 +40,22 @@ class DeepLinkDispatcher {
     if (me == null) return; // not authenticated — ignore until onboarding
     switch (link.kind) {
       case LinkKind.user:
-        final user = await serviceLocator<UserRepository>().findByPublicId(
-          link.payload,
-        );
-        if (user == null) {
-          _toast(l.userNotFound);
-          return;
+        final users = serviceLocator<UserRepository>();
+        final found = await users.findByPublicId(link.payload);
+        UserCollection user;
+        if (found != null) {
+          user = found;
+        } else {
+          // V3.0.1 — instead of bailing out with «Участник не найден» and
+          // blocking discovery of any new user, create a stub record and
+          // open the (mostly empty) profile page so the user can still
+          // interact (add to contacts, invite to a group, …).
+          try {
+            user = await users.getOrCreateStubFromPublicId(link.payload);
+          } on AppError catch (e) {
+            _toast(e.message);
+            return;
+          }
         }
         _push(UserProfilePage(user: user));
       case LinkKind.group:

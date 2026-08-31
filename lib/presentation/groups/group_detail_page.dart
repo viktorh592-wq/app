@@ -19,6 +19,7 @@ import 'package:pokatuha/presentation/groups/tabs/group_activities_tab.dart';
 import 'package:pokatuha/presentation/groups/tabs/group_media_tab.dart';
 import 'package:pokatuha/presentation/groups/tabs/group_members_tab.dart';
 import 'package:pokatuha/presentation/groups/tabs/group_settings_tab.dart';
+import 'package:pokatuha/presentation/widgets/morphing_fab.dart';
 import 'package:pokatuha/presentation/widgets/qr_code_dialog.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -195,15 +196,18 @@ class _GroupDetailPageState extends State<GroupDetailPage>
           ],
         ),
       ),
-      // Inside a group the primary action is «Add Activity»
-      // (ARCHITECTURE_V2.md §6).
-      floatingActionButton: FloatingActionButton.extended(
+      // V3.0.1 bug fix — inside a group the primary action is «Add Activity»
+      // (ARCHITECTURE_V2.md §6). Use `MorphingFab` so the round "+" expands to
+      // the labeled pill on the first tap and fires on the second, instead
+      // of the broken `FloatingActionButton.extended` that had its label
+      // clipped by the global CircleBorder FAB theme.
+      floatingActionButton: MorphingFab(
+        heroTag: 'fab-group-activity-${group.id}',
+        label: l.createActivity,
         onPressed: () => Navigator.of(context)
             .push(MaterialPageRoute(
                 builder: (_) => CreateActivityPage(groupId: group.id)))
             .then((_) => _load()),
-        icon: const Icon(Icons.add_rounded),
-        label: Text(l.createActivity),
       ),
     );
   }

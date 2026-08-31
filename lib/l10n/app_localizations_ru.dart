@@ -833,4 +833,16 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get download => 'Скачать';
+
+  @override
+  String get scanUserQrToInvite => 'Сканировать QR участника';
+
+  @override
+  String get inviteFailed => 'Ошибка приглашения';
+
+  @override
+  String get zoomIn => 'Увеличить';
+
+  @override
+  String get zoomOut => 'Уменьшить';
 }

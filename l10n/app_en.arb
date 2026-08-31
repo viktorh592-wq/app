@@ -318,5 +318,10 @@
   "openInNavigator": "Navigate",
   "noNavigatorApp": "No navigation app found",
   "shareFailed": "Share failed",
-  "download": "Download"
+  "download": "Download",
+
+  "scanUserQrToInvite": "Scan user QR to invite",
+  "inviteFailed": "Invite failed",
+  "zoomIn": "Zoom in",
+  "zoomOut": "Zoom out"
 }
