@@ -833,4 +833,100 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get download => 'Скачать';
+
+  @override
+  String get scanUserQrToInvite => 'Сканировать QR участника';
+
+  @override
+  String get inviteFailed => 'Ошибка приглашения';
+
+  @override
+  String get zoomIn => 'Увеличить';
+
+  @override
+  String get zoomOut => 'Уменьшить';
+
+  @override
+  String get markAllRead => 'Отметить все прочитанными';
+
+  @override
+  String get noNotifications => 'Уведомлений нет';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get noPollsYet => 'Опросов пока нет';
+
+  @override
+  String get activityNotFound => 'Активность не найдена';
+
+  @override
+  String get privacy => 'Конфиденциальность';
+
+  @override
+  String get profileVisibleToPeers => 'Профиль виден другим участникам';
+
+  @override
+  String get shareGpsByDefault => 'По умолчанию делиться GPS';
+
+  @override
+  String get tapMapForCoords => 'Нажмите значок карты, чтобы задать координаты';
+
+  @override
+  String get imageLabel => 'изображение';
+
+  @override
+  String get relativeNow => 'сейчас';
+
+  @override
+  String relativeMinutes(int minutes) => '$minutesм';
+
+  @override
+  String relativeHours(int hours) => '$hoursч';
+
+  @override
+  String relativeDays(int days) => '$daysд';
+
+  @override
+  String userFallbackName(String id) => 'Пользователь $id';
+
+  @override
+  String get editProfile => 'Редактировать профиль';
+
+  @override
+  String get changePhoto => 'Изменить фото';
+
+  @override
+  String get photoFromCamera => 'Сделать снимок';
+
+  @override
+  String get photoFromGallery => 'Выбрать из галереи';
+
+  @override
+  String get removePhoto => 'Удалить фото';
+
+  @override
+  String get photoSaved => 'Фото сохранено';
+
+  @override
+  String get photoRemoved => 'Фото удалено';
+
+  @override
+  String get photoError => 'Не удалось сохранить фото';
+
+  @override
+  String get usernameLabel => '@username';
+
+  @override
+  String get bioLabel => 'О себе';
+
+  @override
+  String get visibilityPrivate => 'Приватная';
+
+  @override
+  String get visibilityLinkOnly => 'По ссылке';
+
+  @override
+  String get visibilityPublic => 'Публичная';
 }

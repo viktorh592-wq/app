@@ -20,6 +20,7 @@ import 'package:pokatuha/presentation/groups/group_detail_page.dart';
 import 'package:pokatuha/presentation/users/qr_scanner_page.dart';
 import 'package:pokatuha/presentation/widgets/empty_state.dart';
 import 'package:pokatuha/presentation/widgets/group_card.dart';
+import 'package:pokatuha/presentation/widgets/morphing_fab.dart';
 import 'package:pokatuha/presentation/widgets/sync_banner.dart';
 
 class GroupsPage extends StatefulWidget {
@@ -111,12 +112,18 @@ class _GroupsPageState extends State<GroupsPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      // V3.0.1 bug fix — replace the broken `FloatingActionButton.extended`
+      // (text was clipped by the global CircleBorder theme) with `MorphingFab`:
+      // round "+" first, expands to a labeled pill on the first tap, fires the
+      // action on the second tap (matches the user-reported UX:
+      // «после нажатия на круглую кнопку с "+" она менялась на кнопку с
+      // соответствующим текстом»).
+      floatingActionButton: MorphingFab(
+        heroTag: 'fab-groups-create',
+        label: l.createGroup,
         onPressed: () => Navigator.of(context)
             .push(MaterialPageRoute(builder: (_) => const CreateGroupPage()))
             .then((_) => setState(_load)),
-        icon: const Icon(Icons.add_rounded),
-        label: Text(l.createGroup),
       ),
     );
   }

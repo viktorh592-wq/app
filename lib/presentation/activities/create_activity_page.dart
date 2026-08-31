@@ -277,7 +277,7 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
               controller: _meetingLabel,
               decoration: InputDecoration(
                 labelText: l.meetingPoint,
-                helperText: 'Tap the map icon to set coordinates',
+                helperText: l.tapMapForCoords,
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.map_outlined),
                   onPressed: _setMeetingFromDefault,
@@ -310,7 +310,7 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
                     items: EventVisibility.values
                         .map((v) => DropdownMenuItem(
                               value: v,
-                              child: Text(v.name),
+                              child: Text(_visibilityLabel(l, v)),
                             ))
                         .toList(),
                     onChanged: (v) => setState(
@@ -335,6 +335,17 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
         ),
       ),
     );
+  }
+
+  /// V3.0.2 — localized [EventVisibility] label. The previous version used
+  /// `v.name` which exposed raw enum names ("private" / "linkOnly" / "public")
+  /// in the UI for both locales.
+  String _visibilityLabel(AppLocalizations l, EventVisibility v) {
+    return switch (v) {
+      EventVisibility.private => l.visibilityPrivate,
+      EventVisibility.linkOnly => l.visibilityLinkOnly,
+      EventVisibility.public => l.visibilityPublic,
+    };
   }
 
   /// V2 §10 — activity color picker: horizontal row of swatches from

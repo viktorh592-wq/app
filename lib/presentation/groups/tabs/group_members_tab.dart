@@ -1,6 +1,12 @@
 /// Group → Members tab (V2 GROUPS_AND_ACTIVITIES.md §5): member list with
 /// roles + the «Invite» action (USER_DISCOVERY.md §2, §4): show group QR,
 /// share the invite link, or find a user by nickname.
+///
+/// V3.0.1 — added a fourth invite action: «Scan user QR» (bug fix for the
+/// user-reported "Участник не найден" issue). Scanning another user's
+/// personal `pokatuha://u/<ID>` QR now creates a stub user record on the
+/// inviter's device and adds them to the group, instead of showing the
+/// "user not found" toast.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -17,6 +23,7 @@ import 'package:pokatuha/domain/services/identity_service.dart';
 import 'package:pokatuha/domain/services/service_locator.dart';
 import 'package:pokatuha/l10n/app_localizations.dart';
 import 'package:pokatuha/presentation/app_view_model.dart';
+import 'package:pokatuha/presentation/users/qr_scanner_page.dart';
 import 'package:pokatuha/presentation/users/user_search_page.dart';
 import 'package:pokatuha/presentation/widgets/empty_state.dart';
 import 'package:pokatuha/presentation/widgets/qr_code_dialog.dart';
@@ -153,7 +160,8 @@ class _GroupMembersTabState extends State<GroupMembersTab>
   }
 
   /// Invite bottom sheet (USER_DISCOVERY.md §2): group QR, invite link,
-  /// nickname search (FIX_PLAN S1-T10).
+  /// nickname search (FIX_PLAN S1-T10), and — V3.0.1 — scan a user's
+  /// personal QR to invite them (bug fix for «Участник не найден»).
   void _showInviteSheet(BuildContext context, GroupCollection group) {
     final l = AppLocalizations.of(context)!;
     showModalBottomSheet<void>(
@@ -193,11 +201,77 @@ class _GroupMembersTabState extends State<GroupMembersTab>
                 ));
               },
             ),
+            // V3.0.1 — invite by scanning the user's personal QR code. The
+            // other user shows their personal `pokatuha://u/<ID>` QR (Profile
+            // tab → Show my QR); the inviter scans it from this sheet.
+            // Scanning a non-user QR (group invite, random link) is rejected
+            // with the localized "invalidQr" message and does not add
+            // anyone to the group.
+            ListTile(
+              leading: const Icon(Icons.qr_code_scanner_rounded),
+              title: Text(l.scanUserQrToInvite),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _scanUserQr(context, group);
+              },
+            ),
             const SizedBox(height: DesignTokens.space2),
           ],
         ),
       ),
     );
+  }
+
+  /// V3.0.1 — open the QR scanner to capture another user's personal QR and
+  /// invite them to the group. Mirrors `_scanQr` on the Profile page, but
+  /// routes the parsed link through `GroupService.inviteByPublicId` instead
+  /// of `DeepLinkDispatcher.handle` (the latter would open a profile page,
+  /// not add a member).
+  Future<void> _scanUserQr(
+    BuildContext context,
+    GroupCollection group,
+  ) async {
+    final l = AppLocalizations.of(context)!;
+    final me = context.read<AppViewModel>().user;
+    if (me == null) return;
+    final raw = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const QrScannerPage()),
+    );
+    if (raw == null || !context.mounted) return;
+    final link = serviceLocator<IdentityService>().parse(raw);
+    if (link == null || link.kind != LinkKind.user) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l.invalidQr)),
+        );
+      }
+      return;
+    }
+    try {
+      final user = await serviceLocator<GroupService>().inviteByPublicId(
+        group: group,
+        publicId: link.payload,
+        addedBy: me.id,
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l.memberAdded(user.displayName))),
+        );
+      }
+      widget.onChanged?.call();
+      if (mounted) setState(_load);
+    } on AppError catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${l.inviteFailed}: $e')),
+        );
+      }
+    }
   }
 
   void _showGroupQr(BuildContext context, GroupCollection group) {

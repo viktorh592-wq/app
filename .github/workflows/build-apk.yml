@@ -5,6 +5,11 @@ on:
     branches:
       - main
       - master
+      - 'fix/**'
+      - 'feat/**'
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:

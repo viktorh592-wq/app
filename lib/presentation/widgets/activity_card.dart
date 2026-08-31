@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pokatuha/core/tokens/design_tokens.dart';
 import 'package:pokatuha/database/collections/event_collection.dart';
 import 'package:pokatuha/domain/enums/enums.dart';
+import 'package:pokatuha/l10n/app_localizations.dart';
 
 /// Activity card — pixel-perfect to Figma / screenshots.
 /// Uses the activity accent color for the entire card background (V2 §11 —
@@ -157,7 +158,7 @@ class ActivityCard extends StatelessWidget {
                   const Spacer(),
                   FilledButton(
                     onPressed: onTap,
-                    child: const Text('Открыть'),
+                    child: Text(AppLocalizations.of(context)!.openMap),
                   ),
                 ],
               ),

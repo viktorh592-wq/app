@@ -7,6 +7,7 @@ import 'package:pokatuha/database/database.dart';
 import 'package:pokatuha/domain/enums/enums.dart';
 import 'package:pokatuha/domain/repositories/group_member_repository.dart';
 import 'package:pokatuha/domain/repositories/group_repository.dart';
+import 'package:pokatuha/domain/repositories/user_repository.dart';
 import 'package:pokatuha/domain/services/group_service.dart';
 
 /// Inserts a locally-known user directly into the store (peers discovered
@@ -188,5 +189,107 @@ void main() {
     expect(await service.canManage(group.id, owner.id), isTrue);
     expect(await service.canManage(group.id, member.id), isFalse);
     expect(await service.canManage(group.id, 'stranger'), isFalse);
+  });
+
+  group('V3.0.1 — inviteByPublicId (bug fix for «Участник не найден»)', () {
+    late GroupService serviceWithUsers;
+    late UserRepository users;
+
+    setUp(() {
+      users = UserRepository(db);
+      serviceWithUsers = GroupService(
+        GroupRepository(db),
+        members,
+        users,
+      );
+    });
+
+    test('creates a stub user and adds them to the group when unknown',
+        () async {
+      final owner = await makeUser('Alex');
+      final group = await serviceWithUsers.createGroup(
+          owner: owner, name: 'Crew', type: GroupType.public);
+
+      const publicId = 'ABCDEF123456'; // 12 hex chars, uppercased.
+      final invited =
+          await serviceWithUsers.inviteByPublicId(
+        group: group,
+        publicId: publicId,
+        addedBy: owner.id,
+      );
+      expect(invited.id, publicId);
+      expect(invited.displayName, 'User ABCD');
+      expect(invited.username, 'user_${publicId.toLowerCase()}');
+      expect(invited.profileVisible, isTrue);
+
+      // Membership link created.
+      final membership = await members.byGroupAndUser(group.id, publicId);
+      expect(membership, isNotNull);
+      expect(membership!.role, GroupRole.member.name);
+
+      // Stub user is discoverable by public id.
+      final lookup = await users.findByPublicId(publicId);
+      expect(lookup, isNotNull);
+      expect(lookup!.id, publicId);
+    });
+
+    test('reuses an existing user record when the public id is already known',
+        () async {
+      final owner = await makeUser('Alex');
+      final group = await serviceWithUsers.createGroup(
+          owner: owner, name: 'Crew', type: GroupType.public);
+      const publicId = 'CAFEBABE1234';
+
+      // Pre-populate a stub user with this public id (simulates a second
+      // scan of an already-known peer).
+      await users.getOrCreateStubFromPublicId(publicId);
+      final beforeCount = await db.usersStore.count();
+
+      final invited = await serviceWithUsers.inviteByPublicId(
+        group: group,
+        publicId: publicId,
+        addedBy: owner.id,
+      );
+      expect(invited.id, publicId);
+
+      final afterCount = await db.usersStore.count();
+      // No duplicate stub users created — the existing record was reused.
+      expect(afterCount, beforeCount);
+    });
+
+    test('rejects a duplicate invite (already a member)', () async {
+      final owner = await makeUser('Alex');
+      final group = await serviceWithUsers.createGroup(
+          owner: owner, name: 'Crew', type: GroupType.public);
+      const publicId = 'DEADBEEF1234';
+      await serviceWithUsers.inviteByPublicId(
+        group: group,
+        publicId: publicId,
+        addedBy: owner.id,
+      );
+      expect(
+        () => serviceWithUsers.inviteByPublicId(
+          group: group,
+          publicId: publicId,
+          addedBy: owner.id,
+        ),
+        throwsA(isA<BusinessRuleError>()),
+      );
+    });
+
+    test('throws when UserRepository is not wired', () async {
+      final owner = await makeUser('Alex');
+      final group = await service.createGroup(
+          owner: owner, name: 'Crew', type: GroupType.public);
+      // `service` is the bare GroupService (no UserRepository injected).
+      expect(
+        () => service.inviteByPublicId(
+          group: group,
+          publicId: 'DEADBEEF1234',
+          addedBy: owner.id,
+        ),
+        throwsA(isA<BusinessRuleError>()),
+      );
+    });
   });
 }

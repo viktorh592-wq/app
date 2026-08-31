@@ -1127,57 +1127,60 @@ class ActivityChatTabState extends State<ActivityChatTab> {
   }) {
     return showDialog<void>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(title),
-        content: FutureBuilder<List<MessageCollection>>(
-          future: fetch(),
-          builder: (ctx, snap) {
-            if (snap.connectionState != ConnectionState.done) {
-              return const SizedBox(
-                height: 80,
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-            final list = snap.data ?? const <MessageCollection>[];
-            if (list.isEmpty) {
+      builder: (dialogContext) {
+        final l = AppLocalizations.of(dialogContext)!;
+        return AlertDialog(
+          title: Text(title),
+          content: FutureBuilder<List<MessageCollection>>(
+            future: fetch(),
+            builder: (ctx, snap) {
+              if (snap.connectionState != ConnectionState.done) {
+                return const SizedBox(
+                  height: 80,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              final list = snap.data ?? const <MessageCollection>[];
+              if (list.isEmpty) {
+                return SizedBox(
+                  height: 80,
+                  child: Center(child: Text(emptyText)),
+                );
+              }
               return SizedBox(
-                height: 80,
-                child: Center(child: Text(emptyText)),
+                width: double.maxFinite,
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: list.length,
+                  itemBuilder: (ctx, i) {
+                    final m = list[i];
+                    return ListTile(
+                      leading: const Icon(Icons.chevron_right_rounded),
+                      title: Text(
+                        m.text.isEmpty
+                            ? (m.attachmentType ?? 'attachment')
+                            : m.text,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _scrollToMessage(m.id);
+                      },
+                    );
+                  },
+                ),
               );
-            }
-            return SizedBox(
-              width: double.maxFinite,
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: list.length,
-                itemBuilder: (ctx, i) {
-                  final m = list[i];
-                  return ListTile(
-                    leading: const Icon(Icons.chevron_right_rounded),
-                    title: Text(
-                      m.text.isEmpty
-                          ? (m.attachmentType ?? 'attachment')
-                          : m.text,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      _scrollToMessage(m.id);
-                    },
-                  );
-                },
-              ),
-            );
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('OK'),
+            },
           ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l.ok),
+            ),
+          ],
+        );
+      },
     );
   }
 

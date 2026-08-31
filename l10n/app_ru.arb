@@ -318,5 +318,48 @@
   "openInNavigator": "Навигатор",
   "noNavigatorApp": "Не найдено приложение-навигатор",
   "shareFailed": "Не удалось поделиться",
-  "download": "Скачать"
+  "download": "Скачать",
+
+  "scanUserQrToInvite": "Сканировать QR участника",
+  "inviteFailed": "Ошибка приглашения",
+  "zoomIn": "Увеличить",
+  "zoomOut": "Уменьшить",
+
+  "markAllRead": "Отметить все прочитанными",
+  "noNotifications": "Уведомлений нет",
+  "ok": "OK",
+  "noPollsYet": "Опросов пока нет",
+  "activityNotFound": "Активность не найдена",
+  "privacy": "Конфиденциальность",
+  "profileVisibleToPeers": "Профиль виден другим участникам",
+  "shareGpsByDefault": "По умолчанию делиться GPS",
+  "tapMapForCoords": "Нажмите значок карты, чтобы задать координаты",
+  "imageLabel": "изображение",
+
+  "relativeNow": "сейчас",
+  "relativeMinutes": "{minutes}м",
+  "@relativeMinutes": { "placeholders": { "minutes": { "type": "int" } } },
+  "relativeHours": "{hours}ч",
+  "@relativeHours": { "placeholders": { "hours": { "type": "int" } } },
+  "relativeDays": "{days}д",
+  "@relativeDays": { "placeholders": { "days": { "type": "int" } } },
+
+  "userFallbackName": "Пользователь {id}",
+  "@userFallbackName": { "placeholders": { "id": { "type": "String" } } },
+
+  "editProfile": "Редактировать профиль",
+  "changePhoto": "Изменить фото",
+  "photoFromCamera": "Сделать снимок",
+  "photoFromGallery": "Выбрать из галереи",
+  "removePhoto": "Удалить фото",
+  "photoSaved": "Фото сохранено",
+  "photoRemoved": "Фото удалено",
+  "photoError": "Не удалось сохранить фото",
+
+  "usernameLabel": "@username",
+  "bioLabel": "О себе",
+
+  "visibilityPrivate": "Приватная",
+  "visibilityLinkOnly": "По ссылке",
+  "visibilityPublic": "Публичная"
 }

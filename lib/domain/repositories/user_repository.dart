@@ -99,4 +99,50 @@ class UserRepository {
     }
     return null;
   }
+
+  /// V3.0.1 — create (or return an existing) "stub" user record for a public
+  /// ID discovered through a scanned `pokatuha://u/{ID}` link when the user is
+  /// not yet known on this device (USER_DISCOVERY.md §2 — discovery by QR).
+  ///
+  /// Local-First context: in a server-less, P2P-not-yet-shipped app the only
+  /// way to learn about another user is by scanning their QR or being handed
+  /// their contact out-of-band. When the scanned user is unknown locally,
+  /// previous versions of the app showed "Участник не найден" and gave up,
+  /// which made it impossible to invite anyone to a group.
+  ///
+  /// The stub user is a fully valid [UserCollection] entity:
+  ///   • `id` = the 12-char publicId (kept stable so subsequent scans of the
+  ///     same QR find the same record instead of creating duplicates)
+  ///   • `username` = "user_{publicId}" (lowercase) so nickname search can
+  ///     also locate the stub if the inviter types the public id back in
+  ///   • `displayName` = "User {first 4 chars}" — minimal placeholder until
+  ///     P2P profile exchange is implemented (ADR-002 / Rule 5)
+  ///   • `profileVisible` = true so the user appears in nickname searches
+  ///
+  /// When real P2P profile exchange arrives, the stub record can be merged
+  /// into the full profile (matched by the original public id) — same local
+  /// id policy so no member-link records need updating.
+  Future<UserCollection> getOrCreateStubFromPublicId(String shortId) async {
+    final wanted = shortId.trim().toUpperCase();
+    if (wanted.isEmpty) {
+      throw const BusinessRuleError('Cannot create a stub user: empty id');
+    }
+    final existing = await findByPublicId(wanted);
+    if (existing != null) return existing;
+
+    final now = Timestamps.nowUtc();
+    final shortPrefix = wanted.length >= 4 ? wanted.substring(0, 4) : wanted;
+    final user = UserCollection()
+      ..id = wanted // stable 12-char id; matches findByPublicId's lookup rule
+      ..createdAt = now
+      ..updatedAt = now
+      ..version = 1
+      ..isDeleted = false
+      ..displayName = 'User $shortPrefix'
+      ..username = 'user_${wanted.toLowerCase()}'
+      ..bio = null
+      ..profileVisible = true
+      ..createdBy = null;
+    return _store.put(user);
+  }
 }

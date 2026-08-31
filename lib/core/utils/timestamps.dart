@@ -31,13 +31,38 @@ class Timestamps {
   }
 
   /// Relative "time ago" helper for chat / notifications.
-  static String relativeFromNow(int utcMillis, String locale) {
+  ///
+  /// V3.0.2 — the short relative units ("now" / "5m" / "5h" / "5d") are now
+  /// passed as localized strings by the call sites, so the chat / notifications
+  /// UI matches the active locale. The default `now:` / `minutesLabel:` /
+  /// `hoursLabel:` / `daysLabel:` keep the previous English behaviour so
+  /// existing call sites that have not been migrated yet do not break.
+  static String relativeFromNow(
+    int utcMillis,
+    String locale, {
+    String? now,
+    String Function(int)? minutesLabel,
+    String Function(int)? hoursLabel,
+    String Function(int)? daysLabel,
+  }) {
     final dt = toLocalDateTime(utcMillis);
     final diff = DateTime.now().toLocal().difference(dt);
-    if (diff.inMinutes < 1) return 'now';
-    if (diff.inHours < 1) return '${diff.inMinutes}m';
-    if (diff.inDays < 1) return '${diff.inHours}h';
-    if (diff.inDays < 7) return '${diff.inDays}d';
+    if (diff.inMinutes < 1) return now ?? 'now';
+    if (diff.inHours < 1) {
+      return minutesLabel != null
+          ? minutesLabel(diff.inMinutes)
+          : '${diff.inMinutes}m';
+    }
+    if (diff.inDays < 1) {
+      return hoursLabel != null
+          ? hoursLabel(diff.inHours)
+          : '${diff.inHours}h';
+    }
+    if (diff.inDays < 7) {
+      return daysLabel != null
+          ? daysLabel(diff.inDays)
+          : '${diff.inDays}d';
+    }
     return DateFormat.yMd(locale).format(dt);
   }
 }

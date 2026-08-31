@@ -18,21 +18,27 @@ void main() {
     test('CyclOSM uses the cycling tile URL with subdomains', () {
       final url = service.urlTemplateFor(MapProvider.cyclOSM);
       expect(url, contains('tile-cyclosm.openstreetmap.fr'));
-      expect(url, contains('{a-c}'));
+      // V3.0.1 fix — flutter_map 7.x expands only `{s}`, not `{a-c}` ranges.
+      expect(url, contains('{s}'));
       expect(url, contains('{z}/{x}/{y}.png'));
+      expect(service.subdomainsFor(MapProvider.cyclOSM), ['a', 'b', 'c']);
     });
 
     test('OpenTopoMap uses the relief tile URL with subdomains', () {
       final url = service.urlTemplateFor(MapProvider.openTopoMap);
       expect(url, contains('tile.opentopomap.org'));
-      expect(url, contains('{a-c}'));
+      // V3.0.1 fix — `{s}` placeholder + explicit subdomains list.
+      expect(url, contains('{s}'));
       expect(url, contains('{z}/{x}/{y}.png'));
+      expect(service.subdomainsFor(MapProvider.openTopoMap), ['a', 'b', 'c']);
     });
 
     test('Esri Satellite uses the ArcGIS World Imagery tile URL', () {
       final url = service.urlTemplateFor(MapProvider.esriSatellite);
       expect(url, contains('server.arcgisonline.com'));
       expect(url, contains('World_Imagery/MapServer/tile/{z}/{y}/{x}'));
+      // No subdomains for the single-origin ArcGIS server.
+      expect(service.subdomainsFor(MapProvider.esriSatellite), isEmpty);
     });
 
     test('Carto Voyager uses the Carto voyager tile URL with 4 subdomains',
@@ -40,7 +46,10 @@ void main() {
       final url = service.urlTemplateFor(MapProvider.cartoVoyager);
       expect(url, contains('basemaps.cartocdn.com'));
       expect(url, contains('voyager'));
-      expect(url, contains('{a-d}'));
+      // V3.0.1 fix — `{s}` placeholder + 4-subdomain list.
+      expect(url, contains('{s}'));
+      expect(service.subdomainsFor(MapProvider.cartoVoyager),
+          ['a', 'b', 'c', 'd']);
     });
 
     test('mapLibre returns the demotiles URL when no custom style is set', () {
