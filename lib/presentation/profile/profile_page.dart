@@ -13,7 +13,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
-import 'package:pokatuha/core/errors/app_error.dart';
 import 'package:pokatuha/core/tokens/design_tokens.dart';
 import 'package:pokatuha/database/collections/user_collection.dart';
 import 'package:pokatuha/domain/repositories/notification_repository.dart';
