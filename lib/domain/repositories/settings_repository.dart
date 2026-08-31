@@ -32,7 +32,9 @@ class SettingsRepository {
       ..version = 1
       ..isDeleted = false
       ..userId = userId
-      ..locale = 'en'
+      // V3.0.2 — default locale is Russian (matches project's primary
+      // audience; user can switch in Settings → Language).
+      ..locale = 'ru'
       ..themeMode = AppThemeMode.dark.name
       ..accentColor = 0xFF3B82F6
       ..mapProvider = MapProvider.openStreetMap.name;

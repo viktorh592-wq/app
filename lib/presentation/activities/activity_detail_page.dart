@@ -112,7 +112,7 @@ class _ActivityDetailPageState extends State<ActivityDetailPage>
     if (event == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: const Center(child: Text('Activity not found')),
+        body: Center(child: Text(l.activityNotFound)),
       );
     }
     final status = EventStatus.values.firstWhere(

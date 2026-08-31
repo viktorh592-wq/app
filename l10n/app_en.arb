@@ -323,5 +323,43 @@
   "scanUserQrToInvite": "Scan user QR to invite",
   "inviteFailed": "Invite failed",
   "zoomIn": "Zoom in",
-  "zoomOut": "Zoom out"
+  "zoomOut": "Zoom out",
+
+  "markAllRead": "Mark all read",
+  "noNotifications": "No notifications",
+  "ok": "OK",
+  "noPollsYet": "No polls yet",
+  "activityNotFound": "Activity not found",
+  "privacy": "Privacy",
+  "profileVisibleToPeers": "Profile visible to peers",
+  "shareGpsByDefault": "Share GPS by default",
+  "tapMapForCoords": "Tap the map icon to set coordinates",
+  "imageLabel": "image",
+
+  "relativeNow": "now",
+  "relativeMinutes": "{minutes}m",
+  "@relativeMinutes": { "placeholders": { "minutes": { "type": "int" } } },
+  "relativeHours": "{hours}h",
+  "@relativeHours": { "placeholders": { "hours": { "type": "int" } } },
+  "relativeDays": "{days}d",
+  "@relativeDays": { "placeholders": { "days": { "type": "int" } } },
+
+  "userFallbackName": "User {id}",
+  "@userFallbackName": { "placeholders": { "id": { "type": "String" } } },
+
+  "editProfile": "Edit profile",
+  "changePhoto": "Change photo",
+  "photoFromCamera": "Take photo",
+  "photoFromGallery": "Choose from gallery",
+  "removePhoto": "Remove photo",
+  "photoSaved": "Photo saved",
+  "photoRemoved": "Photo removed",
+  "photoError": "Failed to save photo",
+
+  "usernameLabel": "@username",
+  "bioLabel": "Bio",
+
+  "visibilityPrivate": "Private",
+  "visibilityLinkOnly": "Link only",
+  "visibilityPublic": "Public"
 }

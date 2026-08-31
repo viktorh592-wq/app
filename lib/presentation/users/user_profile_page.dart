@@ -2,6 +2,8 @@
 /// finding a user: «Добавить в контакты», «Написать», «Пригласить в группу».
 /// Local-First: contacts are marked via user metadata (no new collection);
 /// direct messages arrive with the P2P chat in a later sprint.
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -150,16 +152,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
           Center(
             child: Column(
               children: [
-                CircleAvatar(
-                  radius: 44,
-                  backgroundColor: theme.colorScheme.primaryContainer,
-                  child: Text(
-                    user.displayName.isEmpty
-                        ? '?'
-                        : user.displayName.substring(0, 1).toUpperCase(),
-                    style: theme.textTheme.headlineMedium,
-                  ),
-                ),
+                // V3.0.2 — show the user's avatar image when available,
+                // otherwise fall back to the initial-letter avatar (matches
+                // the Profile tab).
+                _avatarFor(user, theme),
                 const SizedBox(height: DesignTokens.space4),
                 Text(user.displayName, style: theme.textTheme.titleLarge),
                 if (user.username.isNotEmpty)
@@ -205,6 +201,29 @@ class _UserProfilePageState extends State<UserProfilePage> {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  /// V3.0.2 — avatar with optional image. Falls back to the first-letter
+  /// avatar when no image path is set or the file no longer exists.
+  Widget _avatarFor(UserCollection user, ThemeData theme) {
+    final path = user.avatarPath;
+    if (path != null && path.isNotEmpty && File(path).existsSync()) {
+      return CircleAvatar(
+        radius: 44,
+        backgroundColor: theme.colorScheme.primaryContainer,
+        foregroundImage: FileImage(File(path)),
+      );
+    }
+    return CircleAvatar(
+      radius: 44,
+      backgroundColor: theme.colorScheme.primaryContainer,
+      child: Text(
+        user.displayName.isEmpty
+            ? '?'
+            : user.displayName.substring(0, 1).toUpperCase(),
+        style: theme.textTheme.headlineMedium,
       ),
     );
   }

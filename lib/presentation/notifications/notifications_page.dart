@@ -45,7 +45,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
         actions: [
           TextButton(
             onPressed: _markAllRead,
-            child: const Text('Mark all read'),
+            child: Text(l.markAllRead),
           ),
         ],
       ),
@@ -57,7 +57,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           }
           final list = snapshot.data!;
           if (list.isEmpty) {
-            return const Center(child: Text('No notifications'));
+            return Center(child: Text(l.noNotifications));
           }
           return ListView.separated(
             itemCount: list.length,
@@ -79,7 +79,16 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 ),
                 subtitle: Text(n.body),
                 trailing: Text(
-                  Timestamps.relativeFromNow(n.createdAt, 'en'),
+                  // V3.0.2 — pass the active locale so the relative-time string
+                  // ("5м / 5m / now / сейчас") matches the user's language.
+                  Timestamps.relativeFromNow(
+                    n.createdAt,
+                    l.localeName,
+                    now: l.relativeNow,
+                    minutesLabel: l.relativeMinutes,
+                    hoursLabel: l.relativeHours,
+                    daysLabel: l.relativeDays,
+                  ),
                   style: Theme.of(context).textTheme.labelSmall,
                 ),
                 onTap: () async {

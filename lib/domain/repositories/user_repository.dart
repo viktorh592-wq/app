@@ -101,7 +101,7 @@ class UserRepository {
   }
 
   /// V3.0.1 — create (or return an existing) "stub" user record for a public
-  /// ID discovered through a scanned `pokatuha://u/<ID>` link when the user is
+  /// ID discovered through a scanned `pokatuha://u/{ID}` link when the user is
   /// not yet known on this device (USER_DISCOVERY.md §2 — discovery by QR).
   ///
   /// Local-First context: in a server-less, P2P-not-yet-shipped app the only
@@ -113,9 +113,9 @@ class UserRepository {
   /// The stub user is a fully valid [UserCollection] entity:
   ///   • `id` = the 12-char publicId (kept stable so subsequent scans of the
   ///     same QR find the same record instead of creating duplicates)
-  ///   • `username` = "user_<publicId>" (lowercase) so nickname search can
+  ///   • `username` = "user_{publicId}" (lowercase) so nickname search can
   ///     also locate the stub if the inviter types the public id back in
-  ///   • `displayName` = "User <first 4 chars>" — minimal placeholder until
+  ///   • `displayName` = "User {first 4 chars}" — minimal placeholder until
   ///     P2P profile exchange is implemented (ADR-002 / Rule 5)
   ///   • `profileVisible` = true so the user appears in nickname searches
   ///

@@ -79,7 +79,7 @@ class _ActivityPollsTabState extends State<ActivityPollsTab> {
                   children: [
                     const Icon(Icons.poll_outlined, size: 56),
                     const SizedBox(height: 12),
-                    const Text('No polls yet'),
+                    Text(l.noPollsYet),
                     const SizedBox(height: 16),
                     FilledButton.icon(
                       onPressed: () => _openCreate(context),

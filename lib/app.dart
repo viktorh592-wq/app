@@ -74,7 +74,11 @@ class _PokatuhaAppState extends State<PokatuhaApp> {
       child: Consumer<AppViewModel>(
         builder: (context, vm, _) {
           final theme = serviceLocator<ThemeService>();
-          final locale = vm.settings?.locale ?? 'en';
+          // V3.0.2 — Russian is the default locale (project's primary
+          // audience). Falls back to 'ru' when settings are not loaded
+          // yet (e.g. on the first launch before onboarding completes),
+          // so the boot screen and onboarding page already show Russian.
+          final locale = vm.settings?.locale ?? 'ru';
           return MaterialApp(
             title: AppConstants.appName,
             debugShowCheckedModeBanner: false,

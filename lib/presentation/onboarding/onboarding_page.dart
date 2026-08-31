@@ -85,15 +85,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _username,
-                    decoration: const InputDecoration(
-                      labelText: '@username',
+                    decoration: InputDecoration(
+                      labelText: l.usernameLabel,
                       prefixText: '@',
                     ),
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _bio,
-                    decoration: const InputDecoration(labelText: 'Bio'),
+                    decoration: InputDecoration(labelText: l.bioLabel),
                     maxLines: 2,
                   ),
                   const SizedBox(height: 24),

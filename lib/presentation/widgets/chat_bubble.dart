@@ -226,18 +226,21 @@ class AttachmentPreview extends StatelessWidget {
           child: Image.file(
             file,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(
-              color: DesignTokens.chipLavender,
-              padding: const EdgeInsets.all(12),
-              child: const Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.broken_image_outlined, size: 32),
-                  SizedBox(height: 4),
-                  Text('image'),
-                ],
-              ),
-            ),
+            errorBuilder: (context, _, __) {
+              final l = AppLocalizations.of(context)!;
+              return Container(
+                color: DesignTokens.chipLavender,
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.broken_image_outlined, size: 32),
+                    const SizedBox(height: 4),
+                    Text(l.imageLabel),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),

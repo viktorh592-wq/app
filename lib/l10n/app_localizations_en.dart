@@ -845,4 +845,88 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get zoomOut => 'Zoom out';
+
+  @override
+  String get markAllRead => 'Mark all read';
+
+  @override
+  String get noNotifications => 'No notifications';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get noPollsYet => 'No polls yet';
+
+  @override
+  String get activityNotFound => 'Activity not found';
+
+  @override
+  String get privacy => 'Privacy';
+
+  @override
+  String get profileVisibleToPeers => 'Profile visible to peers';
+
+  @override
+  String get shareGpsByDefault => 'Share GPS by default';
+
+  @override
+  String get tapMapForCoords => 'Tap the map icon to set coordinates';
+
+  @override
+  String get imageLabel => 'image';
+
+  @override
+  String get relativeNow => 'now';
+
+  @override
+  String relativeMinutes(int minutes) => '${minutes}m';
+
+  @override
+  String relativeHours(int hours) => '${hours}h';
+
+  @override
+  String relativeDays(int days) => '${days}d';
+
+  @override
+  String userFallbackName(String id) => 'User $id';
+
+  @override
+  String get editProfile => 'Edit profile';
+
+  @override
+  String get changePhoto => 'Change photo';
+
+  @override
+  String get photoFromCamera => 'Take photo';
+
+  @override
+  String get photoFromGallery => 'Choose from gallery';
+
+  @override
+  String get removePhoto => 'Remove photo';
+
+  @override
+  String get photoSaved => 'Photo saved';
+
+  @override
+  String get photoRemoved => 'Photo removed';
+
+  @override
+  String get photoError => 'Failed to save photo';
+
+  @override
+  String get usernameLabel => '@username';
+
+  @override
+  String get bioLabel => 'Bio';
+
+  @override
+  String get visibilityPrivate => 'Private';
+
+  @override
+  String get visibilityLinkOnly => 'Link only';
+
+  @override
+  String get visibilityPublic => 'Public';
 }

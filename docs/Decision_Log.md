@@ -586,4 +586,142 @@ before merge; do not push to `main`
 
 ---
 
+## 2026-09-01 (later)
+
+### V3.0.2 — analyzer warnings + photo change + Russian default + translation audit
+
+Status
+
+Accepted
+
+Branch
+
+`fix/user-feedback-bugs-v3.0.1` (same PR)
+
+Description
+
+Follow-up to the V3.0.1 PR after the user ran `flutter analyze` and
+reported two new requirements plus a translation audit:
+
+1. `flutter analyze` reported 2 `unintended_html_in_doc_comment`
+   infos in `lib/domain/repositories/user_repository.dart` lines 116
+   and 118 — angle brackets inside markdown bullet lists
+   (`<publicId>`, `<first 4 chars>`) were interpreted as HTML.
+2. No way to change the user's avatar in the Profile tab.
+3. The app started in English by default.
+4. Several UI surfaces (settings, dropdowns, snackbar toasts, chat
+   list sheets, broken-image placeholder, activity card button,
+   notification empty state) still contained hard-coded English
+   strings.
+
+Fix
+
+1. Replaced `<…>` placeholders in the doc comment with `{…}` so the
+   dartdoc analyzer stops treating them as HTML. No public API change.
+2. New `ProfilePage._showPhotoSheet` — bottom sheet with
+   «Изменить фото» → «Сделать снимок» / «Выбрать из галереи» /
+   «Удалить фото» (the remove entry only shows when a photo is set).
+   Picks an image via `image_picker` (already a pub dependency for
+   the chat), copies it to `getApplicationDocumentsDirectory()/
+   avatars/<timestamp>_<name>`, deletes the previous file (no orphan
+   accumulation), persists the absolute path in
+   `UserCollection.avatarPath` and refreshes the AppViewModel so the
+   avatar updates immediately. Also added a small camera badge on the
+   avatar in the Profile tab to signal that it is tappable, and
+   refactored the avatar rendering into a `_Avatar` widget that
+   shows the file when it exists and falls back to the initial-letter
+   avatar otherwise. The same fallback was wired into
+   `UserProfilePage` so a discovered user's profile also shows their
+   photo when they have one.
+3. Changed the default locale from `'en'` to `'ru'` in three
+   places: `SettingsCollection.locale`, `applyMap`'s fallback,
+   `SettingsRepository._createDefault` and `app.dart`'s `?? 'en'`.
+   Existing users who explicitly set their locale keep their choice;
+   only the first-launch default changes.
+4. Translation audit — found and replaced 11 hard-coded English
+   strings:
+   - `notifications_page.dart`: "Mark all read" / "No notifications"
+     / `relativeFromNow(... 'en')` → all localised, and the
+     relative-time labels ("now" / "5m" / "5h" / "5d") are now passed
+     through `Timestamps.relativeFromNow`'s optional `now:` /
+     `minutesLabel:` / `hoursLabel:` / `daysLabel:` parameters.
+   - `activity_chat_tab.dart`: "OK" in the list-sheet dialog →
+     `l.ok`.
+   - `activity_polls_tab.dart`: "No polls yet" → `l.noPollsYet`.
+   - `activity_detail_page.dart`: "Activity not found" →
+     `l.activityNotFound`.
+   - `settings_page.dart`: `'Privacy'` / `'Profile visible to peers'`
+     / `'Share GPS by default'` → `l.privacy` /
+     `l.profileVisibleToPeers` / `l.shareGpsByDefault`.
+   - `create_activity_page.dart`: "Tap the map icon to set
+     coordinates" helper → `l.tapMapForCoords`; `EventVisibility`
+     dropdown that previously rendered raw `v.name` ("private" /
+     "linkOnly" / "public") now uses a new `_visibilityLabel` helper
+     that maps each enum value to `l.visibilityPrivate` /
+     `l.visibilityLinkOnly` / `l.visibilityPublic`.
+   - `chat_bubble.dart`: the broken-image placeholder label "image"
+     → `l.imageLabel`.
+   - `activity_card.dart`: the hard-coded Russian "Открыть" string
+     (inconsistent with the rest of the localisation) →
+     `AppLocalizations.of(context)!.openMap`.
+   - `onboarding_page.dart`: "@username" and "Bio" labels →
+     `l.usernameLabel` and `l.bioLabel`.
+
+Localization
+
+28 new ARB keys added to both `l10n/app_ru.arb` and `l10n/app_en.arb`
+(`markAllRead`, `noNotifications`, `ok`, `noPollsYet`,
+`activityNotFound`, `privacy`, `profileVisibleToPeers`,
+`shareGpsByDefault`, `tapMapForCoords`, `imageLabel`, `relativeNow`,
+`relativeMinutes`, `relativeHours`, `relativeDays`, `userFallbackName`,
+`editProfile`, `changePhoto`, `photoFromCamera`, `photoFromGallery`,
+`removePhoto`, `photoSaved`, `photoRemoved`, `photoError`,
+`usernameLabel`, `bioLabel`, `visibilityPrivate`, `visibilityLinkOnly`,
+`visibilityPublic`). The corresponding abstract getters and concrete
+`@override` implementations were hand-edited in the generated
+`lib/l10n/app_localizations*.dart` files because the Flutter SDK needed
+for `flutter gen-l10n` is not available in this environment.
+
+Files touched (V3.0.2)
+
+- `lib/domain/repositories/user_repository.dart` (doc-comment fix only)
+- `lib/database/collections/settings_collection.dart` (default locale)
+- `lib/domain/repositories/settings_repository.dart` (default locale)
+- `lib/app.dart` (default locale fallback)
+- `lib/presentation/profile/profile_page.dart` (photo change + avatar
+  refactor)
+- `lib/presentation/users/user_profile_page.dart` (avatar image)
+- `lib/presentation/notifications/notifications_page.dart`
+- `lib/presentation/activities/tabs/activity_chat_tab.dart`
+- `lib/presentation/activities/tabs/activity_polls_tab.dart`
+- `lib/presentation/activities/activity_detail_page.dart`
+- `lib/presentation/settings/settings_page.dart`
+- `lib/presentation/activities/create_activity_page.dart`
+- `lib/presentation/widgets/chat_bubble.dart`
+- `lib/presentation/widgets/activity_card.dart`
+- `lib/presentation/onboarding/onboarding_page.dart`
+- `lib/core/utils/timestamps.dart` (localised relative-time labels)
+- `l10n/app_ru.arb`, `l10n/app_en.arb`
+- `lib/l10n/app_localizations.dart`, `lib/l10n/app_localizations_ru.dart`,
+  `lib/l10n/app_localizations_en.dart`
+- `docs/Decision_Log.md` (this entry)
+
+Verification
+
+CI (`flutter.yml`) will run `flutter analyze` (now expected to report
+zero infos/warnings) and `flutter test` on push. Code was written
+carefully to match the existing lint set; the doc-comment fix removes
+the only two analyzer findings from the V3.0.1 PR.
+
+Reference
+
+ADR-001 (Local-First — avatar files are stored in the app's documents
+directory, never uploaded to any server)
+
+AI_RULES Rule 12 — Privacy has higher priority than convenience
+(the avatar picker keeps the photo strictly local; the camera/gallery
+permission is only requested when the user actually taps the sheet).
+
+---
+
 End of document.
