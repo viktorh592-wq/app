@@ -9,6 +9,12 @@
 ///   • §3 route card now shows distance + elevation + duration
 ///   • §5 external handoff — "Открыть в навигаторе" via geo: URI +
 ///     "Поделиться" via system share sheet
+///
+/// V3 fix (user-reported): the route map now fills all available screen
+/// space (Expanded) with the action buttons pinned below it. When several
+/// routes exist, a dropdown at the top lets the user switch between them
+/// without leaving the full-screen map. Previously each route lived in a
+/// small 160-px card inside a scrollable list, which wasted the screen.
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -27,6 +33,7 @@ import 'package:pokatuha/domain/services/gpx_service.dart';
 import 'package:pokatuha/domain/services/map_service.dart';
 import 'package:pokatuha/domain/services/service_locator.dart';
 import 'package:pokatuha/l10n/app_localizations.dart';
+import 'package:pokatuha/presentation/widgets/elevation_profile_chart.dart';
 
 class ActivityRouteTab extends StatefulWidget {
   const ActivityRouteTab({super.key, required this.eventId, this.accentColor});
@@ -42,6 +49,9 @@ class ActivityRouteTab extends StatefulWidget {
 
 class _ActivityRouteTabState extends State<ActivityRouteTab> {
   late Future<List<RouteCollection>> _future;
+  final MapController _mapController = MapController();
+  int _selectedIndex = 0;
+  bool _initialFitDone = false;
 
   @override
   void initState() {
@@ -86,7 +96,8 @@ class _ActivityRouteTabState extends State<ActivityRouteTab> {
           .parseForExtension(content, ext);
       await serviceLocator<RouteRepository>().importGpx(
         eventId: widget.eventId,
-        name: file.name.replaceAll(RegExp(r'\.(gpx|kml)$', caseSensitive: false), ''),
+        name: file.name.replaceAll(
+            RegExp(r'\.(gpx|kml)$', caseSensitive: false), ''),
         waypoints: points,
         gpxFilePath: file.path ?? file.name,
       );
@@ -141,13 +152,19 @@ class _ActivityRouteTabState extends State<ActivityRouteTab> {
               ),
             );
           }
-          return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-            itemCount: routes.length,
-            itemBuilder: (context, i) => _RouteCard(
-              route: routes[i],
-              accentColor: widget.accentColor,
-            ),
+          final route = routes[_selectedIndex.clamp(0, routes.length - 1)];
+          return _FullScreenRouteView(
+            route: route,
+            routes: routes,
+            accentColor: widget.accentColor,
+            mapController: _mapController,
+            onSelected: (i) => setState(() {
+              _selectedIndex = i;
+              _initialFitDone = false;
+            }),
+            onImport: _importFile,
+            initialFitDone: _initialFitDone,
+            onFitDone: () => _initialFitDone = true,
           );
         },
       ),
@@ -155,13 +172,30 @@ class _ActivityRouteTabState extends State<ActivityRouteTab> {
   }
 }
 
-class _RouteCard extends StatelessWidget {
-  const _RouteCard({required this.route, this.accentColor});
+/// Full-screen route view — map fills the available area (Expanded) with
+/// the action buttons (Open in navigator / Share / Import) + elevation
+/// profile pinned below. A dropdown at the top lets the user switch
+/// between routes when more than one exists.
+class _FullScreenRouteView extends StatelessWidget {
+  const _FullScreenRouteView({
+    required this.route,
+    required this.routes,
+    required this.accentColor,
+    required this.mapController,
+    required this.onSelected,
+    required this.onImport,
+    required this.initialFitDone,
+    required this.onFitDone,
+  });
 
   final RouteCollection route;
-
-  /// Activity accent color (V2 §11) — polyline color.
+  final List<RouteCollection> routes;
   final Color? accentColor;
+  final MapController mapController;
+  final ValueChanged<int> onSelected;
+  final VoidCallback onImport;
+  final bool initialFitDone;
+  final VoidCallback onFitDone;
 
   @override
   Widget build(BuildContext context) {
@@ -169,82 +203,179 @@ class _RouteCard extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
     final points = route.waypoints.map((w) => LatLng(w.lat, w.lng)).toList();
     final center = points.isNotEmpty ? points.first : const LatLng(0, 0);
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      clipBehavior: Clip.antiAlias,
+
+    // Fit camera to route bounds once after the route changes.
+    if (!initialFitDone && points.length >= 2) {
+      onFitDone();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        mapController.fitCamera(
+          CameraFit.bounds(
+            bounds: LatLngBounds.fromPoints(points),
+            padding: const EdgeInsets.all(48),
+          ),
+        );
+      });
+    }
+
+    return SafeArea(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            height: 160,
-            child: FlutterMap(
-              options: MapOptions(initialCenter: center, initialZoom: 13),
-              children: [
-                serviceLocator<MapService>().tileLayer(),
-                if (points.isNotEmpty)
-                  PolylineLayer(
-                    polylines: [
-                      Polyline(
-                        points: points,
-                        color: accentColor ?? DesignTokens.primary,
-                        strokeWidth: 4,
+          // Top bar — route selector (only when more than one) + import.
+          if (routes.length > 1)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<int>(
+                      value: routes.indexOf(route).clamp(0, routes.length - 1),
+                      decoration: InputDecoration(
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        prefixIcon: const Icon(Icons.route_rounded, size: 20),
                       ),
-                    ],
+                      items: routes
+                          .asMap()
+                          .entries
+                          .map((e) => DropdownMenuItem(
+                                value: e.key,
+                                child: Text(e.value.name,
+                                    overflow: TextOverflow.ellipsis),
+                              ))
+                          .toList(),
+                      onChanged: (v) {
+                        if (v != null) onSelected(v);
+                      },
+                    ),
                   ),
-                MarkerLayer(
-                  markers: [
+                ],
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+              child: Row(
+                children: [
+                  Icon(Icons.route_rounded,
+                      size: 20, color: accentColor ?? DesignTokens.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(route.name,
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
+                  ),
+                ],
+              ),
+            ),
+
+          // Full-screen map — Expanded to take all remaining vertical space
+          // above the buttons + elevation chart.
+          Expanded(
+            flex: 5,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+                child: FlutterMap(
+                  mapController: mapController,
+                  options: MapOptions(
+                    initialCenter: center,
+                    initialZoom: 13,
+                    minZoom: 3,
+                    maxZoom: 19,
+                  ),
+                  children: [
+                    serviceLocator<MapService>().tileLayer(),
                     if (points.isNotEmpty)
-                      Marker(
-                        point: points.first,
-                        width: 30,
-                        height: 30,
-                        child: const Icon(Icons.flag_rounded,
-                            color: Colors.green, size: 28),
+                      PolylineLayer(
+                        polylines: [
+                          Polyline(
+                            points: points,
+                            color: accentColor ?? DesignTokens.primary,
+                            strokeWidth: 5,
+                          ),
+                        ],
                       ),
-                    if (points.length > 1)
-                      Marker(
-                        point: points.last,
-                        width: 30,
-                        height: 30,
-                        child: const Icon(Icons.flag_rounded,
-                            color: Colors.red, size: 28),
-                      ),
+                    MarkerLayer(
+                      markers: [
+                        if (points.isNotEmpty)
+                          Marker(
+                            point: points.first,
+                            width: 30,
+                            height: 30,
+                            child: const Icon(Icons.flag_rounded,
+                                color: Colors.green, size: 28),
+                          ),
+                        if (points.length > 1)
+                          Marker(
+                            point: points.last,
+                            width: 30,
+                            height: 30,
+                            child: const Icon(Icons.flag_rounded,
+                                color: Colors.red, size: 28),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(route.name, style: theme.textTheme.titleMedium),
-                const SizedBox(height: 4),
-                // V2 §3 — distance + elevation + duration.
-                Text(
-                  _statsLabel(l),
-                  style: theme.textTheme.bodySmall,
-                ),
-                const SizedBox(height: 8),
-                // V2 §5 — external handoff buttons.
-                Row(
+
+          // Below-the-map block — stats, action buttons, elevation profile.
+          // Flexible so it shrinks if the map needs more room; scrolls
+          // internally if the elevation chart + buttons don't fit.
+          Flexible(
+            flex: 4,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    OutlinedButton.icon(
-                      onPressed: () => _openInNavigator(context),
-                      icon: const Icon(Icons.directions_rounded, size: 18),
-                      label: Text(l.openInNavigator),
+                    Text(_statsLabel(l, route),
+                        style: theme.textTheme.bodySmall
+                            ?.copyWith(color: theme.colorScheme.outline)),
+                    const SizedBox(height: 8),
+                    // Action row — "Open in navigator" + "Share" + "Import".
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: () => _openInNavigator(context, route),
+                          icon: const Icon(Icons.directions_rounded, size: 18),
+                          label: Text(l.openInNavigator),
+                        ),
+                        if (route.gpxFilePath != null)
+                          OutlinedButton.icon(
+                            onPressed: () => _share(context, route),
+                            icon:
+                                const Icon(Icons.ios_share_rounded, size: 18),
+                            label: Text(l.share),
+                          ),
+                        OutlinedButton.icon(
+                          onPressed: onImport,
+                          icon: const Icon(Icons.file_upload_outlined,
+                              size: 18),
+                          label: Text(l.importRoute),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    if (route.gpxFilePath != null)
-                      OutlinedButton.icon(
-                        onPressed: () => _share(context),
-                        icon: const Icon(Icons.ios_share_rounded, size: 18),
-                        label: Text(l.share),
-                      ),
+                    const SizedBox(height: 12),
+                    // Elevation profile chart — «Высоты».
+                    ElevationProfileChart(
+                      points: route.waypoints,
+                      accentColor: accentColor,
+                      height: 140,
+                    ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
         ],
@@ -252,14 +383,14 @@ class _RouteCard extends StatelessWidget {
     );
   }
 
-  /// V2 §3 — distance (km) + elevation (m) + duration (h m, when > 0).
-  String _statsLabel(AppLocalizations l) {
+  /// V2 §3 — distance (km) + elevation (m) + duration (ч мин, when > 0).
+  String _statsLabel(AppLocalizations l, RouteCollection route) {
     final km = (route.distanceMeters / 1000).toStringAsFixed(1);
     final elev = route.elevationGainMeters.round();
     if (route.durationSeconds > 0) {
       final hours = route.durationSeconds ~/ 3600;
       final mins = (route.durationSeconds % 3600) ~/ 60;
-      final dur = hours > 0 ? '${hours}h ${mins}m' : '${mins}m';
+      final dur = hours > 0 ? '$hours ч $mins мин' : '$mins мин';
       return l.routeStatsWithDuration(km, '$elev', dur);
     }
     return l.routeStats(km, '$elev');
@@ -267,7 +398,8 @@ class _RouteCard extends StatelessWidget {
 
   /// V2 §5 — "Открыть в навигаторе" via geo: URI (Android) or Apple Maps
   /// URL (iOS / other platforms where geo: is unsupported).
-  Future<void> _openInNavigator(BuildContext context) async {
+  Future<void> _openInNavigator(
+      BuildContext context, RouteCollection route) async {
     final pts = route.waypoints;
     if (pts.isEmpty) return;
     final first = pts.first;
@@ -280,8 +412,6 @@ class _RouteCard extends StatelessWidget {
     final eLat = last.lat.toStringAsFixed(6);
     final eLng = last.lng.toStringAsFixed(6);
 
-    // Android geo: URI — supports navigation with destination + start.
-    // Most apps (Google Maps, Yandex, OsmAnd) register for geo:.
     final geoUri = Uri.parse(
         'geo:$lat,$lng?q=$lat,$lng&start=$sLat,$sLng&end=$eLat,$eLng');
     if (!kIsWeb && Platform.isAndroid) {
@@ -290,7 +420,6 @@ class _RouteCard extends StatelessWidget {
         return;
       }
     }
-    // Fallback — Apple Maps / OSM web URL (works on iOS + web + desktop).
     final mapsUrl = Uri.parse(
         'https://www.openstreetmap.org/?mlat=$lat&mlon=$lng#map=14/$lat/$lng');
     if (await canLaunchUrl(mapsUrl)) {
@@ -305,12 +434,11 @@ class _RouteCard extends StatelessWidget {
   }
 
   /// V2 §5 — "Поделиться" via system share sheet.
-  Future<void> _share(BuildContext context) async {
+  Future<void> _share(BuildContext context, RouteCollection route) async {
     final path = route.gpxFilePath;
     if (path == null) return;
     try {
-      await Share.shareXFiles([XFile(path)],
-          text: route.name);
+      await Share.shareXFiles([XFile(path)], text: route.name);
     } catch (e) {
       if (context.mounted) {
         final l = AppLocalizations.of(context)!;

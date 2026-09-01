@@ -833,4 +833,122 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get download => 'Download';
+
+  @override
+  String get statusPreparation => 'Preparation';
+
+  @override
+  String get statusMeeting => 'Meeting';
+
+  @override
+  String get statusRide => 'Live';
+
+  @override
+  String get statusPause => 'Pause';
+
+  @override
+  String get statusFinished => 'Finished';
+
+  @override
+  String get statusArchived => 'Archived';
+
+  @override
+  String get statusCancelled => 'Cancelled';
+
+  @override
+  String get weatherClearSky => 'Clear sky';
+
+  @override
+  String get weatherMainlyClear => 'Mainly clear';
+
+  @override
+  String get weatherPartlyCloudy => 'Partly cloudy';
+
+  @override
+  String get weatherOvercast => 'Overcast';
+
+  @override
+  String get weatherFog => 'Fog';
+
+  @override
+  String get weatherDrizzle => 'Drizzle';
+
+  @override
+  String get weatherFreezingDrizzle => 'Freezing drizzle';
+
+  @override
+  String get weatherRain => 'Rain';
+
+  @override
+  String get weatherFreezingRain => 'Freezing rain';
+
+  @override
+  String get weatherSnowFall => 'Snow fall';
+
+  @override
+  String get weatherSnowGrains => 'Snow grains';
+
+  @override
+  String get weatherRainShowers => 'Rain showers';
+
+  @override
+  String get weatherSnowShowers => 'Snow showers';
+
+  @override
+  String get weatherThunderstorm => 'Thunderstorm';
+
+  @override
+  String get weatherThunderstormHail => 'Thunderstorm with hail';
+
+  @override
+  String get weatherUnknown => 'Unknown';
+
+  @override
+  String get weatherUnavailable => 'Weather unavailable';
+
+  @override
+  String get weatherHourlyForecast => 'Hourly forecast';
+
+  @override
+  String get weatherWind => 'Wind';
+
+  @override
+  String get weatherPrecipitation => 'Precipitation';
+
+  @override
+  String get weatherRainAlert => 'Possible rain - take a raincoat';
+
+  @override
+  String get weatherHumidity => 'Humidity';
+
+  @override
+  String get elevationProfile => 'Elevation';
+
+  @override
+  String get elevationGain => 'Ascent';
+
+  @override
+  String get elevationLoss => 'Descent';
+
+  @override
+  String get groupNotFound =>
+      'Group not found on this device. Ask the organizer to share the group via QR code or link.';
+
+  @override
+  String get activityNotFound => 'Activity not found';
+
+  @override
+  String get mapSearch => 'Search';
+
+  @override
+  String get mapFilterAll => 'All';
+
+  @override
+  String get mapFilterFound => 'Found';
+
+  @override
+  String get mapFilterHide => 'Hide';
+
+  @override
+  String get mapLayers => 'Layers';
 }

@@ -44,6 +44,7 @@ import 'package:pokatuha/domain/services/settings_service.dart';
 import 'package:pokatuha/l10n/app_localizations.dart';
 import 'package:pokatuha/presentation/activities/activity_detail_page.dart';
 import 'package:pokatuha/presentation/app_view_model.dart';
+import 'package:pokatuha/presentation/widgets/glass_button.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key, this.initialEventId});
@@ -80,6 +81,14 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
   /// rebuild (e.g. on zoom change) would re-fit the camera and override
   /// the user's manual pan/zoom.
   bool _initialFitDone = false;
+
+  /// Right-side glass filter state — which filter chip is active.
+  /// 0 = Все (all), 1 = Найденные (found/live), 2 = Скрыть (hide markers).
+  int _mapFilterIndex = 0;
+
+  /// Whether the top search bar is shown. Tapping × hides it; tapping the
+  /// yellow search bar opens the user/route picker sheet.
+  bool _showSearchBar = true;
 
   @override
   bool get wantKeepAlive => true;
@@ -143,6 +152,10 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
     super.build(context);
     final l = AppLocalizations.of(context)!;
     return Scaffold(
+      // No AppBar — the map fills the whole screen and the controls float
+      // above it as glass overlays (matches the screenshot the user
+      // provided). The bottom-nav is rendered by MainScaffold.
+      extendBodyBehindAppBar: true,
       body: FutureBuilder<_MapData>(
         future: _future,
         builder: (context, snapshot) {
@@ -169,59 +182,249 @@ class _MapPageState extends State<MapPage> with AutomaticKeepAliveClientMixin {
               );
             });
           }
-          return FlutterMap(
-            key: ValueKey('map-${serviceLocator<MapService>().provider.name}'),
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: center,
-              initialZoom: _currentZoom,
-              minZoom: 3,
-              maxZoom: 19,
-              onPositionChanged: (position, hasGesture) {
-                final z = position.zoom;
-                if (z != _currentZoom) {
-                  setState(() => _currentZoom = z);
-                }
-              },
-            ),
+          // Filter the visible markers based on the active filter chip.
+          final visibleParticipants = _mapFilterIndex == 2
+              ? <_LiveParticipant>[]
+              : (_mapFilterIndex == 1
+                  ? data.participants
+                      .where((lp) =>
+                          lp.participant.arrivalStage != 'arrived')
+                      .toList()
+                  : data.participants);
+          final visibleEvents =
+              _mapFilterIndex == 2 ? <EventCollection>[] : data.events;
+
+          return Stack(
             children: [
-              serviceLocator<MapService>().tileLayer(),
-              if (_selectedRoutePoints.length >= 2)
-                PolylineLayer(
-                  polylines: [
-                    Polyline(
-                      points: _selectedRoutePoints,
-                      strokeWidth: 4,
-                      color: DesignTokens.primary,
-                    ),
-                  ],
+              // The map itself — fills the entire Scaffold body.
+              FlutterMap(
+                key: ValueKey(
+                    'map-${serviceLocator<MapService>().provider.name}'),
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: center,
+                  initialZoom: _currentZoom,
+                  minZoom: 3,
+                  maxZoom: 19,
+                  onPositionChanged: (position, hasGesture) {
+                    final z = position.zoom;
+                    if (z != _currentZoom) {
+                      setState(() => _currentZoom = z);
+                    }
+                  },
                 ),
-              MarkerLayer(
-                markers: [
-                  ...data.events.map(_meetingMarker),
-                  ..._participantMarkers(data.participants),
+                children: [
+                  serviceLocator<MapService>().tileLayer(),
+                  if (_selectedRoutePoints.length >= 2)
+                    PolylineLayer(
+                      polylines: [
+                        Polyline(
+                          points: _selectedRoutePoints,
+                          strokeWidth: 4,
+                          color: DesignTokens.primary,
+                        ),
+                      ],
+                    ),
+                  MarkerLayer(
+                    markers: [
+                      ...visibleEvents.map(_meetingMarker),
+                      ..._participantMarkers(visibleParticipants),
+                    ],
+                  ),
+                  RichAttributionWidget(
+                    attributions: [
+                      TextSourceAttribution('OpenStreetMap contributors',
+                          onTap: () {}),
+                    ],
+                  ),
                 ],
               ),
-              RichAttributionWidget(
-                attributions: [
-                  TextSourceAttribution('OpenStreetMap contributors',
-                      onTap: () {}),
-                ],
+
+              // Top search bar (yellow pill, glass) — hidden when the user
+              // taps × . A tap on the bar opens the action sheet (find me /
+              // share location / show route / download GPX / select map /
+              // show participants).
+              if (_showSearchBar)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => _showActionSheet(context),
+                              child: Container(
+                                height: 44,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16),
+                                decoration: BoxDecoration(
+                                  color: DesignTokens.yellowAccent,
+                                  borderRadius: BorderRadius.circular(22),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x331A1A2E),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.search_rounded,
+                                        color: DesignTokens.textPrimary),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        l.mapSearch,
+                                        style: const TextStyle(
+                                          color: DesignTokens.textPrimary,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const Icon(Icons.tune_rounded,
+                                        color: DesignTokens.textPrimary),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          GlassButton(
+                            shape: GlassButtonShape.circle,
+                            size: 44,
+                            icon: Icons.close_rounded,
+                            onTap: () =>
+                                setState(() => _showSearchBar = false),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Right-side vertical filter cluster — glass pills.
+              Positioned(
+                top: 0,
+                bottom: 0,
+                right: 12,
+                child: SafeArea(
+                  child: Center(
+                    child: GlassButtonStack(
+                      children: [
+                        GlassButton(
+                          shape: GlassButtonShape.pill,
+                          icon: Icons.layers_rounded,
+                          label: l.mapFilterAll,
+                          selected: _mapFilterIndex == 0,
+                          onTap: () => setState(() => _mapFilterIndex = 0),
+                        ),
+                        GlassButton(
+                          shape: GlassButtonShape.pill,
+                          icon: Icons.person_pin_circle_rounded,
+                          label: l.mapFilterFound,
+                          selected: _mapFilterIndex == 1,
+                          onTap: () => setState(() => _mapFilterIndex = 1),
+                        ),
+                        GlassButton(
+                          shape: GlassButtonShape.pill,
+                          icon: Icons.visibility_off_rounded,
+                          label: l.mapFilterHide,
+                          selected: _mapFilterIndex == 2,
+                          onTap: () => setState(() => _mapFilterIndex = 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
+
+              // Right-side zoom + locate cluster — glass circles, bottom-right.
+              Positioned(
+                bottom: 16,
+                right: 12,
+                child: SafeArea(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GlassButton(
+                        shape: GlassButtonShape.circle,
+                        icon: Icons.add_rounded,
+                        onTap: () => _mapController.move(
+                          _mapController.camera.center,
+                          (_currentZoom + 1).clamp(3, 19),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      GlassButton(
+                        shape: GlassButtonShape.circle,
+                        icon: Icons.remove_rounded,
+                        onTap: () => _mapController.move(
+                          _mapController.camera.center,
+                          (_currentZoom - 1).clamp(3, 19),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      GlassButton(
+                        shape: GlassButtonShape.circle,
+                        icon: Icons.my_location_rounded,
+                        onTap: _findMe,
+                      ),
+                      const SizedBox(height: 10),
+                      GlassButton(
+                        shape: GlassButtonShape.circle,
+                        icon: Icons.map_outlined,
+                        onTap: _showLayerSwitcher,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Bottom-left refresh button — glass circle, so the user can
+              // still re-query participants / events without opening the
+              // action sheet.
+              Positioned(
+                bottom: 16,
+                left: 12,
+                child: SafeArea(
+                  child: GlassButton(
+                    shape: GlassButtonShape.circle,
+                    icon: Icons.refresh_rounded,
+                    onTap: () => setState(_load),
+                  ),
+                ),
+              ),
+
+              // Hidden search bar — show a small FAB to bring it back.
+              if (!_showSearchBar)
+                Positioned(
+                  top: 0,
+                  left: 12,
+                  right: 12,
+                  child: SafeArea(
+                    bottom: false,
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: GlassButton(
+                        shape: GlassButtonShape.circle,
+                        icon: Icons.search_rounded,
+                        onTap: () => setState(() => _showSearchBar = true),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           );
         },
-      ),
-      appBar: AppBar(title: Text(l.tabMap), actions: [
-        IconButton(
-          icon: const Icon(Icons.refresh_rounded),
-          onPressed: () => setState(_load),
-        ),
-      ]),
-      // V2 map action menu (MAPS_AND_GPS_FIX.md §5).
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showActionSheet(context),
-        child: const Icon(Icons.menu_rounded),
       ),
     );
   }

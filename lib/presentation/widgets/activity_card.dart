@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:pokatuha/core/tokens/design_tokens.dart';
 import 'package:pokatuha/database/collections/event_collection.dart';
 import 'package:pokatuha/domain/enums/enums.dart';
+import 'package:pokatuha/l10n/app_localizations.dart';
+import 'package:pokatuha/presentation/widgets/status_chip.dart';
 
 /// Activity card — pixel-perfect to Figma / screenshots.
 /// Uses the activity accent color for the entire card background (V2 §11 —
@@ -28,6 +30,7 @@ class ActivityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accentColor = _accent;
+    final l = AppLocalizations.of(context)!;
 
     return GestureDetector(
       onTap: onTap,
@@ -41,7 +44,7 @@ class ActivityCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -89,7 +92,7 @@ class ActivityCard extends StatelessWidget {
                       child: Icon(
                         Icons.push_pin_rounded,
                         size: 18,
-                        color: DesignTokens.textPrimary.withOpacity(0.7),
+                        color: DesignTokens.textPrimary.withValues(alpha: 0.7),
                       ),
                     ),
                   if (onMenuTap != null)
@@ -139,7 +142,7 @@ class ActivityCard extends StatelessWidget {
                   if (event.description.isNotEmpty) ...[
                     const SizedBox(height: DesignTokens.space3),
                     Text(
-                      'Описание: ${event.description}',
+                      '${l.description}: ${event.description}',
                       style:
                           DesignTokens.body(color: DesignTokens.textSecondary),
                     ),
@@ -148,16 +151,16 @@ class ActivityCard extends StatelessWidget {
               ),
             ),
 
-            // Actions
+            // Actions — reuse the localized public StatusChip.
             Padding(
               padding: const EdgeInsets.all(DesignTokens.space4),
               child: Row(
                 children: [
-                  _StatusChip(status: _statusLabel(_statusEnum)),
+                  StatusChip(status: _statusEnum),
                   const Spacer(),
                   FilledButton(
                     onPressed: onTap,
-                    child: const Text('Открыть'),
+                    child: Text(l.details),
                   ),
                 ],
               ),
@@ -173,18 +176,6 @@ class ActivityCard extends StatelessWidget {
       (e) => e.name == event.status,
       orElse: () => EventStatus.preparation,
     );
-  }
-
-  String _statusLabel(EventStatus status) {
-    return switch (status) {
-      EventStatus.preparation => 'Подготовка',
-      EventStatus.meeting => 'Сбор',
-      EventStatus.ride => 'В пути',
-      EventStatus.pause => 'Пауза',
-      EventStatus.finished => 'Завершено',
-      EventStatus.archived => 'В архиве',
-      EventStatus.cancelled => 'Отменено',
-    };
   }
 
   /// Activity accent color (V2 §11): event.accentColor if set, violet
@@ -217,34 +208,6 @@ class _InfoRow extends StatelessWidget {
           style: DesignTokens.body(color: DesignTokens.textPrimary),
         ),
       ],
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  final String status;
-
-  const _StatusChip({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.35),
-        borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.access_time, size: 16),
-          const SizedBox(width: 8),
-          Text(
-            status,
-            style: DesignTokens.button(),
-          ),
-        ],
-      ),
     );
   }
 }

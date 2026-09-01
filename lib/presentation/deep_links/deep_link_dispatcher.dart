@@ -2,6 +2,8 @@
 /// (FIX_PLAN S1-T7/S1-T10):
 ///   `pokatuha://u/<id>`    → user profile (if the user is known locally)
 ///   `pokatuha://g/<code>` → join group by invite code → group details
+///   `pokatuha://g/<code>?d=<base64json>` → accept invitation with embedded
+///     group payload (V3 fix — materialize the group locally if needed).
 /// Owns the app [NavigatorState] key so links can be handled from outside
 /// the widget tree (cold start, background links, QR scanner).
 import 'package:flutter/material.dart';
@@ -43,11 +45,25 @@ class DeepLinkDispatcher {
         _push(UserProfilePage(user: user));
       case LinkKind.group:
         try {
-          final group = await serviceLocator<GroupService>()
-              .joinByInviteCode(user: me, code: link.payload);
+          final groupService = serviceLocator<GroupService>();
+          // V3 fix — if the link carries the embedded group payload, use
+          // acceptInvitation which can materialize the group locally.
+          // Otherwise fall back to the legacy joinByInviteCode path which
+          // only works for groups already on this device.
+          final group = link.data != null
+              ? await groupService.acceptInvitation(
+                  user: me, payload: link.data!)
+              : await groupService.joinByInviteCode(
+                  user: me, code: link.payload);
           _push(GroupDetailPage(groupId: group.id));
         } on AppError catch (e) {
-          _toast(e.message);
+          // Prefer the localized "group not found" message over the raw
+          // English error string from the service layer.
+          if (e is NotFoundError) {
+            _toast(l.groupNotFound);
+          } else {
+            _toast(e.message);
+          }
         }
     }
   }

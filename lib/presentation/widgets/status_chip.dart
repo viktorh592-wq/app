@@ -1,7 +1,11 @@
 /// Status chip reflecting the activity lifecycle (Glossary.md — Stage).
+/// Localized via AppLocalizations (statusPreparation / statusMeeting /
+/// statusRide / statusPause / statusFinished / statusArchived /
+/// statusCancelled).
 import 'package:flutter/material.dart';
 
 import 'package:pokatuha/domain/enums/enums.dart';
+import 'package:pokatuha/l10n/app_localizations.dart';
 
 class StatusChip extends StatelessWidget {
   const StatusChip({super.key, required this.status});
@@ -10,11 +14,13 @@ class StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = _style(status, Theme.of(context).colorScheme);
+    final scheme = Theme.of(context).colorScheme;
+    final l = AppLocalizations.of(context)!;
+    final style = _style(status, scheme, l);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: style.color.withOpacity(0.16),
+        color: style.color.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
@@ -28,15 +34,23 @@ class StatusChip extends StatelessWidget {
     );
   }
 
-  ({String label, Color color}) _style(EventStatus s, ColorScheme scheme) {
+  ({String label, Color color}) _style(
+    EventStatus s,
+    ColorScheme scheme,
+    AppLocalizations l,
+  ) {
     return switch (s) {
-      EventStatus.preparation => (label: 'Preparation', color: scheme.primary),
-      EventStatus.meeting => (label: 'Meeting', color: scheme.tertiary),
-      EventStatus.ride => (label: 'Live', color: Colors.red),
-      EventStatus.pause => (label: 'Pause', color: scheme.secondary),
-      EventStatus.finished => (label: 'Finished', color: scheme.outline),
-      EventStatus.archived => (label: 'Archived', color: scheme.outline),
-      EventStatus.cancelled => (label: 'Cancelled', color: scheme.error),
+      EventStatus.preparation =>
+        (label: l.statusPreparation, color: scheme.primary),
+      EventStatus.meeting => (label: l.statusMeeting, color: scheme.tertiary),
+      EventStatus.ride => (label: l.statusRide, color: Colors.red),
+      EventStatus.pause => (label: l.statusPause, color: scheme.secondary),
+      EventStatus.finished =>
+        (label: l.statusFinished, color: scheme.outline),
+      EventStatus.archived =>
+        (label: l.statusArchived, color: scheme.outline),
+      EventStatus.cancelled =>
+        (label: l.statusCancelled, color: scheme.error),
     };
   }
 }

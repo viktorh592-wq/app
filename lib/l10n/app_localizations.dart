@@ -1730,6 +1730,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Download'**
   String get download;
+
+  /// No description provided for @statusPreparation.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparation'**
+  String get statusPreparation;
+
+  /// No description provided for @statusMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting'**
+  String get statusMeeting;
+
+  /// No description provided for @statusRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get statusRide;
+
+  /// No description provided for @statusPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get statusPause;
+
+  /// No description provided for @statusFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished'**
+  String get statusFinished;
+
+  /// No description provided for @statusArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get statusArchived;
+
+  /// No description provided for @statusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get statusCancelled;
+
+  /// No description provided for @weatherClearSky.
+  String get weatherClearSky;
+
+  /// No description provided for @weatherMainlyClear.
+  String get weatherMainlyClear;
+
+  /// No description provided for @weatherPartlyCloudy.
+  String get weatherPartlyCloudy;
+
+  /// No description provided for @weatherOvercast.
+  String get weatherOvercast;
+
+  /// No description provided for @weatherFog.
+  String get weatherFog;
+
+  /// No description provided for @weatherDrizzle.
+  String get weatherDrizzle;
+
+  /// No description provided for @weatherFreezingDrizzle.
+  String get weatherFreezingDrizzle;
+
+  /// No description provided for @weatherRain.
+  String get weatherRain;
+
+  /// No description provided for @weatherFreezingRain.
+  String get weatherFreezingRain;
+
+  /// No description provided for @weatherSnowFall.
+  String get weatherSnowFall;
+
+  /// No description provided for @weatherSnowGrains.
+  String get weatherSnowGrains;
+
+  /// No description provided for @weatherRainShowers.
+  String get weatherRainShowers;
+
+  /// No description provided for @weatherSnowShowers.
+  String get weatherSnowShowers;
+
+  /// No description provided for @weatherThunderstorm.
+  String get weatherThunderstorm;
+
+  /// No description provided for @weatherThunderstormHail.
+  String get weatherThunderstormHail;
+
+  /// No description provided for @weatherUnknown.
+  String get weatherUnknown;
+
+  /// No description provided for @weatherUnavailable.
+  String get weatherUnavailable;
+
+  /// No description provided for @weatherHourlyForecast.
+  String get weatherHourlyForecast;
+
+  /// No description provided for @weatherWind.
+  String get weatherWind;
+
+  /// No description provided for @weatherPrecipitation.
+  String get weatherPrecipitation;
+
+  /// No description provided for @weatherRainAlert.
+  String get weatherRainAlert;
+
+  /// No description provided for @weatherHumidity.
+  String get weatherHumidity;
+
+  /// No description provided for @elevationProfile.
+  String get elevationProfile;
+
+  /// No description provided for @elevationGain.
+  String get elevationGain;
+
+  /// No description provided for @elevationLoss.
+  String get elevationLoss;
+
+  /// No description provided for @groupNotFound.
+  String get groupNotFound;
+
+  /// No description provided for @activityNotFound.
+  String get activityNotFound;
+
+  /// No description provided for @mapSearch.
+  String get mapSearch;
+
+  /// No description provided for @mapFilterAll.
+  String get mapFilterAll;
+
+  /// No description provided for @mapFilterFound.
+  String get mapFilterFound;
+
+  /// No description provided for @mapFilterHide.
+  String get mapFilterHide;
+
+  /// No description provided for @mapLayers.
+  String get mapLayers;
 }
 
 class _AppLocalizationsDelegate

@@ -93,7 +93,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
     if (group == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: Center(child: Text(l.noGroups)),
+        body: Center(child: Text(l.groupNotFound)),
       );
     }
     final user = context.read<AppViewModel>().user;
@@ -210,8 +210,14 @@ class _GroupDetailPageState extends State<GroupDetailPage>
 
   void _showGroupQr(BuildContext context, GroupCollection group) {
     final l = AppLocalizations.of(context)!;
-    final uri =
-        serviceLocator<IdentityService>().groupUri(group.inviteCode ?? '');
+    final groupService = serviceLocator<GroupService>();
+    final identity = serviceLocator<IdentityService>();
+    // V3 fix — embed the full group payload in the QR so the receiver can
+    // materialize the group even when it doesn't exist on their device yet.
+    final uri = identity.groupUriWithPayload(
+      inviteCode: group.inviteCode ?? '',
+      payload: groupService.invitationPayload(group),
+    );
     showDialog(
       context: context,
       builder: (_) => QrCodeDialog(
@@ -232,8 +238,13 @@ class _GroupDetailPageState extends State<GroupDetailPage>
     final user = context.read<AppViewModel>().user;
     switch (value) {
       case 'shareLink':
-        final uri =
-            serviceLocator<IdentityService>().groupUri(group.inviteCode ?? '');
+        final groupService = serviceLocator<GroupService>();
+        final identity = serviceLocator<IdentityService>();
+        // V3 fix — embed the payload in the shared link too.
+        final uri = identity.groupUriWithPayload(
+          inviteCode: group.inviteCode ?? '',
+          payload: groupService.invitationPayload(group),
+        );
         await Share.share(uri);
         break;
       case 'leave':

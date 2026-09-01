@@ -20,6 +20,7 @@ import 'package:pokatuha/presentation/activities/participants_block.dart';
 import 'package:pokatuha/presentation/app_view_model.dart';
 import 'package:pokatuha/presentation/map/map_page.dart';
 import 'package:pokatuha/presentation/weather/weather_preview.dart';
+import 'package:pokatuha/presentation/widgets/elevation_profile_chart.dart';
 import 'package:pokatuha/presentation/widgets/glass_card.dart';
 
 class ActivityDetailsTab extends StatelessWidget {
@@ -63,7 +64,11 @@ class ActivityDetailsTab extends StatelessWidget {
         if (event.meetingPoint != null) ...[
           GlassCard(
             accentColor: _accent,
-            child: WeatherPreview(point: event.meetingPoint!),
+            child: WeatherPreview(
+              key: ValueKey('weather-${event.id}'),
+              point: event.meetingPoint!,
+              eventStartAt: event.startAt,
+            ),
           ),
           const SizedBox(height: DesignTokens.space3),
         ],
@@ -138,8 +143,8 @@ class ActivityDetailsTab extends StatelessWidget {
     // Rough estimate at 20 km/h average (route planning heuristic).
     final minutes = (distanceKm / 20 * 60).round();
     final duration = minutes >= 60
-        ? '${minutes ~/ 60} h ${minutes % 60} min'
-        : '$minutes min';
+        ? '${minutes ~/ 60} ч ${minutes % 60} мин'
+        : '$minutes мин';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -157,6 +162,13 @@ class ActivityDetailsTab extends StatelessWidget {
         _InfoRow(
           icon: Icons.access_time_rounded,
           text: '${l.duration}: $duration',
+        ),
+        const SizedBox(height: DesignTokens.space3),
+        // Elevation profile graph (V3 fix — user-requested «Высоты» chart).
+        ElevationProfileChart(
+          points: route.waypoints,
+          accentColor: _accent,
+          height: 160,
         ),
       ],
     );

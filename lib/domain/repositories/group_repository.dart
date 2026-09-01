@@ -57,7 +57,7 @@ class GroupRepository {
   Future<GroupCollection> create(GroupCollection group) async {
     final now = Timestamps.nowUtc();
     group
-      ..id = UuidGenerator.generate()
+      ..id = group.id.isEmpty ? UuidGenerator.generate() : group.id
       ..createdAt = now
       ..updatedAt = now
       ..version = 1

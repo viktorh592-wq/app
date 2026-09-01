@@ -176,8 +176,15 @@ class _GroupMembersTabState extends State<GroupMembersTab>
               title: Text(l.shareInviteLink),
               onTap: () {
                 Navigator.pop(sheetContext);
-                final uri = serviceLocator<IdentityService>()
-                    .groupUri(group.inviteCode ?? '');
+                // V3 fix — embed the full group payload in the shared link
+                // so the receiver can materialize the group even if it
+                // doesn't exist on their device yet.
+                final groupService = serviceLocator<GroupService>();
+                final identity = serviceLocator<IdentityService>();
+                final uri = identity.groupUriWithPayload(
+                  inviteCode: group.inviteCode ?? '',
+                  payload: groupService.invitationPayload(group),
+                );
                 Share.share(uri);
               },
             ),
@@ -202,8 +209,13 @@ class _GroupMembersTabState extends State<GroupMembersTab>
 
   void _showGroupQr(BuildContext context, GroupCollection group) {
     final l = AppLocalizations.of(context)!;
-    final uri =
-        serviceLocator<IdentityService>().groupUri(group.inviteCode ?? '');
+    final groupService = serviceLocator<GroupService>();
+    final identity = serviceLocator<IdentityService>();
+    // V3 fix — embed the full group payload in the QR.
+    final uri = identity.groupUriWithPayload(
+      inviteCode: group.inviteCode ?? '',
+      payload: groupService.invitationPayload(group),
+    );
     showDialog(
       context: context,
       builder: (_) => QrCodeDialog(

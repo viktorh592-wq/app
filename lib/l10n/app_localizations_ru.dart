@@ -833,4 +833,122 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get download => 'Скачать';
+
+  @override
+  String get statusPreparation => 'Подготовка';
+
+  @override
+  String get statusMeeting => 'Сбор';
+
+  @override
+  String get statusRide => 'В пути';
+
+  @override
+  String get statusPause => 'Пауза';
+
+  @override
+  String get statusFinished => 'Завершено';
+
+  @override
+  String get statusArchived => 'В архиве';
+
+  @override
+  String get statusCancelled => 'Отменено';
+
+  @override
+  String get weatherClearSky => 'Ясно';
+
+  @override
+  String get weatherMainlyClear => 'Преимущественно ясно';
+
+  @override
+  String get weatherPartlyCloudy => 'Переменная облачность';
+
+  @override
+  String get weatherOvercast => 'Пасмурно';
+
+  @override
+  String get weatherFog => 'Туман';
+
+  @override
+  String get weatherDrizzle => 'Морось';
+
+  @override
+  String get weatherFreezingDrizzle => 'Ледяная морось';
+
+  @override
+  String get weatherRain => 'Дождь';
+
+  @override
+  String get weatherFreezingRain => 'Ледяной дождь';
+
+  @override
+  String get weatherSnowFall => 'Снег';
+
+  @override
+  String get weatherSnowGrains => 'Снежная крупа';
+
+  @override
+  String get weatherRainShowers => 'Ливень';
+
+  @override
+  String get weatherSnowShowers => 'Снегопад';
+
+  @override
+  String get weatherThunderstorm => 'Гроза';
+
+  @override
+  String get weatherThunderstormHail => 'Гроза с градом';
+
+  @override
+  String get weatherUnknown => 'Неизвестно';
+
+  @override
+  String get weatherUnavailable => 'Погода недоступна';
+
+  @override
+  String get weatherHourlyForecast => 'Прогноз по часам';
+
+  @override
+  String get weatherWind => 'Ветер';
+
+  @override
+  String get weatherPrecipitation => 'Осадки';
+
+  @override
+  String get weatherRainAlert => 'Возможен дождь — возьми дождевик';
+
+  @override
+  String get weatherHumidity => 'Влажность';
+
+  @override
+  String get elevationProfile => 'Высоты';
+
+  @override
+  String get elevationGain => 'Подъём';
+
+  @override
+  String get elevationLoss => 'Спуск';
+
+  @override
+  String get groupNotFound =>
+      'Группа не найдена на этом устройстве. Попросите организатора поделиться группой через QR-код или ссылку.';
+
+  @override
+  String get activityNotFound => 'Активность не найдена';
+
+  @override
+  String get mapSearch => 'Поиск';
+
+  @override
+  String get mapFilterAll => 'Все';
+
+  @override
+  String get mapFilterFound => 'Найденные';
+
+  @override
+  String get mapFilterHide => 'Скрыть';
+
+  @override
+  String get mapLayers => 'Слои';
 }
