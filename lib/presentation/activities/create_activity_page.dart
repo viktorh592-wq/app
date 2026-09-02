@@ -76,6 +76,12 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
       _accentColor = e.accentColor ?? EventCollection.defaultAccentColorArgb;
     } else {
       _loadGroupDefaultColor();
+      // V3.0.3 fix — auto-set a default meeting point so the Weather
+      // block always renders in the created activity (user-reported
+      // Issue 2: «weather not displayed in created activity»). The
+      // meeting point defaults to the user's current GPS, or a neutral
+      // coordinate if GPS is unavailable.
+      _setMeetingFromDefault();
     }
   }
 
@@ -224,7 +230,7 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
               controller: _title,
               decoration: InputDecoration(labelText: l.title),
               validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? l.title : null,
+                  (v == null || v.trim().isEmpty) ? l.fieldRequired : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -277,7 +283,7 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
               controller: _meetingLabel,
               decoration: InputDecoration(
                 labelText: l.meetingPoint,
-                helperText: 'Tap the map icon to set coordinates',
+                helperText: l.meetingPointHint,
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.map_outlined),
                   onPressed: _setMeetingFromDefault,
@@ -310,7 +316,14 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
                     items: EventVisibility.values
                         .map((v) => DropdownMenuItem(
                               value: v,
-                              child: Text(v.name),
+                              child: Text(switch (v) {
+                                EventVisibility.private =>
+                                  l.visibilityPrivate,
+                                EventVisibility.linkOnly =>
+                                  l.visibilityLinkOnly,
+                                EventVisibility.public =>
+                                  l.visibilityPublic,
+                              }),
                             ))
                         .toList(),
                     onChanged: (v) => setState(

@@ -362,5 +362,23 @@
   "mapFilterAll": "All",
   "mapFilterFound": "Found",
   "mapFilterHide": "Hide",
-  "mapLayers": "Layers"
+  "mapLayers": "Layers",
+
+  "fieldRequired": "This field is required",
+  "meetingPointHint": "Tap the map icon to set coordinates",
+  "visibilityPrivate": "Private",
+  "visibilityPublic": "Public",
+  "visibilityLinkOnly": "By link",
+  "selectActivityType": "Select activity type",
+  "archivedActivityTitle": "Archived activity",
+  "archivedActivityHint": "This activity is finished and read-only",
+  "usernameLabel": "Username",
+  "bioLabel": "Bio",
+  "markAllRead": "Mark all read",
+  "noNotifications": "No notifications",
+  "noPollsYet": "No polls yet",
+  "okButton": "OK",
+  "profileVisibleHint": "Profile visible to peers",
+  "shareGpsByDefault": "Share GPS by default",
+  "privacy": "Privacy"
 }

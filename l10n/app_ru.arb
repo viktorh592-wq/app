@@ -362,5 +362,23 @@
   "mapFilterAll": "Все",
   "mapFilterFound": "Найденные",
   "mapFilterHide": "Скрыть",
-  "mapLayers": "Слои"
+  "mapLayers": "Слои",
+
+  "fieldRequired": "Заполните это поле",
+  "meetingPointHint": "Нажмите на иконку карты, чтобы задать координаты",
+  "visibilityPrivate": "Приватная",
+  "visibilityPublic": "Публичная",
+  "visibilityLinkOnly": "По ссылке",
+  "selectActivityType": "Выберите тип активности",
+  "archivedActivityTitle": "Архивная активность",
+  "archivedActivityHint": "Эта активность завершена и доступна только для чтения",
+  "usernameLabel": "Ник",
+  "bioLabel": "О себе",
+  "markAllRead": "Отметить все прочитанными",
+  "noNotifications": "Нет уведомлений",
+  "noPollsYet": "Опросов пока нет",
+  "okButton": "OK",
+  "profileVisibleHint": "Профиль виден другим участникам",
+  "shareGpsByDefault": "Делиться GPS по умолчанию",
+  "privacy": "Приватность"
 }

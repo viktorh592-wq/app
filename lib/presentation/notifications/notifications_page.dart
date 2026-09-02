@@ -45,7 +45,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
         actions: [
           TextButton(
             onPressed: _markAllRead,
-            child: const Text('Mark all read'),
+            child: Text(l.markAllRead),
           ),
         ],
       ),
@@ -57,7 +57,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           }
           final list = snapshot.data!;
           if (list.isEmpty) {
-            return const Center(child: Text('No notifications'));
+            return Center(child: Text(l.noNotifications));
           }
           return ListView.separated(
             itemCount: list.length,

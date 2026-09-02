@@ -951,4 +951,55 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get mapLayers => 'Слои';
+
+  @override
+  String get fieldRequired => 'Заполните это поле';
+
+  @override
+  String get meetingPointHint => 'Нажмите на иконку карты, чтобы задать координаты';
+
+  @override
+  String get visibilityPrivate => 'Приватная';
+
+  @override
+  String get visibilityPublic => 'Публичная';
+
+  @override
+  String get visibilityLinkOnly => 'По ссылке';
+
+  @override
+  String get selectActivityType => 'Выберите тип активности';
+
+  @override
+  String get archivedActivityTitle => 'Архивная активность';
+
+  @override
+  String get archivedActivityHint => 'Эта активность завершена и доступна только для чтения';
+
+  @override
+  String get usernameLabel => 'Ник';
+
+  @override
+  String get bioLabel => 'О себе';
+
+  @override
+  String get markAllRead => 'Отметить все прочитанными';
+
+  @override
+  String get noNotifications => 'Нет уведомлений';
+
+  @override
+  String get noPollsYet => 'Опросов пока нет';
+
+  @override
+  String get okButton => 'OK';
+
+  @override
+  String get profileVisibleHint => 'Профиль виден другим участникам';
+
+  @override
+  String get shareGpsByDefault => 'Делиться GPS по умолчанию';
+
+  @override
+  String get privacy => 'Приватность';
 }
