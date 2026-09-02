@@ -1868,6 +1868,57 @@ abstract class AppLocalizations {
 
   /// No description provided for @mapLayers.
   String get mapLayers;
+
+  /// No description provided for @fieldRequired.
+  String get fieldRequired;
+
+  /// No description provided for @meetingPointHint.
+  String get meetingPointHint;
+
+  /// No description provided for @visibilityPrivate.
+  String get visibilityPrivate;
+
+  /// No description provided for @visibilityPublic.
+  String get visibilityPublic;
+
+  /// No description provided for @visibilityLinkOnly.
+  String get visibilityLinkOnly;
+
+  /// No description provided for @selectActivityType.
+  String get selectActivityType;
+
+  /// No description provided for @archivedActivityTitle.
+  String get archivedActivityTitle;
+
+  /// No description provided for @archivedActivityHint.
+  String get archivedActivityHint;
+
+  /// No description provided for @usernameLabel.
+  String get usernameLabel;
+
+  /// No description provided for @bioLabel.
+  String get bioLabel;
+
+  /// No description provided for @markAllRead.
+  String get markAllRead;
+
+  /// No description provided for @noNotifications.
+  String get noNotifications;
+
+  /// No description provided for @noPollsYet.
+  String get noPollsYet;
+
+  /// No description provided for @okButton.
+  String get okButton;
+
+  /// No description provided for @profileVisibleHint.
+  String get profileVisibleHint;
+
+  /// No description provided for @shareGpsByDefault.
+  String get shareGpsByDefault;
+
+  /// No description provided for @privacy.
+  String get privacy;
 }
 
 class _AppLocalizationsDelegate

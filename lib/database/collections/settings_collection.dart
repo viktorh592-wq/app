@@ -6,7 +6,10 @@ class SettingsCollection extends BaseEntity {
   String userId = '';
 
   // --- General ---
-  String locale = 'en';
+  // V3.0.3 fix — default locale is Russian (the app's primary audience).
+  // Previously defaulted to 'en', causing the app to start in English
+  // for new users (user-reported Issue 7).
+  String locale = 'ru';
 
   /// AppThemeMode enum stored as string.
   String themeMode = 'dark';
@@ -87,7 +90,7 @@ class SettingsCollection extends BaseEntity {
   void applyMap(Map<String, dynamic> m) {
     baseFromMap(m);
     userId = m['userId'] as String? ?? '';
-    locale = m['locale'] as String? ?? 'en';
+    locale = m['locale'] as String? ?? 'ru';
     themeMode = m['themeMode'] as String? ?? 'dark';
     accentColor = (m['accentColor'] as num?)?.toInt() ?? 0xFF3B82F6;
     mapProvider = m['mapProvider'] as String? ?? 'openStreetMap';

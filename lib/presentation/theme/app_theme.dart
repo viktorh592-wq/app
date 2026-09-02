@@ -137,10 +137,13 @@ class AppTheme {
           ),
         ),
       ),
+      // V3.0.3 fix — do NOT force `shape: CircleBorder()` globally.
+      // The MorphingFab owns its shape per-state (round → stadium pill),
+      // and a forced CircleBorder clips `FloatingActionButton.extended`
+      // labels (user-reported "broken background" bug).
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: DesignTokens.limeAccent,
         foregroundColor: DesignTokens.textPrimary,
-        shape: CircleBorder(),
         elevation: 4,
       ),
       navigationBarTheme: NavigationBarThemeData(

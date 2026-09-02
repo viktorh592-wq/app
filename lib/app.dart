@@ -74,7 +74,7 @@ class _PokatuhaAppState extends State<PokatuhaApp> {
       child: Consumer<AppViewModel>(
         builder: (context, vm, _) {
           final theme = serviceLocator<ThemeService>();
-          final locale = vm.settings?.locale ?? 'en';
+          final locale = vm.settings?.locale ?? 'ru';
           return MaterialApp(
             title: AppConstants.appName,
             debugShowCheckedModeBanner: false,

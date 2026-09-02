@@ -951,4 +951,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mapLayers => 'Layers';
+
+  @override
+  String get fieldRequired => 'This field is required';
+
+  @override
+  String get meetingPointHint => 'Tap the map icon to set coordinates';
+
+  @override
+  String get visibilityPrivate => 'Private';
+
+  @override
+  String get visibilityPublic => 'Public';
+
+  @override
+  String get visibilityLinkOnly => 'By link';
+
+  @override
+  String get selectActivityType => 'Select activity type';
+
+  @override
+  String get archivedActivityTitle => 'Archived activity';
+
+  @override
+  String get archivedActivityHint => 'This activity is finished and read-only';
+
+  @override
+  String get usernameLabel => 'Username';
+
+  @override
+  String get bioLabel => 'Bio';
+
+  @override
+  String get markAllRead => 'Mark all read';
+
+  @override
+  String get noNotifications => 'No notifications';
+
+  @override
+  String get noPollsYet => 'No polls yet';
+
+  @override
+  String get okButton => 'OK';
+
+  @override
+  String get profileVisibleHint => 'Profile visible to peers';
+
+  @override
+  String get shareGpsByDefault => 'Share GPS by default';
+
+  @override
+  String get privacy => 'Privacy';
 }

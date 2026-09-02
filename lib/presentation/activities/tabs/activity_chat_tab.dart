@@ -1174,7 +1174,7 @@ class ActivityChatTabState extends State<ActivityChatTab> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('OK'),
+            child: Text(AppLocalizations.of(context)!.okButton),
           ),
         ],
       ),
