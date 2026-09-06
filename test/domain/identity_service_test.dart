@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pokatuha/domain/services/identity_service.dart';
 
@@ -57,5 +60,63 @@ void main() {
     final link = service.parse(uri);
     expect(link, isNotNull);
     expect(link!.payload, service.publicId(userId));
+  });
+
+  // --- V3.0.4 (bug 2): gzipped group payload ---
+
+  test('groupUriWithPayload round-trips through parse (gzip form)', () {
+    final payload = <String, dynamic>{
+      'id': 'group-123',
+      'name': 'Клуб «ВелоПоход»',
+      'inviteCode': 'ABC123',
+      'members': <Map<String, dynamic>>[
+        {'userId': 'u1', 'displayName': 'Аня'},
+      ],
+      'activities': <Map<String, dynamic>>[
+        {'id': 'a1', 'title': 'Вечерний заезд'},
+      ],
+    };
+    final uri = service.groupUriWithPayload(
+      inviteCode: 'ABC123',
+      payload: payload,
+    );
+    final link = service.parse(uri);
+    expect(link, isNotNull);
+    expect(link!.kind, LinkKind.group);
+    expect(link.payload, 'ABC123');
+    expect(link.data, isNotNull);
+    expect(link.data!['id'], 'group-123');
+    expect(link.data!['name'], 'Клуб «ВелоПоход»');
+    expect((link.data!['members'] as List).first['userId'], 'u1');
+  });
+
+  test('gzipped payload is significantly smaller than plain base64', () {
+    final payload = <String, dynamic>{
+      'id': 'group-123',
+      'inviteCode': 'ABC123',
+      'activities': List.generate(
+        5,
+        (i) => <String, dynamic>{
+          'id': 'activity-$i',
+          'title': 'Очень длинное название активности номер $i',
+          'description': 'Длинное описание ' * 20,
+        },
+      ),
+    };
+    // Compare encoded sizes directly.
+    final plain = base64Url.encode(utf8.encode(jsonEncode(payload)));
+    final gzipped =
+        base64Url.encode(gzip.encode(utf8.encode(jsonEncode(payload))));
+    expect(gzipped.length, lessThan(plain.length ~/ 3),
+        reason: 'gzip must cut the QR payload to under a third');
+  });
+
+  test('legacy plain-base64 payload still parses (backward compat)', () {
+    final json = jsonEncode(<String, dynamic>{'id': 'g1', 'name': 'Old'});
+    final b64 = base64Url.encode(utf8.encode(json));
+    final uri = 'pokatuha://g/OLD1?d=$b64';
+    final link = service.parse(uri);
+    expect(link, isNotNull);
+    expect(link!.data!['id'], 'g1');
   });
 }

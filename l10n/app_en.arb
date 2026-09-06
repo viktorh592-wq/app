@@ -46,11 +46,29 @@
   "live": "Live",
   "finished": "Finished",
   "arrivalNear": "{name} is 500 m away",
-  "@arrivalNear": { "placeholders": { "name": { "type": "String" } } },
+  "@arrivalNear": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "arrivalClose": "{name} is arriving",
-  "@arrivalClose": { "placeholders": { "name": { "type": "String" } } },
+  "@arrivalClose": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "arrivalArrived": "{name} has arrived",
-  "@arrivalArrived": { "placeholders": { "name": { "type": "String" } } },
+  "@arrivalArrived": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "offlineMode": "Offline mode",
   "syncing": "Synchronizing…",
   "allSynced": "All changes synced",
@@ -74,7 +92,13 @@
   "esriSatellite": "Esri Satellite",
   "cartoVoyager": "Carto Voyager",
   "mapLayerByContext": "Suggested for: {context}",
-  "@mapLayerByContext": { "placeholders": { "context": { "type": "String" } } },
+  "@mapLayerByContext": {
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
   "mapContextCycling": "cycling",
   "mapContextMountains": "mountains",
   "mapContextForest": "forest",
@@ -99,7 +123,6 @@
   "yourName": "Your name",
   "continueButton": "Continue",
   "search": "Search",
-
   "tabGroups": "Groups",
   "createGroup": "Create group",
   "noGroups": "No groups",
@@ -132,10 +155,21 @@
   "noMediaHint": "Photos and videos from group chats will appear here",
   "invite": "Invite",
   "memberAdded": "{name} added to the group",
-  "@memberAdded": { "placeholders": { "name": { "type": "String" } } },
+  "@memberAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "membersCount": "{count, plural, =0{No members} one{# member} other{# members}}",
-  "@membersCount": { "placeholders": { "count": { "type": "int" } } },
-
+  "@membersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "showMyQr": "Show my QR",
   "scanQr": "Scan QR",
   "addToContacts": "Add to contacts",
@@ -152,7 +186,6 @@
   "copied": "Copied",
   "share": "Share",
   "done": "Done",
-
   "mapActions": "Map actions",
   "findMe": "Find me",
   "shareLocation": "Share location",
@@ -168,7 +201,6 @@
   "noRoutesHint": "Add a route to a group activity",
   "gpxExported": "GPX is ready to share",
   "noParticipantsOnMap": "No participants with live position",
-
   "tabMain": "Main",
   "activityColor": "Activity color",
   "openMap": "Open map",
@@ -178,7 +210,13 @@
   "mUnit": "m",
   "noParticipants": "No participants yet",
   "liveSharingCount": "{count} live",
-  "@liveSharingCount": { "placeholders": { "count": { "type": "int" } } },
+  "@liveSharingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "noMessagesYet": "No messages yet",
   "details": "Details",
   "menuEdit": "Edit",
@@ -193,7 +231,6 @@
   "pinned": "Pinned in group",
   "unpinned": "Unpinned",
   "archived": "Activity moved to archive",
-
   "chatReaction": "Reaction",
   "chatReply": "Reply",
   "chatForward": "Forward",
@@ -202,11 +239,29 @@
   "chatCopy": "Copy",
   "chatDeleteMessage": "Delete",
   "chatForwardedFrom": "Forwarded from {name}",
-  "@chatForwardedFrom": { "placeholders": { "name": { "type": "String" } } },
+  "@chatForwardedFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatReplyTo": "Reply to {name}",
-  "@chatReplyTo": { "placeholders": { "name": { "type": "String" } } },
+  "@chatReplyTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatPinnedBar": "{count} pinned",
-  "@chatPinnedBar": { "placeholders": { "count": { "type": "int" } } },
+  "@chatPinnedBar": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "chatAttachCamera": "Camera",
   "chatAttachGallery": "Gallery",
   "chatAttachRoute": "Route",
@@ -234,16 +289,27 @@
   "chatForwardTarget": "Forward to…",
   "chatForwarded": "Message forwarded",
   "chatPhotoSizeWarning": "Photo size: {kb} KB",
-  "@chatPhotoSizeWarning": { "placeholders": { "kb": { "type": "int" } } },
+  "@chatPhotoSizeWarning": {
+    "placeholders": {
+      "kb": {
+        "type": "int"
+      }
+    }
+  },
   "chatNoMedia": "No media in this chat yet",
   "chatNoPinned": "No pinned messages",
   "chatNoFiles": "No files in this chat yet",
   "chatNoRoutes": "No routes shared in this chat yet",
   "chatOpenInMap": "Open in map",
   "chatPlaybackSpeed": "{speed}x speed",
-  "@chatPlaybackSpeed": { "placeholders": { "speed": { "type": "String" } } },
+  "@chatPlaybackSpeed": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
   "chatDocumentOpen": "Open",
-
   "mapParticipantStatus": "Status",
   "mapParticipantSpeed": "Speed",
   "mapParticipantDistance": "Distance to me",
@@ -253,11 +319,29 @@
   "mapParticipantStatusArrived": "Arrived",
   "mapParticipantStatusIdle": "Idle",
   "mapParticipantBatteryValue": "{percent}%",
-  "@mapParticipantBatteryValue": { "placeholders": { "percent": { "type": "int" } } },
+  "@mapParticipantBatteryValue": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "mapParticipantSpeedValue": "{kmh} km/h",
-  "@mapParticipantSpeedValue": { "placeholders": { "kmh": { "type": "String" } } },
+  "@mapParticipantSpeedValue": {
+    "placeholders": {
+      "kmh": {
+        "type": "String"
+      }
+    }
+  },
   "mapParticipantDistanceValue": "{meters} m",
-  "@mapParticipantDistanceValue": { "placeholders": { "meters": { "type": "String" } } },
+  "@mapParticipantDistanceValue": {
+    "placeholders": {
+      "meters": {
+        "type": "String"
+      }
+    }
+  },
   "mapHeadingN": "North",
   "mapHeadingNE": "Northeast",
   "mapHeadingE": "East",
@@ -266,14 +350,12 @@
   "mapHeadingSW": "Southwest",
   "mapHeadingW": "West",
   "mapHeadingNW": "Northwest",
-
   "gpsPermissionDenied": "Location permission denied",
   "gpsPermissionDeniedForever": "Location permission permanently denied. Open settings to enable.",
   "gpsServiceDisabled": "Location services are disabled",
   "gpsOpenSettings": "Open settings",
   "gpsForegroundTracking": "Pokatuha is sharing your location",
   "gpsForegroundTrackingBody": "Live position is being shared with activity participants.",
-
   "pollAnonymous": "Anonymous",
   "pollPublic": "Public",
   "pollOpen": "Open",
@@ -282,33 +364,77 @@
   "pollDeadline": "No deadline",
   "pollOption": "Option",
   "addOption": "Add option",
-
   "closesInMinutes": "Closes in {minutes}m",
-  "@closesInMinutes": { "placeholders": { "minutes": { "type": "String" } } },
+  "@closesInMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
   "closesInHours": "Closes in {hours}h",
-  "@closesInHours": { "placeholders": { "hours": { "type": "String" } } },
+  "@closesInHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
   "closesInDays": "Closes in {days}d",
-  "@closesInDays": { "placeholders": { "days": { "type": "String" } } },
+  "@closesInDays": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
   "closedMinutesAgo": "Closed {minutes}m ago",
-  "@closedMinutesAgo": { "placeholders": { "minutes": { "type": "String" } } },
+  "@closedMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
   "closedHoursAgo": "Closed {hours}h ago",
-  "@closedHoursAgo": { "placeholders": { "hours": { "type": "String" } } },
+  "@closedHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
   "closedDaysAgo": "Closed {days}d ago",
-  "@closedDaysAgo": { "placeholders": { "days": { "type": "String" } } },
-
+  "@closedDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
   "routeStats": "{km} km • ↑ {elev} m",
   "@routeStats": {
     "placeholders": {
-      "km": { "type": "String" },
-      "elev": { "type": "String" }
+      "km": {
+        "type": "String"
+      },
+      "elev": {
+        "type": "String"
+      }
     }
   },
   "routeStatsWithDuration": "{km} km • ↑ {elev} m • ⏱ {duration}",
   "@routeStatsWithDuration": {
     "placeholders": {
-      "km": { "type": "String" },
-      "elev": { "type": "String" },
-      "duration": { "type": "String" }
+      "km": {
+        "type": "String"
+      },
+      "elev": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "importRoute": "Import route",
@@ -319,7 +445,6 @@
   "noNavigatorApp": "No navigation app found",
   "shareFailed": "Share failed",
   "download": "Download",
-
   "statusPreparation": "Preparation",
   "statusMeeting": "Meeting",
   "statusRide": "Live",
@@ -327,7 +452,6 @@
   "statusFinished": "Finished",
   "statusArchived": "Archived",
   "statusCancelled": "Cancelled",
-
   "weatherClearSky": "Clear sky",
   "weatherMainlyClear": "Mainly clear",
   "weatherPartlyCloudy": "Partly cloudy",
@@ -350,20 +474,16 @@
   "weatherPrecipitation": "Precipitation",
   "weatherRainAlert": "Possible rain - take a raincoat",
   "weatherHumidity": "Humidity",
-
   "elevationProfile": "Elevation",
   "elevationGain": "Ascent",
   "elevationLoss": "Descent",
-
   "groupNotFound": "Group not found on this device. Ask the organizer to share the group via QR code or link.",
   "activityNotFound": "Activity not found",
-
   "mapSearch": "Search",
   "mapFilterAll": "All",
   "mapFilterFound": "Found",
   "mapFilterHide": "Hide",
   "mapLayers": "Layers",
-
   "fieldRequired": "This field is required",
   "meetingPointHint": "Tap the map icon to set coordinates",
   "visibilityPrivate": "Private",
@@ -381,10 +501,17 @@
   "profileVisibleHint": "Profile visible to peers",
   "shareGpsByDefault": "Share GPS by default",
   "privacy": "Privacy",
-
   "canInvite": "May invite to activities",
   "canInviteHint": "Lets this member invite other users to activities in this group",
   "canInviteShort": "Invite",
   "privateActivityRequiresInvite": "Private activity — invitation required",
-  "alreadyInvited": "Already invited"
+  "alreadyInvited": "Already invited",
+  "scanStart": "Scan",
+  "scanPause": "Pause",
+  "scanStarting": "Starting camera…",
+  "scanActive": "Scanning active — aim at the QR code",
+  "scanStopped": "Scanning paused",
+  "cameraPermissionDenied": "No camera access — allow the camera in Settings",
+  "alreadyInGroup": "You are already a member of this group",
+  "groupJoined": "You joined the group"
 }

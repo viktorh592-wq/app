@@ -134,6 +134,32 @@ class GroupService {
   ///                  visibility, organizerId, meetingPoint{lat,lng},
   ///                  meetingPointLabel, maxParticipants, accentColor,
   ///                  pinnedInGroup, status }]
+  /// Looks up a locally-known group for the given invitation payload
+  /// (V3.0.4, bug 2). Lets the deep-link layer distinguish «already a
+  /// member — just open the group» from «materialize + join» so repeated
+  /// QR scans give explicit feedback instead of silence.
+  Future<GroupCollection?> findExistingForInvite(
+    Map<String, dynamic> payload,
+  ) async {
+    final id = (payload['id'] as String?)?.trim() ?? '';
+    final inviteCode = (payload['inviteCode'] as String?)?.trim() ?? '';
+    if (id.isEmpty && inviteCode.isEmpty) return null;
+    GroupCollection? existing;
+    if (id.isNotEmpty) {
+      existing = await _groupRepository.getById(id);
+    }
+    existing ??= inviteCode.isEmpty
+        ? null
+        : await _groupRepository.getByInviteCode(inviteCode.toUpperCase());
+    return existing;
+  }
+
+  /// True when [userId] is in the member roster of [groupId].
+  Future<bool> isMember(String groupId, String userId) async {
+    final members = await _memberRepository.byGroup(groupId);
+    return members.any((m) => m.userId == userId);
+  }
+
   Future<GroupCollection> acceptInvitation({
     required UserCollection user,
     required Map<String, dynamic> payload,
@@ -145,13 +171,7 @@ class GroupService {
     }
 
     // Try to find an existing local group by id, then by invite code.
-    GroupCollection? existing;
-    if (id.isNotEmpty) {
-      existing = await _groupRepository.getById(id);
-    }
-    existing ??= inviteCode.isEmpty
-        ? null
-        : await _groupRepository.getByInviteCode(inviteCode.toUpperCase());
+    final existing = await findExistingForInvite(payload);
 
     final GroupCollection group;
     if (existing != null) {

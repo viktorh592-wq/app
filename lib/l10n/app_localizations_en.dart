@@ -1019,4 +1019,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get alreadyInvited => 'Already invited';
-}
+
+  @override
+  String get scanStart => 'Scan';
+
+  @override
+  String get scanPause => 'Pause';
+
+  @override
+  String get scanStarting => 'Starting camera…';
+
+  @override
+  String get scanActive => 'Scanning active — aim at the QR code';
+
+  @override
+  String get scanStopped => 'Scanning paused';
+
+  @override
+  String get cameraPermissionDenied => 'No camera access — allow the camera in Settings';
+
+  @override
+  String get alreadyInGroup => 'You are already a member of this group';
+
+  @override
+  String get groupJoined => 'You joined the group';

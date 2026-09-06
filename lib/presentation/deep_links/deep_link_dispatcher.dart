@@ -11,6 +11,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:pokatuha/core/errors/app_error.dart';
+import 'package:pokatuha/database/collections/group_collection.dart';
 import 'package:pokatuha/domain/repositories/user_repository.dart';
 import 'package:pokatuha/domain/services/auth_service.dart';
 import 'package:pokatuha/domain/services/chat_sync_service.dart';
@@ -49,13 +50,30 @@ class DeepLinkDispatcher {
       case LinkKind.group:
         try {
           final groupService = serviceLocator<GroupService>();
+          // V3.0.4 (bug 2) — repeated scan of a group the user already
+          // belongs to must give explicit feedback ("nothing happened"
+          // previously). Note: the payload lookup runs BEFORE accept so we
+          // can skip the join side effects entirely.
+          Map<String, dynamic>? payload = link.data;
+          GroupCollection? existing;
+          if (payload != null) {
+            existing = await groupService.findExistingForInvite(payload);
+          }
+          if (existing != null && await groupService.isMember(existing.id, me.id)) {
+            // Still request chat history — peers may have messages this
+            // device missed since the last visit (V3.0.4 bug 1).
+            unawaited(
+                serviceLocator<ChatSyncService>().requestHistory(existing.id));
+            _toast(l.alreadyInGroup);
+            _push(GroupDetailPage(groupId: existing.id));
+            return;
+          }
           // V3 fix — if the link carries the embedded group payload, use
           // acceptInvitation which can materialize the group locally.
           // Otherwise fall back to the legacy joinByInviteCode path which
           // only works for groups already on this device.
-          final group = link.data != null
-              ? await groupService.acceptInvitation(
-                  user: me, payload: link.data!)
+          final group = payload != null
+              ? await groupService.acceptInvitation(user: me, payload: payload)
               : await groupService.joinByInviteCode(
                   user: me, code: link.payload);
           // V3.0.4 (bug 1) — ask peers on the local network for the recent
@@ -63,6 +81,7 @@ class DeepLinkDispatcher {
           // the group page must open instantly regardless of network state.
           unawaited(
               serviceLocator<ChatSyncService>().requestHistory(group.id));
+          _toast(l.groupJoined);
           _push(GroupDetailPage(groupId: group.id));
         } on AppError catch (e) {
           // Prefer the localized "group not found" message over the raw

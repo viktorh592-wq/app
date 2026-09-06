@@ -46,11 +46,29 @@
   "live": "В эфире",
   "finished": "Завершено",
   "arrivalNear": "{name} в 500 м",
-  "@arrivalNear": { "placeholders": { "name": { "type": "String" } } },
+  "@arrivalNear": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "arrivalClose": "{name} приближается",
-  "@arrivalClose": { "placeholders": { "name": { "type": "String" } } },
+  "@arrivalClose": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "arrivalArrived": "{name} прибыл",
-  "@arrivalArrived": { "placeholders": { "name": { "type": "String" } } },
+  "@arrivalArrived": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "offlineMode": "Автономный режим",
   "syncing": "Синхронизация…",
   "allSynced": "Все изменения синхронизированы",
@@ -74,7 +92,13 @@
   "esriSatellite": "Esri Спутник",
   "cartoVoyager": "Carto Voyager",
   "mapLayerByContext": "Подходит для: {context}",
-  "@mapLayerByContext": { "placeholders": { "context": { "type": "String" } } },
+  "@mapLayerByContext": {
+    "placeholders": {
+      "context": {
+        "type": "String"
+      }
+    }
+  },
   "mapContextCycling": "велосипед",
   "mapContextMountains": "горы",
   "mapContextForest": "лес",
@@ -99,7 +123,6 @@
   "yourName": "Ваше имя",
   "continueButton": "Продолжить",
   "search": "Поиск",
-
   "tabGroups": "Группы",
   "createGroup": "Создать группу",
   "noGroups": "Нет групп",
@@ -132,10 +155,21 @@
   "noMediaHint": "Фото и видео из чатов группы появятся здесь",
   "invite": "Пригласить",
   "memberAdded": "{name} добавлен(а) в группу",
-  "@memberAdded": { "placeholders": { "name": { "type": "String" } } },
+  "@memberAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "membersCount": "{count, plural, =0{Нет участников} one{# участник} few{# участника} many{# участников} other{# участников}}",
-  "@membersCount": { "placeholders": { "count": { "type": "int" } } },
-
+  "@membersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "showMyQr": "Показать мой QR",
   "scanQr": "Сканировать QR",
   "addToContacts": "Добавить в контакты",
@@ -152,7 +186,6 @@
   "copied": "Скопировано",
   "share": "Поделиться",
   "done": "Готово",
-
   "mapActions": "Действия на карте",
   "findMe": "Найти меня",
   "shareLocation": "Поделиться местоположением",
@@ -168,7 +201,6 @@
   "noRoutesHint": "Добавьте маршрут в активность группы",
   "gpxExported": "GPX готов к отправке",
   "noParticipantsOnMap": "Нет участников с активной позицией",
-
   "tabMain": "Обзор",
   "activityColor": "Цвет активности",
   "openMap": "Открыть карту",
@@ -178,7 +210,13 @@
   "mUnit": "м",
   "noParticipants": "Пока нет участников",
   "liveSharingCount": "{count} в эфире",
-  "@liveSharingCount": { "placeholders": { "count": { "type": "int" } } },
+  "@liveSharingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "noMessagesYet": "Сообщений пока нет",
   "details": "Подробности",
   "menuEdit": "Редактировать",
@@ -193,7 +231,6 @@
   "pinned": "Закреплено в группе",
   "unpinned": "Откреплено",
   "archived": "Активность перемещена в архив",
-
   "chatReaction": "Реакция",
   "chatReply": "Ответить",
   "chatForward": "Переслать",
@@ -202,11 +239,29 @@
   "chatCopy": "Копировать",
   "chatDeleteMessage": "Удалить",
   "chatForwardedFrom": "Переслано от {name}",
-  "@chatForwardedFrom": { "placeholders": { "name": { "type": "String" } } },
+  "@chatForwardedFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatReplyTo": "Ответ {name}",
-  "@chatReplyTo": { "placeholders": { "name": { "type": "String" } } },
+  "@chatReplyTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatPinnedBar": "{count} закрепл.",
-  "@chatPinnedBar": { "placeholders": { "count": { "type": "int" } } },
+  "@chatPinnedBar": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "chatAttachCamera": "Камера",
   "chatAttachGallery": "Галерея",
   "chatAttachRoute": "Маршрут",
@@ -234,16 +289,27 @@
   "chatForwardTarget": "Переслать в…",
   "chatForwarded": "Сообщение переслано",
   "chatPhotoSizeWarning": "Размер фото: {kb} КБ",
-  "@chatPhotoSizeWarning": { "placeholders": { "kb": { "type": "int" } } },
+  "@chatPhotoSizeWarning": {
+    "placeholders": {
+      "kb": {
+        "type": "int"
+      }
+    }
+  },
   "chatNoMedia": "В чате пока нет медиа",
   "chatNoPinned": "Нет закреплённых сообщений",
   "chatNoFiles": "В чате пока нет файлов",
   "chatNoRoutes": "В чате пока нет маршрутов",
   "chatOpenInMap": "Открыть на карте",
   "chatPlaybackSpeed": "Скорость {speed}x",
-  "@chatPlaybackSpeed": { "placeholders": { "speed": { "type": "String" } } },
+  "@chatPlaybackSpeed": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
   "chatDocumentOpen": "Открыть",
-
   "mapParticipantStatus": "Статус",
   "mapParticipantSpeed": "Скорость",
   "mapParticipantDistance": "Дистанция до меня",
@@ -253,11 +319,29 @@
   "mapParticipantStatusArrived": "Прибыл",
   "mapParticipantStatusIdle": "Ожидает",
   "mapParticipantBatteryValue": "{percent}%",
-  "@mapParticipantBatteryValue": { "placeholders": { "percent": { "type": "int" } } },
+  "@mapParticipantBatteryValue": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "mapParticipantSpeedValue": "{kmh} км/ч",
-  "@mapParticipantSpeedValue": { "placeholders": { "kmh": { "type": "String" } } },
+  "@mapParticipantSpeedValue": {
+    "placeholders": {
+      "kmh": {
+        "type": "String"
+      }
+    }
+  },
   "mapParticipantDistanceValue": "{meters} м",
-  "@mapParticipantDistanceValue": { "placeholders": { "meters": { "type": "String" } } },
+  "@mapParticipantDistanceValue": {
+    "placeholders": {
+      "meters": {
+        "type": "String"
+      }
+    }
+  },
   "mapHeadingN": "Север",
   "mapHeadingNE": "Северо-восток",
   "mapHeadingE": "Восток",
@@ -266,14 +350,12 @@
   "mapHeadingSW": "Юго-запад",
   "mapHeadingW": "Запад",
   "mapHeadingNW": "Северо-запад",
-
   "gpsPermissionDenied": "Доступ к местоположению запрещён",
   "gpsPermissionDeniedForever": "Доступ запрещён навсегда. Откройте настройки, чтобы разрешить.",
   "gpsServiceDisabled": "Службы геолокации отключены",
   "gpsOpenSettings": "Открыть настройки",
   "gpsForegroundTracking": "Покатуха делится вашим местоположением",
   "gpsForegroundTrackingBody": "Живая позиция передаётся участникам активности.",
-
   "pollAnonymous": "Анонимный",
   "pollPublic": "Открытый",
   "pollOpen": "Открыт",
@@ -282,33 +364,77 @@
   "pollDeadline": "Без срока",
   "pollOption": "Вариант",
   "addOption": "Добавить вариант",
-
   "closesInMinutes": "Закроется через {minutes}м",
-  "@closesInMinutes": { "placeholders": { "minutes": { "type": "String" } } },
+  "@closesInMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
   "closesInHours": "Закроется через {hours}ч",
-  "@closesInHours": { "placeholders": { "hours": { "type": "String" } } },
+  "@closesInHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
   "closesInDays": "Закроется через {days}д",
-  "@closesInDays": { "placeholders": { "days": { "type": "String" } } },
+  "@closesInDays": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
   "closedMinutesAgo": "Закрыт {minutes}м назад",
-  "@closedMinutesAgo": { "placeholders": { "minutes": { "type": "String" } } },
+  "@closedMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
   "closedHoursAgo": "Закрыт {hours}ч назад",
-  "@closedHoursAgo": { "placeholders": { "hours": { "type": "String" } } },
+  "@closedHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
   "closedDaysAgo": "Закрыт {days}д назад",
-  "@closedDaysAgo": { "placeholders": { "days": { "type": "String" } } },
-
+  "@closedDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
   "routeStats": "{km} км • ↑ {elev} м",
   "@routeStats": {
     "placeholders": {
-      "km": { "type": "String" },
-      "elev": { "type": "String" }
+      "km": {
+        "type": "String"
+      },
+      "elev": {
+        "type": "String"
+      }
     }
   },
   "routeStatsWithDuration": "{km} км • ↑ {elev} м • ⏱ {duration}",
   "@routeStatsWithDuration": {
     "placeholders": {
-      "km": { "type": "String" },
-      "elev": { "type": "String" },
-      "duration": { "type": "String" }
+      "km": {
+        "type": "String"
+      },
+      "elev": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "importRoute": "Импорт маршрута",
@@ -319,7 +445,6 @@
   "noNavigatorApp": "Не найдено приложение-навигатор",
   "shareFailed": "Не удалось поделиться",
   "download": "Скачать",
-
   "statusPreparation": "Подготовка",
   "statusMeeting": "Сбор",
   "statusRide": "В пути",
@@ -327,7 +452,6 @@
   "statusFinished": "Завершено",
   "statusArchived": "В архиве",
   "statusCancelled": "Отменено",
-
   "weatherClearSky": "Ясно",
   "weatherMainlyClear": "Преимущественно ясно",
   "weatherPartlyCloudy": "Переменная облачность",
@@ -350,20 +474,16 @@
   "weatherPrecipitation": "Осадки",
   "weatherRainAlert": "Возможен дождь — возьми дождевик",
   "weatherHumidity": "Влажность",
-
   "elevationProfile": "Высоты",
   "elevationGain": "Подъём",
   "elevationLoss": "Спуск",
-
   "groupNotFound": "Группа не найдена на этом устройстве. Попросите организатора поделиться группой через QR-код или ссылку.",
   "activityNotFound": "Активность не найдена",
-
   "mapSearch": "Поиск",
   "mapFilterAll": "Все",
   "mapFilterFound": "Найденные",
   "mapFilterHide": "Скрыть",
   "mapLayers": "Слои",
-
   "fieldRequired": "Заполните это поле",
   "meetingPointHint": "Нажмите на иконку карты, чтобы задать координаты",
   "visibilityPrivate": "Приватная",
@@ -381,10 +501,17 @@
   "profileVisibleHint": "Профиль виден другим участникам",
   "shareGpsByDefault": "Делиться GPS по умолчанию",
   "privacy": "Приватность",
-
   "canInvite": "Может приглашать в активности",
   "canInviteHint": "Позволяет участнику приглашать других пользователей в активности этой группы",
   "canInviteShort": "Приглашает",
   "privateActivityRequiresInvite": "Приватная активность — нужно приглашение",
-  "alreadyInvited": "Уже приглашён"
+  "alreadyInvited": "Уже приглашён",
+  "scanStart": "Сканировать",
+  "scanPause": "Пауза",
+  "scanStarting": "Запускаем камеру…",
+  "scanActive": "Сканирование активно — наведите на QR-код",
+  "scanStopped": "Сканирование остановлено",
+  "cameraPermissionDenied": "Нет доступа к камере — разрешите камеру в настройках",
+  "alreadyInGroup": "Вы уже состоите в этой группе",
+  "groupJoined": "Вы вступили в группу"
 }

@@ -1019,4 +1019,27 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get alreadyInvited => 'Уже приглашён';
-}
+
+  @override
+  String get scanStart => 'Сканировать';
+
+  @override
+  String get scanPause => 'Пауза';
+
+  @override
+  String get scanStarting => 'Запускаем камеру…';
+
+  @override
+  String get scanActive => 'Сканирование активно — наведите на QR-код';
+
+  @override
+  String get scanStopped => 'Сканирование остановлено';
+
+  @override
+  String get cameraPermissionDenied => 'Нет доступа к камере — разрешите камеру в настройках';
+
+  @override
+  String get alreadyInGroup => 'Вы уже состоите в этой группе';
+
+  @override
+  String get groupJoined => 'Вы вступили в группу';

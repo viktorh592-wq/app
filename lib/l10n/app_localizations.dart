@@ -1934,6 +1934,14 @@ abstract class AppLocalizations {
 
   /// No description provided for @alreadyInvited.
   String get alreadyInvited;
+  String get scanStart;
+  String get scanPause;
+  String get scanStarting;
+  String get scanActive;
+  String get scanStopped;
+  String get cameraPermissionDenied;
+  String get alreadyInGroup;
+  String get groupJoined;
 }
 
 class _AppLocalizationsDelegate
@@ -1967,4 +1975,4 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       'an issue with the localizations generation tool. Please file an issue '
       'on GitHub with a reproducible sample app and the gen-l10n configuration '
       'that was used.');
-}
+
