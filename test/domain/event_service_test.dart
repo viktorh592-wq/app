@@ -62,12 +62,62 @@ void main() {
       activityTypeId: 'MTB',
       meetingLat: 0,
       meetingLng: 0,
+      visibility: EventVisibility.public,
     );
     final synthetic = UserCollection()..id = 'guest-1';
     final joined = await service.join(event: event, user: synthetic);
     expect(joined.status, ParticipantStatus.accepted.name);
     final left = await service.leave(event: event, user: synthetic);
     expect(left.status, ParticipantStatus.left.name);
+  });
+
+  test(
+      'V3.0.3 fix — private activity rejects join without invitation (user feedback)',
+      () async {
+    final organizer =
+        await users.createProfile(displayName: 'Alex', username: 'alex');
+    final event = await service.createActivity(
+      organizer: organizer,
+      groupId: 'group-1',
+      title: 'Ride',
+      description: '',
+      startAt: DateTime.now().millisecondsSinceEpoch,
+      activityTypeId: 'MTB',
+      meetingLat: 0,
+      meetingLng: 0,
+      // visibility defaults to private
+    );
+    final synthetic = UserCollection()..id = 'guest-1';
+    expect(
+      () => service.join(event: event, user: synthetic),
+      throwsA(isA<BusinessRuleError>()),
+    );
+  });
+
+  test(
+      'V3.0.3 fix — private activity allows join when user has been invited',
+      () async {
+    final organizer =
+        await users.createProfile(displayName: 'Alex', username: 'alex');
+    final event = await service.createActivity(
+      organizer: organizer,
+      groupId: 'group-1',
+      title: 'Ride',
+      description: '',
+      startAt: DateTime.now().millisecondsSinceEpoch,
+      activityTypeId: 'MTB',
+      meetingLat: 0,
+      meetingLng: 0,
+      // visibility defaults to private
+    );
+    final synthetic = UserCollection()..id = 'guest-1';
+    await participants.invite(
+      eventId: event.id,
+      userId: synthetic.id,
+      byUserId: organizer.id,
+    );
+    final joined = await service.join(event: event, user: synthetic);
+    expect(joined.status, ParticipantStatus.accepted.name);
   });
 
   test('startRide then finishRide creates archive (UC-003, UC-004, BR-002)',

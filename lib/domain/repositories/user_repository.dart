@@ -64,6 +64,22 @@ class UserRepository {
     return _store.put(user);
   }
 
+  /// V3.0.3 fix (user feedback): upsert a locally-known peer user (NOT
+  /// the local profile — use [createProfile] for that). Used when
+  /// materializing group members from a deep-link payload: if the user
+  /// already exists locally, do nothing (we don't overwrite displayName /
+  /// username with stale data from the inviter's device — local wins).
+  /// Otherwise insert the record as-is.
+  Future<UserCollection> upsertKnown(UserCollection user) async {
+    final existing = await _store.getById(user.id);
+    if (existing != null && !existing.isDeleted) return existing;
+    final now = Timestamps.nowUtc();
+    if (user.createdAt == 0) user.createdAt = now;
+    if (user.updatedAt == 0) user.updatedAt = now;
+    if (user.version < 1) user.version = 1;
+    return _store.put(user);
+  }
+
   /// Search locally known users by nickname or display name
   /// (V2 USER_DISCOVERY.md §2 — discovery by nickname). Local-First: only
   /// users already known on this device (contacts, scanned profiles) are

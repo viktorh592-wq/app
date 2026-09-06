@@ -274,13 +274,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
               title: Text(l.shareInviteLink),
               onTap: () {
                 Navigator.pop(sheetContext);
-                final groupService = serviceLocator<GroupService>();
-                final identity = serviceLocator<IdentityService>();
-                final uri = identity.groupUriWithPayload(
-                  inviteCode: group.inviteCode ?? '',
-                  payload: groupService.invitationPayload(group),
-                );
-                Share.share(uri);
+                _shareInviteLink(context, group);
               },
             ),
             ListTile(
@@ -333,21 +327,38 @@ class _GroupDetailPageState extends State<GroupDetailPage>
 
   void _showGroupQr(BuildContext context, GroupCollection group) {
     final l = AppLocalizations.of(context)!;
+    // V3.0.3 fix — invitation payload now also carries the member roster and
+    // activities so the receiver sees the same group state (members +
+    // activities) right after scanning. Build the payload asynchronously
+    // before showing the QR dialog.
+    _buildInviteUri(group).then((uri) {
+      if (!context.mounted) return;
+      showDialog(
+        context: context,
+        builder: (_) => QrCodeDialog(
+          title: l.groupQrCode,
+          subtitle: group.name,
+          uri: uri,
+        ),
+      );
+    });
+  }
+
+  Future<void> _shareInviteLink(
+    BuildContext context,
+    GroupCollection group,
+  ) async {
+    final uri = await _buildInviteUri(group);
+    await Share.share(uri);
+  }
+
+  Future<String> _buildInviteUri(GroupCollection group) async {
     final groupService = serviceLocator<GroupService>();
     final identity = serviceLocator<IdentityService>();
-    // V3 fix — embed the full group payload in the QR so the receiver can
-    // materialize the group even when it doesn't exist on their device yet.
-    final uri = identity.groupUriWithPayload(
+    final payload = await groupService.invitationPayload(group);
+    return identity.groupUriWithPayload(
       inviteCode: group.inviteCode ?? '',
-      payload: groupService.invitationPayload(group),
-    );
-    showDialog(
-      context: context,
-      builder: (_) => QrCodeDialog(
-        title: l.groupQrCode,
-        subtitle: group.name,
-        uri: uri,
-      ),
+      payload: payload,
     );
   }
 
@@ -361,14 +372,8 @@ class _GroupDetailPageState extends State<GroupDetailPage>
     final user = context.read<AppViewModel>().user;
     switch (value) {
       case 'shareLink':
-        final groupService = serviceLocator<GroupService>();
-        final identity = serviceLocator<IdentityService>();
-        // V3 fix — embed the payload in the shared link too.
-        final uri = identity.groupUriWithPayload(
-          inviteCode: group.inviteCode ?? '',
-          payload: groupService.invitationPayload(group),
-        );
-        await Share.share(uri);
+        // V3.0.3 fix — payload now carries members + activities.
+        await _shareInviteLink(context, group);
         break;
       case 'leave':
         if (user == null) return;

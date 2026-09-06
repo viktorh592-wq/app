@@ -380,5 +380,11 @@
   "okButton": "OK",
   "profileVisibleHint": "Профиль виден другим участникам",
   "shareGpsByDefault": "Делиться GPS по умолчанию",
-  "privacy": "Приватность"
+  "privacy": "Приватность",
+
+  "canInvite": "Может приглашать в активности",
+  "canInviteHint": "Позволяет участнику приглашать других пользователей в активности этой группы",
+  "canInviteShort": "Приглашает",
+  "privateActivityRequiresInvite": "Приватная активность — нужно приглашение",
+  "alreadyInvited": "Уже приглашён"
 }

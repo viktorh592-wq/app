@@ -380,5 +380,11 @@
   "okButton": "OK",
   "profileVisibleHint": "Profile visible to peers",
   "shareGpsByDefault": "Share GPS by default",
-  "privacy": "Privacy"
+  "privacy": "Privacy",
+
+  "canInvite": "May invite to activities",
+  "canInviteHint": "Lets this member invite other users to activities in this group",
+  "canInviteShort": "Invite",
+  "privateActivityRequiresInvite": "Private activity — invitation required",
+  "alreadyInvited": "Already invited"
 }

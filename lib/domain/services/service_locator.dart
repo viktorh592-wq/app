@@ -93,6 +93,9 @@ Future<void> setupServiceLocator() async {
   serviceLocator.registerLazySingleton<GroupService>(() => GroupService(
         serviceLocator<GroupRepository>(),
         serviceLocator<GroupMemberRepository>(),
+        serviceLocator<EventRepository>(),
+        serviceLocator<UserRepository>(),
+        serviceLocator<ParticipantRepository>(),
       ));
   serviceLocator.registerLazySingleton<StatisticsService>(
       () => StatisticsService(serviceLocator<StatisticsRepository>()));

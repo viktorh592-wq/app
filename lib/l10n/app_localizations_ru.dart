@@ -1002,4 +1002,21 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get privacy => 'Приватность';
+
+  @override
+  String get canInvite => 'Может приглашать в активности';
+
+  @override
+  String get canInviteHint =>
+      'Позволяет участнику приглашать других пользователей в активности этой группы';
+
+  @override
+  String get canInviteShort => 'Приглашает';
+
+  @override
+  String get privateActivityRequiresInvite =>
+      'Приватная активность — нужно приглашение';
+
+  @override
+  String get alreadyInvited => 'Уже приглашён';
 }

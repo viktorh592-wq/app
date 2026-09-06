@@ -52,10 +52,12 @@ class GroupMemberRepository {
     required String userId,
     String role = 'member',
     String? addedBy,
+    bool canInvite = false,
+    int? joinedAt,
   }) async {
     final existing = await byGroupAndUser(groupId, userId);
     if (existing != null) return existing;
-    final now = Timestamps.nowUtc();
+    final now = joinedAt ?? Timestamps.nowUtc();
     final member = GroupMemberCollection()
       ..id = UuidGenerator.generate()
       ..createdAt = now
@@ -67,7 +69,22 @@ class GroupMemberRepository {
       ..role = role
       ..addedBy = addedBy
       ..joinedAt = now
+      ..canInvite = canInvite
       ..createdBy = addedBy;
+    return _store.put(member);
+  }
+
+  /// Update role and canInvite flag (V3.0.3 fix — admin grants invite rights).
+  Future<GroupMemberCollection> updatePermissions(
+    GroupMemberCollection member, {
+    String? role,
+    bool? canInvite,
+    String? by,
+  }) async {
+    if (role != null) member.role = role;
+    if (canInvite != null) member.canInvite = canInvite;
+    member.touch(Timestamps.nowUtc());
+    member.updatedBy = by;
     return _store.put(member);
   }
 

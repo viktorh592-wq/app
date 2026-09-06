@@ -88,4 +88,18 @@ class EventRepository {
     event.softDelete(Timestamps.nowUtc(), by: by);
     await _store.put(event);
   }
+
+  /// V3.0.3 fix (user feedback): upsert an activity that was received via
+  /// a group invitation payload. If the activity already exists locally,
+  /// do nothing (local data wins — we don't clobber local edits). Used
+  /// by [GroupService.acceptInvitation] to materialize activities on the
+  /// receiver's device so the group's Activities tab shows all activities.
+  Future<EventCollection> upsertFromInvitation(EventCollection event) async {
+    final existing = await _store.getById(event.id);
+    if (existing != null && !existing.isDeleted) return existing;
+    if (event.createdAt == 0) event.createdAt = Timestamps.nowUtc();
+    if (event.updatedAt == 0) event.updatedAt = Timestamps.nowUtc();
+    if (event.version < 1) event.version = 1;
+    return _store.put(event);
+  }
 }

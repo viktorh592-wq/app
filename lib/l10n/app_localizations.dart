@@ -1919,6 +1919,21 @@ abstract class AppLocalizations {
 
   /// No description provided for @privacy.
   String get privacy;
+
+  /// No description provided for @canInvite.
+  String get canInvite;
+
+  /// No description provided for @canInviteHint.
+  String get canInviteHint;
+
+  /// No description provided for @canInviteShort.
+  String get canInviteShort;
+
+  /// No description provided for @privateActivityRequiresInvite.
+  String get privateActivityRequiresInvite;
+
+  /// No description provided for @alreadyInvited.
+  String get alreadyInvited;
 }
 
 class _AppLocalizationsDelegate

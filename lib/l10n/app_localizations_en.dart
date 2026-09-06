@@ -1002,4 +1002,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacy => 'Privacy';
+
+  @override
+  String get canInvite => 'May invite to activities';
+
+  @override
+  String get canInviteHint =>
+      'Lets this member invite other users to activities in this group';
+
+  @override
+  String get canInviteShort => 'Invite';
+
+  @override
+  String get privateActivityRequiresInvite =>
+      'Private activity — invitation required';
+
+  @override
+  String get alreadyInvited => 'Already invited';
 }
