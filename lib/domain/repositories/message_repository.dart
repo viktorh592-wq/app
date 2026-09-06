@@ -4,6 +4,12 @@
 /// V3 Sprint 3 (FIX_PLAN S3-T1..T11) — adds the V2 Telegram-style operations:
 /// pin / unpin, setReaction (toggle per user), setDeliveryState, markRead by
 /// userId, forward, and a pinned stream for the chat top-bar (S3-T5).
+///
+/// V3.0.3 (bug 1): [sendText] now also broadcasts the freshly-saved message
+/// via the registered [CommunicationService] so it reaches other Pokatuha
+/// devices on the same Wi-Fi. [ingestIncoming] is the symmetric counterpart
+/// for receiving envelopes. Both directions are no-ops when no transport is
+/// registered (tests, web).
 import 'dart:async';
 import 'dart:convert';
 
@@ -16,10 +22,19 @@ import 'package:pokatuha/core/utils/validators.dart';
 import 'package:pokatuha/database/collections/message_collection.dart';
 import 'package:pokatuha/database/database.dart';
 import 'package:pokatuha/domain/enums/enums.dart';
+import 'package:pokatuha/domain/services/communication_service.dart';
 
 class MessageRepository {
-  MessageRepository(this._db);
+  MessageRepository(this._db, {CommunicationService? transport})
+      : _transport = transport;
+
   final DatabaseService _db;
+
+  /// Optional P2P transport — when set, [sendText] / [sendAttachment]
+  /// broadcast the saved message so other devices on the same Wi-Fi receive
+  /// it. The transport is injected by [setupServiceLocator] in production
+  /// and stays null in unit tests.
+  final CommunicationService? _transport;
 
   TypedStore<MessageCollection> get _store => _db.messagesStore;
 
@@ -115,6 +130,7 @@ class MessageRepository {
       ..createdBy = authorId;
     final saved = await _store.put(msg);
     await _notifyPinned(eventId);
+    await _broadcast(saved, authorId: authorId);
     return saved;
   }
 
@@ -150,6 +166,7 @@ class MessageRepository {
       ..createdBy = authorId;
     final saved = await _store.put(msg);
     await _notifyPinned(eventId);
+    await _broadcast(saved, authorId: authorId);
     return saved;
   }
 
@@ -381,5 +398,68 @@ class MessageRepository {
       'messages': list.map((m) => m.toMap()).toList(),
     };
     return jsonEncode(payload);
+  }
+
+  /// Broadcast the saved message via the registered [CommunicationService]
+  /// so other Pokatuha devices on the same Wi-Fi receive it (bug 1 — V3.0.3).
+  ///
+  /// No-op when no transport is registered (tests / web). Failures are
+  /// swallowed — the local copy is already persisted and the outgoing bubble
+  /// already reflects `queued` → `sending` locally; the next sync window
+  /// will retry.
+  Future<void> _broadcast(
+    MessageCollection message, {
+    required String authorId,
+  }) async {
+    final transport = _transport;
+    if (transport == null) return;
+    try {
+      await transport.broadcast(RealtimeEnvelope(
+        type: RealtimeType.chat,
+        payload: message.toMap(),
+        senderId: authorId,
+        timestamp: Timestamps.nowUtc(),
+      ));
+    } catch (_) {
+      // Network failures are non-fatal — best-effort transport.
+    }
+  }
+
+  /// Ingest a chat [RealtimeEnvelope] received from another device on the
+  /// local network. Idempotent: a message with the same id is not duplicated
+  /// (its fields are merged instead). This is the symmetric counterpart of
+  /// [_broadcast].
+  ///
+  /// Returns the stored message (existing or newly created), or null when
+  /// the envelope was malformed / for a different event we don't know about.
+  Future<MessageCollection?> ingestIncoming(Map<String, dynamic> payload) async {
+    final id = (payload['id'] as String?)?.trim() ?? '';
+    if (id.isEmpty) return null;
+    final eventId = (payload['eventId'] as String?)?.trim() ?? '';
+    if (eventId.isEmpty) return null;
+    final authorId = (payload['authorId'] as String?)?.trim() ?? '';
+    if (authorId.isEmpty) return null;
+
+    // Idempotent upsert: load any existing message with the same id, apply
+    // the incoming fields, and save. This avoids duplicate rows when the
+    // same envelope arrives twice (UDP retransmit, multi-device fan-out).
+    final existing = await _store.getById(id);
+    final msg = existing ?? MessageCollection()..id = id;
+    msg.applyMap({
+      ...msg.toMap(),
+      ...payload,
+      // Defensive: never let an incoming envelope mark the message as deleted.
+      'isDeleted': false,
+    });
+    // Force a fresh version bump so the receiver-side UI notices the change.
+    msg.touch(Timestamps.nowUtc());
+    // Incoming messages are never "queued" on the receiver side — they have
+    // already been delivered by definition.
+    if (existing == null) {
+      msg.deliveryState = DeliveryState.delivered.name;
+    }
+    await _store.put(msg);
+    await _notifyPinned(eventId);
+    return msg;
   }
 }

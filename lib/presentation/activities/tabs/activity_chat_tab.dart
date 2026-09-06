@@ -46,6 +46,7 @@ import 'package:pokatuha/domain/repositories/message_repository.dart';
 import 'package:pokatuha/domain/repositories/participant_repository.dart';
 import 'package:pokatuha/domain/repositories/route_repository.dart';
 import 'package:pokatuha/domain/repositories/user_repository.dart';
+import 'package:pokatuha/domain/services/communication_service.dart';
 import 'package:pokatuha/domain/services/gpx_service.dart';
 import 'package:pokatuha/domain/services/gps_service.dart';
 import 'package:pokatuha/domain/services/map_service.dart';
@@ -105,15 +106,38 @@ class ActivityChatTabState extends State<ActivityChatTab> {
 
   late Future<(_ChatData data, bool isParticipant)> _future;
 
+  /// Subscription to incoming chat envelopes from the local-network transport
+  /// — refreshes the chat view when a peer's message arrives (bug 1 — V3.0.3).
+  StreamSubscription<RealtimeEnvelope>? _incomingSub;
+
   @override
   void initState() {
     super.initState();
     _event = widget.event;
     _load();
+    // Reload whenever a chat envelope arrives from another device on the
+    // same Wi-Fi. The AppViewModel persists the incoming message to the
+    // local DB before this stream emits, so _load() picks it up.
+    _incomingSub = serviceLocator<CommunicationService>()
+        .incoming
+        .where((e) => e.type == RealtimeType.chat)
+        .listen((envelope) {
+      if (!mounted) return;
+      // Only refresh when the envelope is for our event.
+      final payload = envelope.payload;
+      final event = payload['eventId'];
+      if (event is String && event == widget.eventId) {
+        setState(_load);
+      } else if (event is String && event.isEmpty) {
+        // Defensive: some peers may omit eventId — refresh anyway.
+        setState(_load);
+      }
+    });
   }
 
   @override
   void dispose() {
+    _incomingSub?.cancel();
     _controller.dispose();
     _scrollController.dispose();
     _searchController.dispose();

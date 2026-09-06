@@ -184,4 +184,66 @@ void main() {
       expect(exported, contains('eventId'));
     });
   });
+
+  // V3.0.3 bug 1 — local-network chat ingest (incoming envelope path).
+  group('V3.0.3 — ingestIncoming', () {
+    test('creates a new message from an incoming envelope', () async {
+      final saved = await repo.ingestIncoming({
+        'id': 'incoming-1',
+        'eventId': eventId,
+        'authorId': 'remote-user',
+        'text': 'Hello from the other device',
+        'kind': 'text',
+        'deliveryState': 'queued',
+      });
+      expect(saved, isNotNull);
+      expect(saved!.id, 'incoming-1');
+      expect(saved.text, 'Hello from the other device');
+      expect(saved.delivery, DeliveryState.delivered);
+      final list = await repo.byEvent(eventId);
+      expect(list.length, 1);
+      expect(list.first.id, 'incoming-1');
+    });
+
+    test('is idempotent — same id arrives twice, no duplicate', () async {
+      const payload = {
+        'id': 'incoming-2',
+        'eventId': eventId,
+        'authorId': 'remote-user',
+        'text': 'Hi',
+        'kind': 'text',
+      };
+      await repo.ingestIncoming(payload);
+      await repo.ingestIncoming({
+        ...payload,
+        // second delivery updates the text
+        'text': 'Hi (updated)',
+      });
+      final list = await repo.byEvent(eventId);
+      expect(list.length, 1);
+      expect(list.first.text, 'Hi (updated)');
+    });
+
+    test('rejects payloads without id / eventId / authorId', () async {
+      expect(await repo.ingestIncoming({'eventId': eventId, 'authorId': 'u1'}),
+          isNull);
+      expect(await repo.ingestIncoming({'id': 'x', 'authorId': 'u1'}), isNull);
+      expect(await repo.ingestIncoming({'id': 'x', 'eventId': eventId}),
+          isNull);
+    });
+
+    test('never marks an incoming message as deleted', () async {
+      await repo.ingestIncoming({
+        'id': 'incoming-3',
+        'eventId': eventId,
+        'authorId': 'remote-user',
+        'text': 'Stay alive',
+        'isDeleted': true, // hostile payload
+        'kind': 'text',
+      });
+      final msg = await repo.getById('incoming-3');
+      expect(msg, isNotNull);
+      expect(msg!.isDeleted, isFalse);
+    });
+  });
 }

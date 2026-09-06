@@ -76,4 +76,54 @@ void main() {
     expect(await repo.findByPublicId('FFFFFFFFFF00'), isNull);
     expect(await repo.findByPublicId(''), isNull);
   });
+
+  // V3.0.3 bug 1 — stub user creation when a chat envelope arrives from an
+  // unknown peer.
+  group('V3.0.3 — upsertStub', () {
+    test('creates a stub for an unknown user id', () async {
+      final stub = UserCollection()
+        ..id = 'peer-uuid-1'
+        ..displayName = 'PEERUUID1';
+      final saved = await repo.upsertStub(stub);
+      expect(saved.id, 'peer-uuid-1');
+      expect(saved.displayName, 'PEERUUID1');
+      expect(saved.profileVisible, isTrue);
+      final fetched = await repo.getById('peer-uuid-1');
+      expect(fetched?.id, 'peer-uuid-1');
+    });
+
+    test('does not clobber an existing profile', () async {
+      // Pre-existing richer profile.
+      final existing = UserCollection()
+        ..id = 'peer-uuid-2'
+        ..displayName = 'Real Name'
+        ..username = 'real_handle'
+        ..bio = 'Cyclist';
+      final now = Timestamps.nowUtc();
+      existing
+        ..createdAt = now
+        ..updatedAt = now
+        ..version = 1
+        ..isDeleted = false
+        ..profileVisible = true;
+      await db.usersStore.put(existing);
+
+      // Now upsertStub with a stub of the same id but a placeholder name.
+      final stub = UserCollection()
+        ..id = 'peer-uuid-2'
+        ..displayName = 'STUB_NAME_ONLY';
+      final result = await repo.upsertStub(stub);
+      expect(result.displayName, 'Real Name');
+      expect(result.username, 'real_handle');
+      expect(result.bio, 'Cyclist');
+    });
+
+    test('uses the id as displayName when the stub is empty', () async {
+      final stub = UserCollection()
+        ..id = 'peer-uuid-3'
+        ..displayName = '';
+      final saved = await repo.upsertStub(stub);
+      expect(saved.displayName, 'peer-uuid-3');
+    });
+  });
 }

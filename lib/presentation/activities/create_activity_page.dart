@@ -5,6 +5,7 @@
 /// cards, chat, polls, route and map — S2-T6). When [event] is provided the
 /// form edits that activity instead of creating a new one (V2 §9 — Edit).
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import 'package:pokatuha/core/errors/app_error.dart';
@@ -16,10 +17,10 @@ import 'package:pokatuha/domain/enums/enums.dart';
 import 'package:pokatuha/domain/repositories/activity_type_repository.dart';
 import 'package:pokatuha/domain/repositories/group_repository.dart';
 import 'package:pokatuha/domain/services/event_service.dart';
-import 'package:pokatuha/domain/services/gps_service.dart';
 import 'package:pokatuha/domain/services/service_locator.dart';
 import 'package:pokatuha/l10n/app_localizations.dart';
 import 'package:pokatuha/presentation/app_view_model.dart';
+import 'package:pokatuha/presentation/map/map_picker_page.dart';
 
 class CreateActivityPage extends StatefulWidget {
   const CreateActivityPage({super.key, required this.groupId, this.event});
@@ -277,10 +278,11 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
               controller: _meetingLabel,
               decoration: InputDecoration(
                 labelText: l.meetingPoint,
-                helperText: 'Tap the map icon to set coordinates',
+                helperText: l.meetingPointHint,
                 suffixIcon: IconButton(
+                  tooltip: l.pickOnMap,
                   icon: const Icon(Icons.map_outlined),
-                  onPressed: _setMeetingFromDefault,
+                  onPressed: _pickMeetingOnMap,
                 ),
               ),
             ),
@@ -380,22 +382,39 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
     );
   }
 
-  /// For Local-First UX the meeting point defaults to the user's current GPS
-  /// if available (FR-005). Falls back to a neutral coordinate.
-  Future<void> _setMeetingFromDefault() async {
-    try {
-      final sample = await serviceLocator<GpsService>().current();
-      setState(() {
-        _meetingLat = sample.lat;
-        _meetingLng = sample.lng;
-        _hasMeeting = true;
-      });
-    } catch (_) {
-      setState(() {
-        _meetingLat = 50.4501;
-        _meetingLng = 30.5234;
-        _hasMeeting = true;
-      });
-    }
+  /// Open the map picker so the user can search for an address or tap on
+  /// the map to choose a meeting point. The selected address is written
+  /// into the meeting-point text field; the lat/lng is stored internally
+  /// and persisted on submit (bug 3 — V3.0.3).
+  Future<void> _pickMeetingOnMap() async {
+    final initial = _hasMeeting
+        ? LatLng(_meetingLat, _meetingLng)
+        : null;
+    final result = await Navigator.of(context).push<MapPickerResult>(
+      MaterialPageRoute(
+        builder: (_) => MapPickerPage(
+          initialLatLng: initial,
+          initialLabel:
+              _meetingLabel.text.trim().isEmpty ? null : _meetingLabel.text.trim(),
+        ),
+      ),
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _meetingLat = result.lat;
+      _meetingLng = result.lng;
+      _hasMeeting = true;
+      // Replace the field content with the resolved address (only when
+      // the user hasn't typed a custom label that should be preserved).
+      final currentText = _meetingLabel.text.trim();
+      if (currentText.isEmpty || currentText == _formatLatLng(initial)) {
+        _meetingLabel.text = result.label;
+      }
+    });
+  }
+
+  String _formatLatLng(LatLng? ll) {
+    if (ll == null) return '';
+    return '${ll.latitude.toStringAsFixed(5)}, ${ll.longitude.toStringAsFixed(5)}';
   }
 }

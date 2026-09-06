@@ -362,5 +362,23 @@
   "mapFilterAll": "All",
   "mapFilterFound": "Found",
   "mapFilterHide": "Hide",
-  "mapLayers": "Layers"
+  "mapLayers": "Layers",
+
+  "pickOnMap": "Pick on map",
+  "meetingPointHint": "Tap the map icon to choose a meeting point",
+  "mapPickerTitle": "Meeting point",
+  "mapPickerSearchHint": "Search address or place",
+  "mapPickerHint": "Tap on the map to set the meeting point",
+  "mapPickerResolving": "Resolving address…",
+  "findMe": "Find me",
+  "confirm": "Confirm",
+  "locationUnavailable": "Location unavailable",
+
+  "startScan": "Scan",
+  "stopScan": "Stop",
+  "scanning": "Scanning…",
+  "cameraPermissionDenied": "Camera permission denied",
+  "scanFailed": "Could not read the QR code — try again",
+
+  "peerToPeerChatNotice": "Local chat works on the same Wi-Fi network between participants"
 }

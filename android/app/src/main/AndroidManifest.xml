@@ -3,6 +3,14 @@
 
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- V3.0.3 bug 1 — local-network UDP transport. CHANGE_WIFI_MULTICAST_STATE
+         is required so the Wi-Fi chip keeps delivering broadcast/multicast
+         packets to the app while it is in the foreground (Android suspends
+         them by default to save power). See ADR-008. -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
+
     <!-- V2 MAPS_AND_GPS_FIX.md §2 — Android GPS permissions. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>

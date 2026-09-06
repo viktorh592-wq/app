@@ -99,4 +99,30 @@ class UserRepository {
     }
     return null;
   }
+
+  /// Insert (or replace) a stub user record when we receive a chat envelope
+  /// from a user we don't yet know locally (bug 1 — V3.0.3). The stub carries
+  /// just enough data (id + displayName derived from the short public id) so
+  /// the chat bubble renders something readable instead of a raw UUID.
+  ///
+  /// If a record with the same id already exists (created/updated by a
+  /// different code path), this is a no-op — never overwrite a richer
+  /// existing profile with a stub.
+  Future<UserCollection> upsertStub(UserCollection stub) async {
+    final existing = await _store.getById(stub.id);
+    if (existing != null) {
+      // Don't clobber a real profile with a stub.
+      return existing;
+    }
+    final now = Timestamps.nowUtc();
+    stub
+      ..createdAt = now
+      ..updatedAt = now
+      ..version = 1
+      ..isDeleted = false
+      ..displayName = stub.displayName.isEmpty ? stub.id : stub.displayName
+      ..username = stub.username.isEmpty ? stub.displayName : stub.username
+      ..profileVisible = true;
+    return _store.put(stub);
+  }
 }

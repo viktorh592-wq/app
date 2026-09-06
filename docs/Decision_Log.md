@@ -366,4 +366,89 @@ AGENTS.md (one PR per task; CI must be green before merge)
 
 ---
 
+## 2026-09-07
+
+### V3.0.3 — Three user-reported bugs fixed
+
+Status
+
+Accepted
+
+Description
+
+Three regressions reported after testing the V3.0.2 build (workflow run
+#34046041610):
+
+1. **Chat does not work between devices (critical).** User 1 scans
+   User 2's group QR, the group / activity / participants appear on
+   User 1, but messages sent by User 1 in the activity chat do not
+   show at User 2. Root cause: the registered `LocalCommunicationService`
+   was an in-process loopback only — no bytes ever left the sender.
+2. **Reverse QR scan does nothing.** User 2 scanning User 1's group QR
+   produced no visible feedback. The page relied on
+   `MobileScanner` auto-starting its internal controller; permission
+   failures and lifecycle pauses left the camera silently stopped.
+3. **Map icon in CreateActivity does nothing.** Tapping the map icon
+   in the "Meeting point" field silently set the coordinates to the
+   user's current GPS (or a Kyiv fallback) without ever opening a map.
+
+Decisions
+
+- ADR-008 — Local-network UDP transport for chat. Introduces
+  `LocalNetworkCommunicationService` as a decorator around
+  `LocalCommunicationService`. Chat envelopes are JSON-encoded and
+  broadcast to `255.255.255.255:53100`. `MessageRepository.sendText` /
+  `sendAttachment` now invoke `_broadcast` after the local save, and a
+  new `ingestIncoming` method performs an idempotent upsert on the
+  receiving side. The Android side acquires `WifiManager.MulticastLock`
+  via a new `pokatuha/network` MethodChannel so the Wi-Fi chip keeps
+  delivering broadcast packets to the app. New permissions:
+  `ACCESS_WIFI_STATE`, `ACCESS_NETWORK_STATE`,
+  `CHANGE_WIFI_MULTICAST_STATE`. In-process loopback stays untouched so
+  unit tests stay deterministic; the transport is injectable as an
+  optional `CommunicationService?` constructor parameter on
+  `MessageRepository` (null in tests).
+- QrScannerPage rewritten with an explicit `MobileScannerController`
+  (`autoStart: false`), an explicit `_start()` request that surfaces
+  camera permission state, and a "Scan" / "Stop" button at the bottom
+  that toggles scanning. The page also observes `AppLifecycleState` so
+  the camera is restarted when the app returns to the foreground (root
+  cause of the "nothing happens" reverse-direction bug — the camera was
+  left stopped after the permission dialog paused the activity). A
+  status banner shows "Scanning…" / "Stopped" / "Camera permission
+  denied" so the user is never left guessing.
+- New `MapPickerPage` (`lib/presentation/map/map_picker_page.dart`)
+  opens from the "Meeting point" map icon. Uses `flutter_map` (already
+  a dependency) + a new `GeocodingService` that wraps the
+  OpenStreetMap Nominatim API (no API key, free, Local-First compliant —
+  see ADR-007 implicit). The page supports:
+  - free-text address search (debounced 700ms, max 1 req/sec per
+    Nominatim policy),
+  - tap on the map → reverse-geocode → set the marker + address label,
+  - "Find me" FAB → centres the map on the current GPS,
+  - "Confirm" → returns a `MapPickerResult{lat, lng, label}` to the
+    caller.
+  The selected address is written into the meeting-point text field
+  and the lat/lng are stored internally as before.
+- Added 14 new tests (geocoding service round-trip with a MockClient;
+  `MessageRepository.ingestIncoming` happy path + idempotency +
+  hostile payload rejection; `UserRepository.upsertStub` happy path +
+  no-clobber + empty-displayName fallback).
+- Localization: added 14 new strings in `app_en.arb` + `app_ru.arb`
+  (scan/stop, scanning, camera permission denied, scan failed,
+  map picker title/hint/search hint/resolving, find me, confirm,
+  location unavailable, pick on map, meeting point hint, P2P notice).
+
+Verification
+
+- `flutter analyze` — 0 new issues (4 pre-existing info-level warnings
+  unchanged).
+- `flutter test` — 146 / 146 passing (was 132, +14 new tests).
+
+Reference
+
+adr/ADR-008-Local-Network-UDP-Transport.md
+
+---
+
 End of document.

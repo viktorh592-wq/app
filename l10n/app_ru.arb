@@ -362,5 +362,23 @@
   "mapFilterAll": "Все",
   "mapFilterFound": "Найденные",
   "mapFilterHide": "Скрыть",
-  "mapLayers": "Слои"
+  "mapLayers": "Слои",
+
+  "pickOnMap": "Выбрать на карте",
+  "meetingPointHint": "Нажмите на иконку карты, чтобы выбрать место сбора",
+  "mapPickerTitle": "Точка сбора",
+  "mapPickerSearchHint": "Искать адрес или место",
+  "mapPickerHint": "Нажмите на карту, чтобы выбрать точку сбора",
+  "mapPickerResolving": "Определяем адрес…",
+  "findMe": "Моё местоположение",
+  "confirm": "Подтвердить",
+  "locationUnavailable": "Местоположение недоступно",
+
+  "startScan": "Сканировать",
+  "stopScan": "Стоп",
+  "scanning": "Сканирование…",
+  "cameraPermissionDenied": "Доступ к камере запрещён",
+  "scanFailed": "QR-код не распознан — попробуйте ещё раз",
+
+  "peerToPeerChatNotice": "Чат работает между участниками в одной Wi-Fi сети"
 }
