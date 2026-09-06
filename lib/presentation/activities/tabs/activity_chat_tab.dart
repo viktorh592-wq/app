@@ -105,19 +105,46 @@ class ActivityChatTabState extends State<ActivityChatTab> {
 
   late Future<(_ChatData data, bool isParticipant)> _future;
 
+  /// Last resolved chat data — used to keep rendering the previous message
+  /// list while a reload (triggered by an incoming P2P message) is in
+  /// flight, instead of flashing the full-screen spinner (V3.0.4).
+  (_ChatData, bool)? _lastData;
+
+  /// Chat store change subscription (V3.0.4, bug 1) — messages received
+  /// over the local network / history sync / delivery acks mutate the store
+  /// outside this widget; without this subscription the user would have to
+  /// re-open the chat to see them.
+  StreamSubscription<void>? _storeChanges;
+
   @override
   void initState() {
     super.initState();
     _event = widget.event;
     _load();
+    _storeChanges = serviceLocator<MessageRepository>()
+        .changeStream(widget.eventId)
+        .listen((_) => _onStoreChanged());
   }
 
   @override
   void dispose() {
+    _storeChanges?.cancel();
+    _storeChanges = null;
     _controller.dispose();
     _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  /// Store changed for this event — schedule a silent reload. Debounced
+  /// through the event loop: a history batch can emit several change
+  /// events synchronously, a single reload is enough.
+  void _onStoreChanged() {
+    if (!mounted) return;
+    scheduleMicrotask(() {
+      if (!mounted) return;
+      setState(_load);
+    });
   }
 
   void _load() {
@@ -718,10 +745,15 @@ class ActivityChatTabState extends State<ActivityChatTab> {
     return FutureBuilder<(_ChatData, bool)>(
       future: _future,
       builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
+        // While a reload is in flight keep rendering the previous data —
+        // a full-screen spinner on every incoming P2P message would make
+        // the chat feel broken.
+        final resolved = snapshot.data ?? _lastData;
+        if (resolved == null) {
           return const Center(child: CircularProgressIndicator());
         }
-        final (data, isParticipant) = snapshot.data!;
+        final (data, isParticipant) = resolved;
+        _lastData = resolved;
         _chatData = data;
         if (!isParticipant) {
           return Center(

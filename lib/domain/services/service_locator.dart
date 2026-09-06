@@ -21,6 +21,7 @@ import 'package:pokatuha/domain/repositories/settings_repository.dart';
 import 'package:pokatuha/domain/repositories/statistics_repository.dart';
 import 'package:pokatuha/domain/repositories/user_repository.dart';
 import 'package:pokatuha/domain/services/auth_service.dart';
+import 'package:pokatuha/domain/services/chat_sync_service.dart';
 import 'package:pokatuha/domain/services/communication_service.dart';
 import 'package:pokatuha/domain/services/event_service.dart';
 import 'package:pokatuha/domain/services/foreground_location_service.dart';
@@ -30,6 +31,7 @@ import 'package:pokatuha/domain/services/group_service.dart';
 import 'package:pokatuha/domain/services/identity_service.dart';
 import 'package:pokatuha/domain/services/map_service.dart';
 import 'package:pokatuha/domain/services/notification_service.dart';
+import 'package:pokatuha/domain/services/local_network_communication_service.dart';
 import 'package:pokatuha/domain/services/settings_service.dart';
 import 'package:pokatuha/domain/services/statistics_service.dart';
 import 'package:pokatuha/domain/services/theme_service.dart';
@@ -55,7 +57,12 @@ Future<void> setupServiceLocator() async {
   serviceLocator.registerLazySingleton<ParticipantRepository>(
       () => ParticipantRepository(database));
   serviceLocator.registerLazySingleton<MessageRepository>(
-      () => MessageRepository(database));
+      () => MessageRepository(
+            database,
+            // P2P transport — chat messages are broadcast to peers on the
+            // same network (V3.0.4, bug 1).
+            transport: serviceLocator<CommunicationService>(),
+          ));
   serviceLocator
       .registerLazySingleton<PollRepository>(() => PollRepository(database));
   serviceLocator
@@ -104,8 +111,23 @@ Future<void> setupServiceLocator() async {
       () => NotificationService(serviceLocator<NotificationRepository>()));
   serviceLocator.registerLazySingleton<SettingsService>(
       () => SettingsService(serviceLocator<SettingsRepository>()));
+  // --- Communication (V3.0.4 — real local-network transport) ---
+  // LocalNetworkCommunicationService keeps the in-process loopback of the
+  // old LocalCommunicationService and adds UDP broadcast on the local
+  // Wi-Fi (ADR-008) so chat messages actually leave the device.
   serviceLocator.registerLazySingleton<CommunicationService>(
-      () => LocalCommunicationService());
+      () => LocalNetworkCommunicationService());
+  serviceLocator.registerLazySingleton<ChatSyncService>(() => ChatSyncService(
+        transport: serviceLocator<CommunicationService>(),
+        messageRepository: serviceLocator<MessageRepository>(),
+        eventRepository: serviceLocator<EventRepository>(),
+        memberRepository: serviceLocator<GroupMemberRepository>(),
+        authService: serviceLocator<AuthService>(),
+      ));
+  // Start listening to incoming envelopes right away — the chat, history
+  // sync and acks rely on this subscription being alive for the whole app
+  // session.
+  serviceLocator<ChatSyncService>().start();
   serviceLocator.registerLazySingleton<DeepLinkService>(
       () => DeepLinkService());
   serviceLocator.registerLazySingleton<DeepLinkDispatcher>(
@@ -114,9 +136,16 @@ Future<void> setupServiceLocator() async {
 
 Future<void> disposeServiceLocator() async {
   serviceLocator<WeatherService>().dispose();
+  if (serviceLocator.isRegistered<ChatSyncService>()) {
+    await serviceLocator<ChatSyncService>().stop();
+  }
   if (serviceLocator.isRegistered<CommunicationService>()) {
-    (serviceLocator<CommunicationService>() as LocalCommunicationService)
-        .dispose();
+    final communication = serviceLocator<CommunicationService>();
+    if (communication is LocalNetworkCommunicationService) {
+      communication.dispose();
+    } else if (communication is LocalCommunicationService) {
+      communication.dispose();
+    }
   }
   await serviceLocator<DatabaseService>().close();
   await serviceLocator.reset();

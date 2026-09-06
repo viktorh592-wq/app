@@ -3,6 +3,7 @@ import 'package:pokatuha/core/errors/app_error.dart';
 import 'package:pokatuha/database/collections/message_collection.dart';
 import 'package:pokatuha/database/database.dart';
 import 'package:pokatuha/domain/repositories/message_repository.dart';
+import 'package:pokatuha/domain/services/communication_service.dart';
 
 void main() {
   late DatabaseService db;
@@ -184,4 +185,92 @@ void main() {
       expect(exported, contains('eventId'));
     });
   });
+
+  // --- V3.0.4 (bug 1): P2P transport wiring ---
+
+  test('broadcast on send goes through the registered transport', () async {
+    final hub = _RecordingTransport();
+    final repo = MessageRepository(db, transport: hub);
+    final m = await repo.sendText(
+        eventId: eventId, authorId: 'u1', text: 'over the wire');
+    expect(hub.envelopes, hasLength(1));
+    expect(hub.envelopes.first.type, RealtimeType.chat);
+    expect(hub.envelopes.first.payload['id'], m.id);
+    // Delivery state advanced queued -> sending before hitting the wire.
+    final stored = await repo.getById(m.id);
+    expect(stored!.deliveryState, DeliveryState.sending.name);
+  });
+
+  test('ingestIncoming stores a peer message and is idempotent', () async {
+    final hub = _RecordingTransport();
+    final repo = MessageRepository(db, transport: hub);
+    final payload = MessageCollection()
+      ..id = 'peer-1'
+      ..createdAt = 1000
+      ..updatedAt = 1000
+      ..version = 1
+      ..eventId = eventId
+      ..authorId = 'peer'
+      ..kind = MessageKind.text.name
+      ..text = 'from peer'
+      ..deliveryState = DeliveryState.delivered.name
+      ..createdBy = 'peer'
+      .toMap();
+    final first = await repo.ingestIncoming(
+        payload, deliveryState: DeliveryState.delivered.name);
+    final second = await repo.ingestIncoming(
+        payload, deliveryState: DeliveryState.delivered.name);
+    expect(first, isTrue);
+    expect(second, isFalse, reason: 'duplicate must be ignored');
+    final list = await repo.byEvent(eventId);
+    expect(list, hasLength(1));
+    expect(list.first.text, 'from peer');
+  });
+
+  test('recentByEvent returns the LAST N messages oldest-first', () async {
+    for (var i = 1; i <= 7; i++) {
+      await repo.sendText(eventId: eventId, authorId: 'u1', text: 'm$i');
+    }
+    final recent = await repo.recentByEvent(eventId, 5);
+    expect(recent, hasLength(5));
+    expect(recent.first.text, 'm3');
+    expect(recent.last.text, 'm7');
+  });
+
+  test('changeStream fires on send and on ingest', () async {
+    final events = <void>[];
+    final sub = repo.changeStream(eventId).listen(events.add);
+    await Future<void>.delayed(Duration.zero);
+    await repo.sendText(eventId: eventId, authorId: 'u1', text: 'x');
+    await repo.ingestIncoming(
+      MessageCollection()
+        ..id = 'p2'
+        ..createdAt = 1
+        ..updatedAt = 1
+        ..version = 1
+        ..eventId = eventId
+        ..authorId = 'peer'
+        ..kind = 'text'
+        ..text = 'y'
+        ..deliveryState = 'delivered'
+        ..createdBy = 'peer'
+        .toMap(),
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(events.length, greaterThanOrEqualTo(2));
+    await sub.cancel();
+  });
 }
+
+/// Records broadcast envelopes for assertions (no network).
+class _RecordingTransport implements CommunicationService {
+  final envelopes = <RealtimeEnvelope>[];
+
+  @override
+  Future<void> broadcast(RealtimeEnvelope envelope) async {
+    envelopes.add(envelope);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+

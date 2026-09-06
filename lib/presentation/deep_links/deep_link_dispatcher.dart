@@ -6,11 +6,14 @@
 ///     group payload (V3 fix — materialize the group locally if needed).
 /// Owns the app [NavigatorState] key so links can be handled from outside
 /// the widget tree (cold start, background links, QR scanner).
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:pokatuha/core/errors/app_error.dart';
 import 'package:pokatuha/domain/repositories/user_repository.dart';
 import 'package:pokatuha/domain/services/auth_service.dart';
+import 'package:pokatuha/domain/services/chat_sync_service.dart';
 import 'package:pokatuha/domain/services/group_service.dart';
 import 'package:pokatuha/domain/services/identity_service.dart';
 import 'package:pokatuha/domain/services/service_locator.dart';
@@ -55,6 +58,11 @@ class DeepLinkDispatcher {
                   user: me, payload: link.data!)
               : await groupService.joinByInviteCode(
                   user: me, code: link.payload);
+          // V3.0.4 (bug 1) — ask peers on the local network for the recent
+          // chat history of the group's activities. Runs fire-and-forget:
+          // the group page must open instantly regardless of network state.
+          unawaited(
+              serviceLocator<ChatSyncService>().requestHistory(group.id));
           _push(GroupDetailPage(groupId: group.id));
         } on AppError catch (e) {
           // Prefer the localized "group not found" message over the raw
