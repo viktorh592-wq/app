@@ -196,7 +196,7 @@ class _ElevationPainter extends CustomPainter {
       final y = plotBottom - plotH * t;
       _drawText(
         canvas,
-        '${value}м',
+        '$valueм',
         Offset(plotLeft - 4, y - 6),
         yTextStyle,
         alignRight: true,

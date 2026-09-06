@@ -527,7 +527,7 @@ class GroupService {
     await _memberRepository.updatePermissions(
       member,
       role: role.name,
-      canInvite: role == GroupRole.admin.name ? true : member.canInvite,
+      canInvite: role == GroupRole.admin ? true : member.canInvite,
       by: byUserId,
     );
   }

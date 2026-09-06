@@ -65,6 +65,9 @@ class _GroupMembersTabState extends State<GroupMembersTab>
 
   void _load() {
     _future = () async {
+      // Resolve the current user BEFORE the first await — reading from
+      // Provider across async gaps is an analyzer error.
+      final me = context.read<AppViewModel>().user;
       final members = await serviceLocator<GroupMemberRepository>()
           .byGroup(widget.group.id);
       final users = serviceLocator<UserRepository>();
@@ -84,7 +87,6 @@ class _GroupMembersTabState extends State<GroupMembersTab>
       });
       // Resolve whether the current user may manage the group (owner or
       // admin) so we can show the tap affordance on member rows.
-      final me = context.read<AppViewModel>().user;
       final canManage = me == null
           ? false
           : await serviceLocator<GroupService>()
@@ -141,7 +143,6 @@ class _GroupMembersTabState extends State<GroupMembersTab>
     _MemberItem item,
     bool canManage,
   ) {
-    final l = AppLocalizations.of(context)!;
     final role = GroupRole.values.firstWhere(
       (r) => r.name == item.member.role,
       orElse: () => GroupRole.member,

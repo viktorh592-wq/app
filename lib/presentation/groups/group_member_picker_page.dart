@@ -142,7 +142,7 @@ class _GroupMemberPickerPageState extends State<GroupMemberPickerPage> {
                 title: Text(name + (item.isMe ? ' (Вы)' : '')),
                 subtitle: nickname == null ? null : Text(nickname),
                 trailing: alreadyIn
-                    ? _statusChip(context, p!)
+                    ? _statusChip(context, p)
                     : (widget.multiSelect
                         ? Checkbox(
                             value: isSelected,
@@ -184,6 +184,9 @@ class _GroupMemberPickerPageState extends State<GroupMemberPickerPage> {
   }
 
   void _confirm() {
+    // Capture the navigator synchronously — using `context` after the
+    // `_future` completes would be a use_across_async_gaps violation.
+    final navigator = Navigator.of(context);
     _future.then((pickerData) {
       final selected = <UserCollection>[];
       for (final item in pickerData.items) {
@@ -191,7 +194,8 @@ class _GroupMemberPickerPageState extends State<GroupMemberPickerPage> {
           selected.add(item.user!);
         }
       }
-      Navigator.of(context).pop();
+      if (!mounted) return;
+      navigator.pop();
       widget.onMembersSelected(selected);
     });
   }

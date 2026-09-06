@@ -211,14 +211,14 @@ void main() {
       expect(payload['name'], 'Crew');
       expect(payload['members'], isA<List>());
       // Owner is auto-added as a member with canInvite = true.
-      final members = payload['members'] as List;
+      final members = payload['members'] as List<dynamic>;
       expect(members.length, 1);
       expect(members.first['userId'], owner.id);
       expect(members.first['role'], GroupRole.owner.name);
       expect(members.first['canInvite'], isTrue);
       // activities starts empty for a fresh group.
       expect(payload['activities'], isA<List>());
-      expect((payload['activities'] as List).isEmpty, isTrue);
+      expect((payload['activities'] as List<dynamic>).isEmpty, isTrue);
     });
 
     test('acceptInvitation materializes members and activities on the '

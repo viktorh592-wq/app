@@ -233,12 +233,12 @@ class _FullScreenRouteView extends StatelessWidget {
                   Expanded(
                     child: DropdownButtonFormField<int>(
                       value: routes.indexOf(route).clamp(0, routes.length - 1),
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         isDense: true,
-                        border: const OutlineInputBorder(),
-                        contentPadding: const EdgeInsets.symmetric(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
                             horizontal: 12, vertical: 10),
-                        prefixIcon: const Icon(Icons.route_rounded, size: 20),
+                        prefixIcon: Icon(Icons.route_rounded, size: 20),
                       ),
                       items: routes
                           .asMap()
