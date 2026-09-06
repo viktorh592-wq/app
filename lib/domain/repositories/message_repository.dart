@@ -279,23 +279,23 @@ class MessageRepository {
   }
 
   /// Persists an incoming message payload (live chat or history batch).
-  /// Idempotent by id: returns false for duplicates or records whose local
-  /// version is newer. Never re-broadcasts (loop safety — see
-  /// ChatSyncService docs).
+  /// Idempotent: returns false for exact duplicates (same id + same version
+  /// + unchanged delivery state) or records whose local version is newer.
+  /// Never re-broadcasts (loop safety — see ChatSyncService docs).
   Future<bool> ingestIncoming(
     Map<String, dynamic> payload, {
     String? deliveryState,
   }) async {
     final id = payload['id'] as String?;
     if (id == null || id.isEmpty) return false;
-    final existing = await _store.record(id).get(_db);
+    final incomingVersion = (payload['version'] as num?)?.toInt() ?? 1;
+    final existing = await _store.getById(id);
     if (existing != null) {
-      final existingVersion = (existing['version'] as num?)?.toInt() ?? 1;
-      final incomingVersion = (payload['version'] as num?)?.toInt() ?? 1;
-      if (incomingVersion < existingVersion) return false;
-      // Same version → duplicate envelope; only refresh delivery state.
-      if (incomingVersion == existingVersion && deliveryState == null) {
-        return false;
+      if (incomingVersion < existing.version) return false;
+      final nextState = deliveryState ??
+          (payload['deliveryState'] as String? ?? existing.deliveryState);
+      if (incomingVersion == existing.version && nextState == existing.deliveryState) {
+        return false; // exact duplicate — nothing changed locally
       }
     }
     final incoming = MessageCollection.fromMap(payload)

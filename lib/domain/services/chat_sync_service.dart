@@ -24,7 +24,7 @@ library;
 import 'dart:async';
 
 import 'package:pokatuha/core/utils/timestamps.dart';
-import 'package:pokatuha/domain/enums/enums.dart';
+import 'package:pokatuha/database/collections/message_collection.dart';
 import 'package:pokatuha/domain/repositories/event_repository.dart';
 import 'package:pokatuha/domain/repositories/group_member_repository.dart';
 import 'package:pokatuha/domain/repositories/message_repository.dart';

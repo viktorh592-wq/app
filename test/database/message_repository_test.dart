@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pokatuha/core/errors/app_error.dart';
 import 'package:pokatuha/database/collections/message_collection.dart';
 import 'package:pokatuha/database/database.dart';
+import 'package:pokatuha/domain/enums/enums.dart';
 import 'package:pokatuha/domain/repositories/message_repository.dart';
 import 'package:pokatuha/domain/services/communication_service.dart';
 
@@ -204,7 +205,7 @@ void main() {
   test('ingestIncoming stores a peer message and is idempotent', () async {
     final hub = _RecordingTransport();
     final repo = MessageRepository(db, transport: hub);
-    final payload = MessageCollection()
+    final payload = (MessageCollection()
       ..id = 'peer-1'
       ..createdAt = 1000
       ..updatedAt = 1000
@@ -214,8 +215,7 @@ void main() {
       ..kind = MessageKind.text.name
       ..text = 'from peer'
       ..deliveryState = DeliveryState.delivered.name
-      ..createdBy = 'peer'
-      .toMap();
+      ..createdBy = 'peer').toMap();
     final first = await repo.ingestIncoming(
         payload, deliveryState: DeliveryState.delivered.name);
     final second = await repo.ingestIncoming(
@@ -230,6 +230,7 @@ void main() {
   test('recentByEvent returns the LAST N messages oldest-first', () async {
     for (var i = 1; i <= 7; i++) {
       await repo.sendText(eventId: eventId, authorId: 'u1', text: 'm$i');
+      await Future<void>.delayed(const Duration(milliseconds: 3));
     }
     final recent = await repo.recentByEvent(eventId, 5);
     expect(recent, hasLength(5));
@@ -243,7 +244,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     await repo.sendText(eventId: eventId, authorId: 'u1', text: 'x');
     await repo.ingestIncoming(
-      MessageCollection()
+      (MessageCollection()
         ..id = 'p2'
         ..createdAt = 1
         ..updatedAt = 1
@@ -253,8 +254,7 @@ void main() {
         ..kind = 'text'
         ..text = 'y'
         ..deliveryState = 'delivered'
-        ..createdBy = 'peer'
-        .toMap(),
+        ..createdBy = 'peer').toMap(),
     );
     await Future<void>.delayed(Duration.zero);
     expect(events.length, greaterThanOrEqualTo(2));
@@ -273,4 +273,4 @@ class _RecordingTransport implements CommunicationService {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-
+}

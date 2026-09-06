@@ -6,7 +6,6 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:pokatuha/core/utils/uuid.dart';
-import 'package:pokatuha/domain/enums/enums.dart';
 import 'package:pokatuha/domain/services/communication_service.dart';
 import 'package:pokatuha/domain/services/local_network_communication_service.dart';
 

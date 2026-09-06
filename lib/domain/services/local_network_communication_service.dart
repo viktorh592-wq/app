@@ -28,7 +28,6 @@ library;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -143,7 +142,7 @@ class LocalNetworkCommunicationService implements CommunicationService {
     await _inner.broadcast(envelope); // loopback + offline queue
     if (!_networkBooted) return;
     try {
-      _sendDatagram(_encodeEnvelope(envelope));
+      await _sendDatagram(_encodeEnvelope(envelope));
     } catch (_) {
       // Best-effort — never surface transport errors to the caller.
     }
@@ -192,15 +191,13 @@ class LocalNetworkCommunicationService implements CommunicationService {
   /// Encodes and broadcasts one datagram to every plausible broadcast
   /// address of the current network (limited broadcast + per-interface
   /// directed broadcast derived from the interface IPv4).
-  void _sendDatagram(String body) {
+  Future<void> _sendDatagram(String body) async {
     final socket = _socket;
     if (socket == null) return;
     final bytes = utf8.encode(body);
     if (bytes.length > kMaxDatagramBytes) return; // refuse oversized frames
     final targets = <String>{'255.255.255.255'};
-    for (final addr in _interfaceBroadcastAddresses()) {
-      targets.add(addr);
-    }
+    targets.addAll(await _interfaceBroadcastAddresses());
     for (final target in targets) {
       try {
         socket.send(bytes, InternetAddress(target), _port);
@@ -215,13 +212,14 @@ class LocalNetworkCommunicationService implements CommunicationService {
   /// private ranges (the overwhelmingly common Wi-Fi / hotspot layout) and
   /// always includes the limited broadcast 255.255.255.255 (added by the
   /// caller). Exotic netmasks still receive the limited broadcast.
-  List<String> _interfaceBroadcastAddresses() {
+  Future<List<String>> _interfaceBroadcastAddresses() async {
     final result = <String>[];
     try {
-      for (final iface in NetworkInterface.list(
+      final interfaces = await NetworkInterface.list(
         includeLoopback: false,
         type: InternetAddressType.IPv4,
-      )) {
+      );
+      for (final iface in interfaces) {
         for (final addr in iface.addresses) {
           final octets = addr.address.split('.');
           if (octets.length != 4) continue;
@@ -254,9 +252,9 @@ class LocalNetworkCommunicationService implements CommunicationService {
   // Envelope codec
   // ---------------------------------------------------------------------
 
-  /// Visible for testing — wire format:
-  /// `{"v":1,"eid":"<uuid>","o":"<origin>","t":"<type>","s":"<userId>",
-  ///   "ts":<ms>,"p":{...}}`
+  /// Visible for testing — wire format (version 1 JSON): version marker,
+  /// envelope id `eid`, origin id `o`, type `t`, sender `s`, timestamp
+  /// `ts` (ms) and payload map `p`.
   @visibleForTesting
   String encodeEnvelopeForTest(RealtimeEnvelope envelope) =>
       _encodeEnvelope(envelope);

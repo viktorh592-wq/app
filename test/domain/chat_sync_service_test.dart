@@ -11,6 +11,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:pokatuha/database/collections/event_collection.dart';
 import 'package:pokatuha/database/collections/message_collection.dart';
 import 'package:pokatuha/database/collections/user_collection.dart';
 import 'package:pokatuha/database/database.dart';
@@ -167,51 +168,90 @@ void main() {
 
   test('history request returns last 50 messages and they are ingested',
       () async {
-    // Seed 60 messages on Alice's device.
-    for (var i = 1; i <= 60; i++) {
-      await alice.messages.sendText(
-        eventId: eventId,
-        authorId: 'alice',
-        text: 'msg-$i',
+    // Fresh devices NOT linked yet: seeding must not leak through the live
+    // channel — we are testing the history batch path in isolation.
+    final alice2 = await _Device.create('alice2');
+    final bob2 = await _Device.create('bob2');
+    try {
+      // One event of the group on the owner device.
+      final event = EventCollection()
+        ..title = 'Велопрогулка'
+        ..startAt = 1725600000000
+        ..groupId = groupId
+        ..organizerId = 'alice2';
+      await alice2.events.create(event);
+      // Seed 60 messages (3 ms apart — distinct createdAt for a
+      // deterministic window).
+      for (var i = 1; i <= 60; i++) {
+        await alice2.messages.sendText(
+          eventId: event.id,
+          authorId: 'alice2',
+          text: 'msg-$i',
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 3));
+      }
+      // Bob is a member of the group on Alice's device (privacy filter).
+      await alice2.members.addMember(
+        groupId: groupId,
+        userId: 'bob2',
+        role: GroupRole.member.name,
+        canInvite: false,
+        addedBy: 'alice2',
       );
+
+      // NOW link the "network" and start the sync services.
+      alice2.hub.link(bob2.hub);
+      alice2.sync.start();
+      bob2.sync.start();
+
+      // Bob asks for the group history (as after a QR join).
+      await bob2.sync.requestHistory(groupId);
+      await settle();
+
+      final bobMessages = await bob2.messages.byEvent(event.id);
+      expect(bobMessages, hasLength(50), reason: 'history window is 50');
+      expect(bobMessages.first.text, 'msg-11',
+          reason: 'the 50 MOST RECENT messages are served');
+      expect(bobMessages.last.text, 'msg-60');
+    } finally {
+      await alice2.dispose();
+      await bob2.dispose();
     }
-    // Make Bob a member of the group on Alice's device (privacy filter).
-    await alice.members.addMember(
-      groupId: groupId,
-      userId: 'bob',
-      role: GroupRole.member.name,
-      canInvite: false,
-      addedBy: 'alice',
-    );
-
-    // Bob asks for the group history (as after a QR join).
-    await bob.sync.requestHistory(groupId);
-    await settle();
-
-    final bobMessages = await bob.messages.byEvent(eventId);
-    expect(bobMessages, hasLength(50), reason: 'history window is 50');
-    expect(bobMessages.first.text, 'msg-11',
-        reason: 'the 50 MOST RECENT messages are served');
-    expect(bobMessages.last.text, 'msg-60');
   });
 
   test('history request from a NON-member is not answered (privacy filter)',
       () async {
-    await alice.messages.sendText(
-      eventId: eventId,
-      authorId: 'alice',
-      text: 'secret',
-    );
-    // Bob is NOT in the group roster on Alice's device.
-    await bob.sync.requestHistory(groupId);
-    await settle();
-    expect(await bob.messages.byEvent(eventId), isEmpty);
+    final alice2 = await _Device.create('alice3');
+    final mallory = await _Device.create('mallory');
+    try {
+      final event = EventCollection()
+        ..title = 'Secret ride'
+        ..startAt = 1725600000000
+        ..groupId = groupId
+        ..organizerId = 'alice3';
+      await alice2.events.create(event);
+      await alice2.messages.sendText(
+        eventId: event.id,
+        authorId: 'alice3',
+        text: 'secret',
+      );
+      // Mallory is NOT in the group roster on Alice's device.
+      alice2.hub.link(mallory.hub);
+      alice2.sync.start();
+      mallory.sync.start();
+      await mallory.sync.requestHistory(groupId);
+      await settle();
+      expect(await mallory.messages.byEvent(event.id), isEmpty);
+    } finally {
+      await alice2.dispose();
+      await mallory.dispose();
+    }
   });
 
   test('incoming ingest never re-broadcasts (loop safety)', () async {
     final sentBefore = bob.hub.sent.length;
     final stored = await bob.messages.ingestIncoming(
-      MessageCollection()
+      (MessageCollection()
         ..id = 'x-1'
         ..createdAt = 1
         ..updatedAt = 1
@@ -221,8 +261,7 @@ void main() {
         ..kind = MessageKind.text.name
         ..text = 'from wire'
         ..deliveryState = DeliveryState.delivered.name
-        ..createdBy = 'alice'
-        .toMap(),
+        ..createdBy = 'alice').toMap(),
     );
     expect(stored, isTrue);
     expect(bob.hub.sent.length, sentBefore,
@@ -237,8 +276,14 @@ void main() {
       canInvite: false,
       addedBy: 'alice',
     );
+    final event = EventCollection()
+      ..title = 'Ride'
+      ..startAt = 1725600000000
+      ..groupId = groupId
+      ..organizerId = 'alice';
+    await alice.events.create(event);
     await alice.messages.sendText(
-      eventId: eventId,
+      eventId: event.id,
       authorId: 'alice',
       text: 'one',
     );
@@ -256,6 +301,6 @@ void main() {
         .length;
     expect(requests, 1);
     expect(batches, 1);
-    expect(await bob.messages.byEvent(eventId), hasLength(1));
+    expect(await bob.messages.byEvent(event.id), hasLength(1));
   });
 }
