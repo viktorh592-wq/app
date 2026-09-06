@@ -513,5 +513,15 @@
   "scanStopped": "Сканирование остановлено",
   "cameraPermissionDenied": "Нет доступа к камере — разрешите камеру в настройках",
   "alreadyInGroup": "Вы уже состоите в этой группе",
-  "groupJoined": "Вы вступили в группу"
+  "groupJoined": "Вы вступили в группу",
+  "meetingPointPick": "Выбрать на карте",
+  "mapSearchHint": "Поиск адреса или места",
+  "mapConfirm": "Указать эту точку",
+  "mapSearchNoResults": "Ничего не найдено",
+  "mapSearchError": "Ошибка поиска — проверьте интернет",
+  "mapPickHint": "Ткните на карту или найдите адрес",
+  "mapLoadingAddress": "Определяем адрес…",
+  "addressUnavailable": "Адрес не определён",
+  "mapMyLocation": "Моё местоположение",
+  "mapClearMeetingPoint": "Очистить точку сбора"
 }

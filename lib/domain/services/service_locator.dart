@@ -25,6 +25,7 @@ import 'package:pokatuha/domain/services/chat_sync_service.dart';
 import 'package:pokatuha/domain/services/communication_service.dart';
 import 'package:pokatuha/domain/services/event_service.dart';
 import 'package:pokatuha/domain/services/foreground_location_service.dart';
+import 'package:pokatuha/domain/services/geocoding_service.dart';
 import 'package:pokatuha/domain/services/gpx_service.dart';
 import 'package:pokatuha/domain/services/gps_service.dart';
 import 'package:pokatuha/domain/services/group_service.dart';
@@ -93,6 +94,8 @@ Future<void> setupServiceLocator() async {
       () => ForegroundLocationService());
   serviceLocator.registerLazySingleton<WeatherService>(
       () => WeatherService(client: http.Client()));
+  serviceLocator.registerLazySingleton<GeocodingService>(
+      () => GeocodingService(client: http.Client()));
   serviceLocator.registerLazySingleton<MapService>(() => MapService());
   serviceLocator.registerLazySingleton<GpxService>(() => GpxService());
   serviceLocator.registerLazySingleton<IdentityService>(

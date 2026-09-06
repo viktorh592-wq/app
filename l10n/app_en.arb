@@ -513,5 +513,15 @@
   "scanStopped": "Scanning paused",
   "cameraPermissionDenied": "No camera access — allow the camera in Settings",
   "alreadyInGroup": "You are already a member of this group",
-  "groupJoined": "You joined the group"
+  "groupJoined": "You joined the group",
+  "meetingPointPick": "Pick on map",
+  "mapSearchHint": "Search address or place",
+  "mapConfirm": "Use this point",
+  "mapSearchNoResults": "Nothing found",
+  "mapSearchError": "Search failed — check your connection",
+  "mapPickHint": "Tap the map or search for an address",
+  "mapLoadingAddress": "Resolving address…",
+  "addressUnavailable": "Address unavailable",
+  "mapMyLocation": "My location",
+  "mapClearMeetingPoint": "Clear meeting point"
 }

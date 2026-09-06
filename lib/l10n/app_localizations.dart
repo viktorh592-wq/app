@@ -1942,6 +1942,16 @@ abstract class AppLocalizations {
   String get cameraPermissionDenied;
   String get alreadyInGroup;
   String get groupJoined;
+  String get meetingPointPick;
+  String get mapSearchHint;
+  String get mapConfirm;
+  String get mapSearchNoResults;
+  String get mapSearchError;
+  String get mapPickHint;
+  String get mapLoadingAddress;
+  String get addressUnavailable;
+  String get mapMyLocation;
+  String get mapClearMeetingPoint;
 }
 
 class _AppLocalizationsDelegate

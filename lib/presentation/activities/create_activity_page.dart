@@ -20,6 +20,7 @@ import 'package:pokatuha/domain/services/gps_service.dart';
 import 'package:pokatuha/domain/services/service_locator.dart';
 import 'package:pokatuha/l10n/app_localizations.dart';
 import 'package:pokatuha/presentation/app_view_model.dart';
+import 'package:pokatuha/presentation/map/map_picker_page.dart';
 
 class CreateActivityPage extends StatefulWidget {
   const CreateActivityPage({super.key, required this.groupId, this.event});
@@ -83,6 +84,31 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
       // coordinate if GPS is unavailable.
       _setMeetingFromDefault();
     }
+  }
+
+  /// Opens the map picker for the meeting point (V3.0.4 — bug 3): the icon
+  /// previously ran a silent GPS default and nothing visible happened. Now
+  /// a full map opens (tap / search), and the picked ADDRESS lands in the
+  /// text field while the coordinates are stored for the map view.
+  Future<void> _pickMeetingPointOnMap() async {
+    final result = await Navigator.of(context).push<MapPickResult>(
+      MaterialPageRoute(
+        builder: (_) => MapPickerPage(
+          initialLat: _hasMeeting ? _meetingLat : null,
+          initialLng: _hasMeeting ? _meetingLng : null,
+        ),
+      ),
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _meetingLat = result.lat;
+      _meetingLng = result.lng;
+      _hasMeeting = true;
+      // The user asked for a readable address in the field — replace the
+      // placeholder only when it is empty, otherwise respect the typed one
+      // unless the user actively picked a new point on the map.
+      _meetingLabel.text = result.label;
+    });
   }
 
   /// New activities inherit the group default accent color when set
@@ -284,9 +310,24 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
               decoration: InputDecoration(
                 labelText: l.meetingPoint,
                 helperText: l.meetingPointHint,
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.map_outlined),
-                  onPressed: _setMeetingFromDefault,
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: l.mapClearMeetingPoint,
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: _hasMeeting
+                          ? () => setState(() {
+                                _hasMeeting = false;
+                              })
+                          : null,
+                    ),
+                    IconButton(
+                      tooltip: l.meetingPointPick,
+                      icon: const Icon(Icons.map_outlined),
+                      onPressed: _pickMeetingPointOnMap,
+                    ),
+                  ],
                 ),
               ),
             ),
