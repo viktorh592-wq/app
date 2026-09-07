@@ -1,7 +1,7 @@
 name: pokatuha
 description: "Pokatuha — privacy-first, local-first P2P activity coordination platform for cyclists, hikers and outdoor communities."
 publish_to: "none"
-version: 3.0.0+1
+version: 3.0.5+1
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
