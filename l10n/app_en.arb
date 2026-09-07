@@ -523,5 +523,8 @@
   "mapLoadingAddress": "Resolving address…",
   "addressUnavailable": "Address unavailable",
   "mapMyLocation": "My location",
-  "mapClearMeetingPoint": "Clear meeting point"
+  "mapClearMeetingPoint": "Clear meeting point",
+  "chatKeepAliveTitle": "Pokatuha runs in background",
+  "chatKeepAliveBody": "Receiving chat messages",
+  "chatMessagesChannel": "Chat messages"
 }

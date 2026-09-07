@@ -523,5 +523,8 @@
   "mapLoadingAddress": "Определяем адрес…",
   "addressUnavailable": "Адрес не определён",
   "mapMyLocation": "Моё местоположение",
-  "mapClearMeetingPoint": "Очистить точку сбора"
+  "mapClearMeetingPoint": "Очистить точку сбора",
+  "chatKeepAliveTitle": "Pokatuha работает в фоне",
+  "chatKeepAliveBody": "Приём сообщений чата активен",
+  "chatMessagesChannel": "Сообщения чата"
 }

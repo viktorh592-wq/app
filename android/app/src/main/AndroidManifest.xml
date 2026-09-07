@@ -24,6 +24,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <!-- V3.0.5 bug 1 — the chat keep-alive service runs as dataSync so it
+         may start without location permissions. -->
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
 
     <application
         android:label="Pokatuha"
@@ -63,10 +67,16 @@
         <!-- V2 MAPS_AND_GPS_FIX.md §3 — foreground service for live location
              tracking via flutter_foreground_task. Keeps the GPS stream
              alive when the app goes to background during an active ride
-             (BR-005). -->
+             (BR-005).
+             V3.0.5 bug 1 — the same service is also the chat keep-alive:
+             `dataSync` lets it start without location permissions and
+             `stopWithTask=false` keeps the process (and the task isolate
+             that shows message notifications) alive after the user swipes
+             the app away. -->
         <service
             android:name="com.pravera.flutter_foreground_task.ForegroundService"
-            android:foregroundServiceType="location"
+            android:foregroundServiceType="location|dataSync"
+            android:stopWithTask="false"
             android:exported="false" />
 
         <meta-data

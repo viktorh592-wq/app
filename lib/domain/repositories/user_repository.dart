@@ -19,6 +19,15 @@ class UserRepository {
     return (u != null && !u.isDeleted) ? u : null;
   }
 
+  /// All locally known non-deleted users, capped for snapshot use
+  /// (V3.0.5 — the keep-alive task needs id → display name for
+  /// notifications without touching the database).
+  Future<List<UserCollection>> knownUsers({int limit = 300}) async =>
+      _store.find(
+        filter: Filter.equals('isDeleted', false),
+        limit: limit,
+      );
+
   /// The single local profile (local-first: there is one user on this device).
   Future<UserCollection?> getCurrent() async {
     final list = await _store.find(

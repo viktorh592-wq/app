@@ -27,9 +27,12 @@ import 'package:pokatuha/core/utils/timestamps.dart';
 import 'package:pokatuha/database/collections/message_collection.dart';
 import 'package:pokatuha/domain/repositories/event_repository.dart';
 import 'package:pokatuha/domain/repositories/group_member_repository.dart';
+import 'package:pokatuha/domain/repositories/group_repository.dart';
 import 'package:pokatuha/domain/repositories/message_repository.dart';
+import 'package:pokatuha/domain/repositories/user_repository.dart';
 import 'package:pokatuha/domain/services/auth_service.dart';
 import 'package:pokatuha/domain/services/communication_service.dart';
+import 'package:pokatuha/domain/services/system_notification_service.dart';
 
 /// How many recent messages per event are served for a history request.
 const int kHistoryBatchSize = 50;
@@ -45,17 +48,33 @@ class ChatSyncService {
     required EventRepository eventRepository,
     required GroupMemberRepository memberRepository,
     required AuthService authService,
+    ChatNotifications? notifications,
+    GroupRepository? groupRepository,
+    UserRepository? userRepository,
+    bool Function()? isAppInBackground,
   })  : _transport = transport,
         _messages = messageRepository,
         _events = eventRepository,
         _members = memberRepository,
-        _auth = authService;
+        _auth = authService,
+        _notifications = notifications,
+        _groups = groupRepository,
+        _users = userRepository,
+        _isAppInBackground = isAppInBackground;
 
   final CommunicationService _transport;
   final MessageRepository _messages;
   final EventRepository _events;
   final GroupMemberRepository _members;
   final AuthService _auth;
+
+  /// V3.0.5 (bug 1) — optional system-notification sink. When provided and
+  /// the app is backgrounded, a fresh inbound message is surfaced in the
+  /// Android status bar.
+  final ChatNotifications? _notifications;
+  final GroupRepository? _groups;
+  final UserRepository? _users;
+  final bool Function()? _isAppInBackground;
 
   StreamSubscription<RealtimeEnvelope>? _subscription;
   final Map<String, DateTime> _lastHistoryRequestAt = <String, DateTime>{};
@@ -132,6 +151,9 @@ class ChatSyncService {
       deliveryState: DeliveryState.delivered.name,
     );
     if (!stored) return; // duplicate or older version — nothing to do
+    // V3.0.5 (bug 1) — surface the fresh message when the app is not in
+    // the foreground. Best-effort: never breaks the ingest/ack path.
+    await _notifyIncoming(envelope.payload);
     // Acknowledge so the sender's bubble flips to `delivered`.
     final messageId = envelope.payload['id'] as String?;
     if (messageId == null || messageId.isEmpty) return;
@@ -157,6 +179,57 @@ class ChatSyncService {
     if (message.deliveryState == DeliveryState.delivered.name) return;
     await _messages.setDeliveryState(message, DeliveryState.delivered);
     _messages.notifyChanged(message.eventId);
+  }
+
+  // ---------------------------------------------------------------------
+  // System notifications (V3.0.5 — bug 1)
+  // ---------------------------------------------------------------------
+
+  /// Shows a status-bar notification for a freshly ingested chat message
+  /// when the app is NOT in the foreground. Resolves the display names
+  /// best-effort from the local stores — missing data degrades to a
+  /// generic title / body but never throws.
+  Future<void> _notifyIncoming(Map<String, dynamic> payload) async {
+    final notifications = _notifications;
+    if (notifications == null) return;
+    final inBackground = _isAppInBackground?.call() ?? false;
+    if (!inBackground) return;
+    try {
+      final eventId = payload['eventId'] as String? ?? '';
+      final authorId = payload['authorId'] as String? ?? '';
+      final text = (payload['text'] as String? ?? '').trim();
+      if (eventId.isEmpty) return;
+
+      final authorName = authorId.isEmpty
+          ? ''
+          : (await _users?.getById(authorId))?.displayName ?? '';
+
+      // Event → group → «Group · Event» title (falls back gracefully).
+      String title = 'Pokatuha';
+      String tag = eventId;
+      final event = await _events.getById(eventId);
+      if (event != null) {
+        final eventGroupId = event.groupId;
+        if (eventGroupId != null && eventGroupId.isNotEmpty) {
+          tag = eventGroupId;
+        }
+        final group = (eventGroupId == null || eventGroupId.isEmpty)
+            ? null
+            : (await _groups?.getById(eventGroupId));
+        final groupName = group?.name ?? '';
+        title = groupName.isEmpty || groupName == event.title
+            ? event.title
+            : '$groupName · ${event.title}';
+      }
+
+      final body = text.isEmpty
+          ? authorName
+          : (authorName.isEmpty ? text : '$authorName: $text');
+      if (body.isEmpty) return;
+      await notifications.showChat(tag: tag, title: title, body: body);
+    } catch (_) {
+      // A notification failure must never break the ingest / ack path.
+    }
   }
 
   // ---------------------------------------------------------------------

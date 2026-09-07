@@ -17,6 +17,15 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:pokatuha/domain/services/gps_service.dart';
 
 class ForegroundLocationService {
+  ForegroundLocationService({this.onStoppedFallback});
+
+  /// V3.0.5 — the foreground service is now shared with the chat keep-alive
+  /// (started at app launch, `stopWithTask=false`). When GPS sharing ends,
+  /// the service must NOT stop — the injected callback hands the
+  /// notification text back to the chat keep-alive instead. Null on
+  /// platforms / tests without the keep-alive (falls back to stopping).
+  final Future<void> Function()? onStoppedFallback;
+
   bool _running = false;
 
   bool get isRunning => _running;
@@ -30,6 +39,17 @@ class ForegroundLocationService {
   }) async {
     if (_running) return true;
     try {
+      // V3.0.5 — the chat keep-alive may already own the service: reuse it
+      // and swap the notification text instead of failing with
+      // ServiceAlreadyStartedException.
+      if (await FlutterForegroundTask.isRunningService) {
+        await FlutterForegroundTask.updateService(
+          notificationTitle: title,
+          notificationText: body,
+        );
+        _running = true;
+        return true;
+      }
       await FlutterForegroundTask.startService(
         notificationTitle: title,
         notificationText: body,
@@ -42,11 +62,18 @@ class ForegroundLocationService {
     }
   }
 
-  /// Stop the foreground service. Safe to call when not running.
+  /// Stop the foreground service — unless the chat keep-alive owns it, in
+  /// which case only the notification text is handed back (V3.0.5).
+  /// Safe to call when not running.
   Future<void> stop() async {
     if (!_running) return;
     try {
-      await FlutterForegroundTask.stopService();
+      final fallback = onStoppedFallback;
+      if (fallback != null && await FlutterForegroundTask.isRunningService) {
+        await fallback();
+      } else {
+        await FlutterForegroundTask.stopService();
+      }
     } on Object {
       // Ignore — platform may already be torn down.
     }

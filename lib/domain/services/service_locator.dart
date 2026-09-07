@@ -1,6 +1,7 @@
 /// Dependency injection container (get_it). Wires the Local-First stack:
 /// database → repositories → services. Modules depend only on interfaces,
 /// never on concrete storage (Architecture.md — module independence).
+import 'package:flutter/widgets.dart' show AppLifecycleState, WidgetsBinding;
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 
@@ -21,6 +22,7 @@ import 'package:pokatuha/domain/repositories/settings_repository.dart';
 import 'package:pokatuha/domain/repositories/statistics_repository.dart';
 import 'package:pokatuha/domain/repositories/user_repository.dart';
 import 'package:pokatuha/domain/services/auth_service.dart';
+import 'package:pokatuha/domain/services/chat_keep_alive_service.dart';
 import 'package:pokatuha/domain/services/chat_sync_service.dart';
 import 'package:pokatuha/domain/services/communication_service.dart';
 import 'package:pokatuha/domain/services/event_service.dart';
@@ -35,6 +37,7 @@ import 'package:pokatuha/domain/services/notification_service.dart';
 import 'package:pokatuha/domain/services/local_network_communication_service.dart';
 import 'package:pokatuha/domain/services/settings_service.dart';
 import 'package:pokatuha/domain/services/statistics_service.dart';
+import 'package:pokatuha/domain/services/system_notification_service.dart';
 import 'package:pokatuha/domain/services/theme_service.dart';
 import 'package:pokatuha/domain/services/weather_service.dart';
 import 'package:pokatuha/presentation/deep_links/deep_link_dispatcher.dart';
@@ -90,8 +93,15 @@ Future<void> setupServiceLocator() async {
         serviceLocator<ArchiveRepository>(),
       ));
   serviceLocator.registerLazySingleton<GpsService>(() => GpsService());
+  // V3.0.5 — the foreground service is shared between GPS sharing and the
+  // chat keep-alive. When GPS sharing ends, the notification text is
+  // handed back to the keep-alive instead of stopping the service.
   serviceLocator.registerLazySingleton<ForegroundLocationService>(
-      () => ForegroundLocationService());
+      () => ForegroundLocationService(
+            onStoppedFallback: () async =>
+                await serviceLocator<ChatKeepAliveService>()
+                    .revertNotification(),
+          ));
   serviceLocator.registerLazySingleton<WeatherService>(
       () => WeatherService(client: http.Client()));
   serviceLocator.registerLazySingleton<GeocodingService>(
@@ -112,6 +122,15 @@ Future<void> setupServiceLocator() async {
   serviceLocator.registerLazySingleton<ThemeService>(() => ThemeService());
   serviceLocator.registerLazySingleton<NotificationService>(
       () => NotificationService(serviceLocator<NotificationRepository>()));
+  // V3.0.5 (bug 1) — status-bar notifications for background chat messages.
+  serviceLocator.registerLazySingleton<SystemNotificationService>(
+      () => SystemNotificationService());
+  serviceLocator.registerLazySingleton<ChatKeepAliveService>(
+      () => ChatKeepAliveService(
+            groupRepository: serviceLocator<GroupRepository>(),
+            eventRepository: serviceLocator<EventRepository>(),
+            userRepository: serviceLocator<UserRepository>(),
+          ));
   serviceLocator.registerLazySingleton<SettingsService>(
       () => SettingsService(serviceLocator<SettingsRepository>()));
   // --- Communication (V3.0.4 — real local-network transport) ---
@@ -126,6 +145,15 @@ Future<void> setupServiceLocator() async {
         eventRepository: serviceLocator<EventRepository>(),
         memberRepository: serviceLocator<GroupMemberRepository>(),
         authService: serviceLocator<AuthService>(),
+        // V3.0.5 (bug 1) — status-bar notifications while backgrounded.
+        notifications: serviceLocator<SystemNotificationService>(),
+        groupRepository: serviceLocator<GroupRepository>(),
+        userRepository: serviceLocator<UserRepository>(),
+        isAppInBackground: () {
+          final state =
+              WidgetsBinding.instance.lifecycleState ?? AppLifecycleState.resumed;
+          return state != AppLifecycleState.resumed;
+        },
       ));
   // Start listening to incoming envelopes right away — the chat, history
   // sync and acks rely on this subscription being alive for the whole app

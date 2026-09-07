@@ -6,11 +6,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:provider/provider.dart';
 import 'package:pokatuha/core/constants/app_constants.dart';
 import 'package:pokatuha/core/platform/deep_link_service.dart';
 import 'package:pokatuha/domain/enums/enums.dart';
+import 'package:pokatuha/domain/services/chat_keep_alive_service.dart';
 import 'package:pokatuha/domain/services/service_locator.dart';
+import 'package:pokatuha/domain/services/system_notification_service.dart';
 import 'package:pokatuha/domain/services/theme_service.dart';
 import 'package:pokatuha/l10n/app_localizations.dart';
 import 'package:pokatuha/presentation/app_view_model.dart';
@@ -26,21 +29,62 @@ class PokatuhaApp extends StatefulWidget {
   State<PokatuhaApp> createState() => _PokatuhaAppState();
 }
 
-class _PokatuhaAppState extends State<PokatuhaApp> {
+class _PokatuhaAppState extends State<PokatuhaApp>
+    with WidgetsBindingObserver {
   StreamSubscription<String>? _linkSub;
   Timer? _initialLinkRetry;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // V3.0.5 (bug 1) — task-isolate communication port for the chat
+    // keep-alive heartbeat.
+    FlutterForegroundTask.initCommunicationPort();
     _initDeepLinks();
+    _startChatKeepAlive();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _linkSub?.cancel();
     _initialLinkRetry?.cancel();
     super.dispose();
+  }
+
+  /// V3.0.5 (bug 1) — chat notifications are only relevant while the app
+  /// is out of the foreground; when the user comes back the messages are
+  /// on screen, so clear them.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      serviceLocator<SystemNotificationService>().cancelAllChat();
+    }
+  }
+
+  /// Starts the chat keep-alive foreground service once the navigator
+  /// context exists (localized strings are resolved from it).
+  void _startChatKeepAlive() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context =
+          serviceLocator<DeepLinkDispatcher>().navigatorKey.currentContext;
+      var title = 'Pokatuha';
+      var body = 'Receiving messages';
+      if (context != null) {
+        final l = AppLocalizations.of(context);
+        if (l != null) {
+          title = l.chatKeepAliveTitle;
+          body = l.chatKeepAliveBody;
+        }
+      }
+      // Configure the localized chat channel label before the first
+      // status-bar notification is shown.
+      serviceLocator<SystemNotificationService>()
+          .configure(chatChannelName: title);
+      serviceLocator<ChatKeepAliveService>()
+          .ensureStarted(title: title, body: body);
+    });
   }
 
   /// Cold-start link + live links while the app runs (FIX_PLAN S1-T7).
