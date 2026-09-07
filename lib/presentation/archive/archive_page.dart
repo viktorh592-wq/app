@@ -1,12 +1,16 @@
 /// Archive tab — completed activities stored locally (FR-009, UC-004).
 /// Archived rides are never soft-deleted automatically (Soft_Delete.md).
+/// V3.0.3 fix — archive items are now tappable: opens the activity detail
+/// page in read-only mode (user-reported Доп. 2: «archived activities
+/// don't open for reading»).
 import 'package:flutter/material.dart';
 
-import 'package:pokatuha/database/collections/archive_collection.dart';
 import 'package:pokatuha/core/utils/timestamps.dart';
+import 'package:pokatuha/database/collections/archive_collection.dart';
 import 'package:pokatuha/domain/repositories/archive_repository.dart';
 import 'package:pokatuha/domain/services/service_locator.dart';
 import 'package:pokatuha/l10n/app_localizations.dart';
+import 'package:pokatuha/presentation/activities/activity_detail_page.dart';
 import 'package:pokatuha/presentation/widgets/empty_state.dart';
 
 class ArchivePage extends StatefulWidget {
@@ -33,6 +37,9 @@ class _ArchivePageState extends State<ArchivePage> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    // V3.0.3 fix — use the active locale for date formatting instead of
+    // hardcoded 'en' (user-reported Issue 5).
+    final localeCode = Localizations.localeOf(context).languageCode;
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async => setState(_load),
@@ -65,34 +72,50 @@ class _ArchivePageState extends State<ArchivePage> {
                     return Card(
                       margin: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 6),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(a.title, style: theme.textTheme.titleMedium),
-                            const SizedBox(height: 6),
-                            Text(
-                              Timestamps.formatLocalDate(
-                                  a.rideFinishedAt, 'en'),
-                              style: theme.textTheme.bodyMedium,
-                            ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 16,
-                              runSpacing: 4,
-                              children: [
-                                _stat(l.distance,
-                                    '${(a.distanceMeters / 1000).toStringAsFixed(1)} km'),
-                                _stat(l.duration,
-                                    '${(a.durationSeconds / 60).round()} min'),
-                                _stat(l.elevation,
-                                    '${a.elevationGainMeters.round()} m'),
-                                _stat(l.avgSpeed,
-                                    '${(a.averageSpeed * 3.6).toStringAsFixed(1)} km/h'),
-                              ],
-                            ),
-                          ],
+                      child: InkWell(
+                        onTap: () => _openArchive(context, a),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(a.title,
+                                        style: theme.textTheme.titleMedium),
+                                  ),
+                                  Icon(
+                                    Icons.history_rounded,
+                                    size: 18,
+                                    color: theme.colorScheme.outline,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                Timestamps.formatLocalDate(
+                                    a.rideFinishedAt, localeCode),
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 16,
+                                runSpacing: 4,
+                                children: [
+                                  _stat(l.distance,
+                                      '${(a.distanceMeters / 1000).toStringAsFixed(1)} km'),
+                                  _stat(l.duration,
+                                      '${(a.durationSeconds / 60).round()} min'),
+                                  _stat(l.elevation,
+                                      '${a.elevationGainMeters.round()} m'),
+                                  _stat(l.avgSpeed,
+                                      '${(a.averageSpeed * 3.6).toStringAsFixed(1)} km/h'),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );
@@ -102,6 +125,19 @@ class _ArchivePageState extends State<ArchivePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// V3.0.3 fix — open the archived activity in the ActivityDetailPage.
+  /// The event record is still in the EventRepository (just with status
+  /// 'archived'), so the detail page renders in read-only mode (the
+  /// lifecycle buttons are hidden for archived status — see
+  /// ActivityDetailsTab._actions).
+  void _openArchive(BuildContext context, ArchiveCollection archive) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ActivityDetailPage(eventId: archive.eventId),
       ),
     );
   }

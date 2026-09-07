@@ -19,6 +19,15 @@ class UserRepository {
     return (u != null && !u.isDeleted) ? u : null;
   }
 
+  /// All locally known non-deleted users, capped for snapshot use
+  /// (V3.0.5 — the keep-alive task needs id → display name for
+  /// notifications without touching the database).
+  Future<List<UserCollection>> knownUsers({int limit = 300}) async =>
+      _store.find(
+        filter: Filter.equals('isDeleted', false),
+        limit: limit,
+      );
+
   /// The single local profile (local-first: there is one user on this device).
   Future<UserCollection?> getCurrent() async {
     final list = await _store.find(
@@ -61,6 +70,22 @@ class UserRepository {
 
   Future<UserCollection> updateProfile(UserCollection user) async {
     user.touch(Timestamps.nowUtc());
+    return _store.put(user);
+  }
+
+  /// V3.0.3 fix (user feedback): upsert a locally-known peer user (NOT
+  /// the local profile — use [createProfile] for that). Used when
+  /// materializing group members from a deep-link payload: if the user
+  /// already exists locally, do nothing (we don't overwrite displayName /
+  /// username with stale data from the inviter's device — local wins).
+  /// Otherwise insert the record as-is.
+  Future<UserCollection> upsertKnown(UserCollection user) async {
+    final existing = await _store.getById(user.id);
+    if (existing != null && !existing.isDeleted) return existing;
+    final now = Timestamps.nowUtc();
+    if (user.createdAt == 0) user.createdAt = now;
+    if (user.updatedAt == 0) user.updatedAt = now;
+    if (user.version < 1) user.version = 1;
     return _store.put(user);
   }
 

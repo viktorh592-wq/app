@@ -64,12 +64,16 @@ class _ActivityRouteTabState extends State<ActivityRouteTab> {
   }
 
   /// V2 §1 — accept .gpx and .kml; reject .fit with a localized message.
+  /// V3.0.3 fix — use `FileType.any` instead of `FileType.custom` with
+  /// `allowedExtensions` because the latter fails silently on Android 13+
+  /// (SAF doesn't recognise custom extensions, so tapping a file does
+  /// nothing — user-reported Issue 1). We validate the extension manually
+  /// after the picker returns.
   Future<void> _importFile() async {
     final l = AppLocalizations.of(context)!;
     try {
       final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: const ['gpx', 'kml', 'fit'],
+        type: FileType.any,
         withData: true,
       );
       if (result == null || result.files.isEmpty) return;
@@ -229,12 +233,12 @@ class _FullScreenRouteView extends StatelessWidget {
                   Expanded(
                     child: DropdownButtonFormField<int>(
                       value: routes.indexOf(route).clamp(0, routes.length - 1),
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         isDense: true,
-                        border: const OutlineInputBorder(),
-                        contentPadding: const EdgeInsets.symmetric(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
                             horizontal: 12, vertical: 10),
-                        prefixIcon: const Icon(Icons.route_rounded, size: 20),
+                        prefixIcon: Icon(Icons.route_rounded, size: 20),
                       ),
                       items: routes
                           .asMap()

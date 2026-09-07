@@ -32,7 +32,7 @@ class SettingsRepository {
       ..version = 1
       ..isDeleted = false
       ..userId = userId
-      ..locale = 'en'
+      ..locale = 'ru'
       ..themeMode = AppThemeMode.dark.name
       ..accentColor = 0xFF3B82F6
       ..mapProvider = MapProvider.openStreetMap.name;

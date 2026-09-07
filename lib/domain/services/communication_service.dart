@@ -26,7 +26,37 @@ class RealtimeEnvelope {
   final int timestamp;
 }
 
-enum RealtimeType { gps, chat, poll, vote, presence, stage, arrival }
+enum RealtimeType {
+  gps,
+  chat,
+  poll,
+  vote,
+  presence,
+  stage,
+  arrival,
+
+  /// Chat acknowledgement — receiver confirms a chat envelope (V3.0.4).
+  chatAck,
+
+  /// Request for recent chat history of a group (V3.0.4 — history sync
+  /// after a QR join). Payload: `{groupId, requesterId}`.
+  chatHistoryRequest,
+
+  /// Reply to a history request — one batch per event. Payload:
+  /// `{groupId, requesterId, eventId, messages: [...]}`.
+  chatHistoryBatch,
+
+  /// Request for the group STATE (members + activities) — V3.0.5 bug 3:
+  /// the QR payload was slimmed down (only id / name / code / owner) so
+  /// the QR is easy to scan; the roster arrives over the network after
+  /// the join. Payload: `{groupId, code, requesterId}` — the code doubles
+  /// as the authorization (knowing the invite = having scanned the QR).
+  groupStateRequest,
+
+  /// Reply to a state request — the full group snapshot. Payload:
+  /// `{groupId, requesterId, group: {...}, members: [...], events: [...]}`.
+  groupStateBatch,
+}
 
 /// Queued change awaiting synchronization (Offline Mode — UC-005).
 class PendingChange {

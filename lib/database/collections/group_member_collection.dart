@@ -16,6 +16,12 @@ class GroupMemberCollection extends BaseEntity {
   /// When the member joined (UTC ms).
   int? joinedAt;
 
+  /// V3.0.3 fix (user feedback): whether this member may invite other users
+  /// to activities in the group. The owner and admins always can invite
+  /// (implicit). For a regular member this flag must be explicitly granted
+  /// by the group admin via the «Members» tab → tap member → toggle.
+  bool canInvite = false;
+
   @override
   Map<String, dynamic> toMap() => baseToMap()
     ..addAll({
@@ -24,6 +30,7 @@ class GroupMemberCollection extends BaseEntity {
       'role': role,
       'addedBy': addedBy,
       'joinedAt': joinedAt,
+      'canInvite': canInvite,
     });
 
   @override
@@ -34,6 +41,7 @@ class GroupMemberCollection extends BaseEntity {
     role = m['role'] as String? ?? 'member';
     addedBy = m['addedBy'] as String?;
     joinedAt = (m['joinedAt'] as num?)?.toInt();
+    canInvite = m['canInvite'] as bool? ?? false;
   }
 
   static GroupMemberCollection fromMap(Map<String, dynamic> m) =>

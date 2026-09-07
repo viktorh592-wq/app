@@ -80,20 +80,20 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     decoration: InputDecoration(labelText: l.yourName),
                     textCapitalization: TextCapitalization.words,
                     validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? l.yourName : null,
+                        (v == null || v.trim().isEmpty) ? l.fieldRequired : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _username,
-                    decoration: const InputDecoration(
-                      labelText: '@username',
+                    decoration: InputDecoration(
+                      labelText: l.usernameLabel,
                       prefixText: '@',
                     ),
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _bio,
-                    decoration: const InputDecoration(labelText: 'Bio'),
+                    decoration: InputDecoration(labelText: l.bioLabel),
                     maxLines: 2,
                   ),
                   const SizedBox(height: 24),

@@ -18,7 +18,7 @@ import 'app_localizations_ru.dart';
 /// `supportedLocales` list. For example:
 ///
 /// ```dart
-/// import 'l10n/app_localizations.dart';
+/// import 'gen_l10n/app_localizations.dart';
 ///
 /// return MaterialApp(
 ///   localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -38,14 +38,31 @@ import 'app_localizations_ru.dart';
 ///   flutter_localizations:
 ///     sdk: flutter
 ///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
 /// ```
 ///
-/// ## iOS Integration
+/// ## iOS Applications
 ///
-/// Also update your iOS Info.plist file. Add entries for the supported locales.
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -53,8 +70,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -66,8 +82,7 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -79,7 +94,6 @@ abstract class AppLocalizations {
     Locale('en'),
     Locale('ru')
   ];
-
 
   /// No description provided for @appName.
   ///
@@ -1774,104 +1788,457 @@ abstract class AppLocalizations {
   String get statusCancelled;
 
   /// No description provided for @weatherClearSky.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear sky'**
   String get weatherClearSky;
 
   /// No description provided for @weatherMainlyClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Mainly clear'**
   String get weatherMainlyClear;
 
   /// No description provided for @weatherPartlyCloudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Partly cloudy'**
   String get weatherPartlyCloudy;
 
   /// No description provided for @weatherOvercast.
+  ///
+  /// In en, this message translates to:
+  /// **'Overcast'**
   String get weatherOvercast;
 
   /// No description provided for @weatherFog.
+  ///
+  /// In en, this message translates to:
+  /// **'Fog'**
   String get weatherFog;
 
   /// No description provided for @weatherDrizzle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drizzle'**
   String get weatherDrizzle;
 
   /// No description provided for @weatherFreezingDrizzle.
+  ///
+  /// In en, this message translates to:
+  /// **'Freezing drizzle'**
   String get weatherFreezingDrizzle;
 
   /// No description provided for @weatherRain.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain'**
   String get weatherRain;
 
   /// No description provided for @weatherFreezingRain.
+  ///
+  /// In en, this message translates to:
+  /// **'Freezing rain'**
   String get weatherFreezingRain;
 
   /// No description provided for @weatherSnowFall.
+  ///
+  /// In en, this message translates to:
+  /// **'Snow fall'**
   String get weatherSnowFall;
 
   /// No description provided for @weatherSnowGrains.
+  ///
+  /// In en, this message translates to:
+  /// **'Snow grains'**
   String get weatherSnowGrains;
 
   /// No description provided for @weatherRainShowers.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain showers'**
   String get weatherRainShowers;
 
   /// No description provided for @weatherSnowShowers.
+  ///
+  /// In en, this message translates to:
+  /// **'Snow showers'**
   String get weatherSnowShowers;
 
   /// No description provided for @weatherThunderstorm.
+  ///
+  /// In en, this message translates to:
+  /// **'Thunderstorm'**
   String get weatherThunderstorm;
 
   /// No description provided for @weatherThunderstormHail.
+  ///
+  /// In en, this message translates to:
+  /// **'Thunderstorm with hail'**
   String get weatherThunderstormHail;
 
   /// No description provided for @weatherUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
   String get weatherUnknown;
 
   /// No description provided for @weatherUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Weather unavailable'**
   String get weatherUnavailable;
 
   /// No description provided for @weatherHourlyForecast.
+  ///
+  /// In en, this message translates to:
+  /// **'Hourly forecast'**
   String get weatherHourlyForecast;
 
   /// No description provided for @weatherWind.
+  ///
+  /// In en, this message translates to:
+  /// **'Wind'**
   String get weatherWind;
 
   /// No description provided for @weatherPrecipitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Precipitation'**
   String get weatherPrecipitation;
 
   /// No description provided for @weatherRainAlert.
+  ///
+  /// In en, this message translates to:
+  /// **'Possible rain - take a raincoat'**
   String get weatherRainAlert;
 
   /// No description provided for @weatherHumidity.
+  ///
+  /// In en, this message translates to:
+  /// **'Humidity'**
   String get weatherHumidity;
 
   /// No description provided for @elevationProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Elevation'**
   String get elevationProfile;
 
   /// No description provided for @elevationGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Ascent'**
   String get elevationGain;
 
   /// No description provided for @elevationLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'Descent'**
   String get elevationLoss;
 
   /// No description provided for @groupNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Group not found on this device. Ask the organizer to share the group via QR code or link.'**
   String get groupNotFound;
 
   /// No description provided for @activityNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity not found'**
   String get activityNotFound;
 
   /// No description provided for @mapSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
   String get mapSearch;
 
   /// No description provided for @mapFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
   String get mapFilterAll;
 
   /// No description provided for @mapFilterFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Found'**
   String get mapFilterFound;
 
   /// No description provided for @mapFilterHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
   String get mapFilterHide;
 
   /// No description provided for @mapLayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Layers'**
   String get mapLayers;
+
+  /// No description provided for @fieldRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required'**
+  String get fieldRequired;
+
+  /// No description provided for @meetingPointHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the map icon to set coordinates'**
+  String get meetingPointHint;
+
+  /// No description provided for @visibilityPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get visibilityPrivate;
+
+  /// No description provided for @visibilityPublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get visibilityPublic;
+
+  /// No description provided for @visibilityLinkOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'By link'**
+  String get visibilityLinkOnly;
+
+  /// No description provided for @selectActivityType.
+  ///
+  /// In en, this message translates to:
+  /// **'Select activity type'**
+  String get selectActivityType;
+
+  /// No description provided for @archivedActivityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived activity'**
+  String get archivedActivityTitle;
+
+  /// No description provided for @archivedActivityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This activity is finished and read-only'**
+  String get archivedActivityHint;
+
+  /// No description provided for @usernameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get usernameLabel;
+
+  /// No description provided for @bioLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get bioLabel;
+
+  /// No description provided for @markAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get markAllRead;
+
+  /// No description provided for @noNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications'**
+  String get noNotifications;
+
+  /// No description provided for @noPollsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No polls yet'**
+  String get noPollsYet;
+
+  /// No description provided for @okButton.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get okButton;
+
+  /// No description provided for @profileVisibleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile visible to peers'**
+  String get profileVisibleHint;
+
+  /// No description provided for @shareGpsByDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Share GPS by default'**
+  String get shareGpsByDefault;
+
+  /// No description provided for @privacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get privacy;
+
+  /// No description provided for @canInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'May invite to activities'**
+  String get canInvite;
+
+  /// No description provided for @canInviteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Lets this member invite other users to activities in this group'**
+  String get canInviteHint;
+
+  /// No description provided for @canInviteShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite'**
+  String get canInviteShort;
+
+  /// No description provided for @privateActivityRequiresInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Private activity — invitation required'**
+  String get privateActivityRequiresInvite;
+
+  /// No description provided for @alreadyInvited.
+  ///
+  /// In en, this message translates to:
+  /// **'Already invited'**
+  String get alreadyInvited;
+
+  /// No description provided for @scanStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan'**
+  String get scanStart;
+
+  /// No description provided for @scanPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get scanPause;
+
+  /// No description provided for @scanStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting camera…'**
+  String get scanStarting;
+
+  /// No description provided for @scanActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning active — aim at the QR code'**
+  String get scanActive;
+
+  /// No description provided for @scanStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning paused'**
+  String get scanStopped;
+
+  /// No description provided for @cameraPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'No camera access — allow the camera in Settings'**
+  String get cameraPermissionDenied;
+
+  /// No description provided for @alreadyInGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'You are already a member of this group'**
+  String get alreadyInGroup;
+
+  /// No description provided for @groupJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'You joined the group'**
+  String get groupJoined;
+
+  /// No description provided for @meetingPointPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick on map'**
+  String get meetingPointPick;
+
+  /// No description provided for @mapSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search address or place'**
+  String get mapSearchHint;
+
+  /// No description provided for @mapConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this point'**
+  String get mapConfirm;
+
+  /// No description provided for @mapSearchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing found'**
+  String get mapSearchNoResults;
+
+  /// No description provided for @mapSearchError.
+  ///
+  /// In en, this message translates to:
+  /// **'Search failed — check your connection'**
+  String get mapSearchError;
+
+  /// No description provided for @mapPickHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the map or search for an address'**
+  String get mapPickHint;
+
+  /// No description provided for @mapLoadingAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolving address…'**
+  String get mapLoadingAddress;
+
+  /// No description provided for @addressUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Address unavailable'**
+  String get addressUnavailable;
+
+  /// No description provided for @mapMyLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'My location'**
+  String get mapMyLocation;
+
+  /// No description provided for @mapClearMeetingPoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear meeting point'**
+  String get mapClearMeetingPoint;
+
+  /// No description provided for @chatKeepAliveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pokatuha runs in background'**
+  String get chatKeepAliveTitle;
+
+  /// No description provided for @chatKeepAliveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Receiving chat messages'**
+  String get chatKeepAliveBody;
+
+  /// No description provided for @chatMessagesChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat messages'**
+  String get chatMessagesChannel;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -1880,25 +2247,25 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en', 'ru'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['en', 'ru'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'en':
-      return AppLocalizationsEn();
-    case 'ru':
-      return AppLocalizationsRu();
+    case 'en': return AppLocalizationsEn();
+    case 'ru': return AppLocalizationsRu();
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.'
+  );
 }

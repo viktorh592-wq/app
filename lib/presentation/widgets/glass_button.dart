@@ -75,7 +75,7 @@ class GlassButton extends StatelessWidget {
             // Circle: force square; pill: shrink-wrap to content + padding.
             constraints: isCircle
                 ? BoxConstraints.tightFor(width: size, height: size)
-                : BoxConstraints(minHeight: 36),
+                : const BoxConstraints(minHeight: 36),
             padding: isCircle
                 ? EdgeInsets.zero
                 : const EdgeInsets.symmetric(horizontal: 14, vertical: 8),

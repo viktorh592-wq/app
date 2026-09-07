@@ -6,12 +6,18 @@
 ///     group payload (V3 fix — materialize the group locally if needed).
 /// Owns the app [NavigatorState] key so links can be handled from outside
 /// the widget tree (cold start, background links, QR scanner).
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:pokatuha/core/errors/app_error.dart';
+import 'package:pokatuha/database/collections/group_collection.dart';
 import 'package:pokatuha/domain/repositories/user_repository.dart';
 import 'package:pokatuha/domain/services/auth_service.dart';
+import 'package:pokatuha/domain/services/chat_sync_service.dart';
+import 'package:pokatuha/domain/services/communication_service.dart';
 import 'package:pokatuha/domain/services/group_service.dart';
+import 'package:pokatuha/domain/services/hybrid_communication_service.dart';
 import 'package:pokatuha/domain/services/identity_service.dart';
 import 'package:pokatuha/domain/services/service_locator.dart';
 import 'package:pokatuha/l10n/app_localizations.dart';
@@ -46,15 +52,59 @@ class DeepLinkDispatcher {
       case LinkKind.group:
         try {
           final groupService = serviceLocator<GroupService>();
+          // V3.0.4 (bug 2) — repeated scan of a group the user already
+          // belongs to must give explicit feedback ("nothing happened"
+          // previously). Note: the payload lookup runs BEFORE accept so we
+          // can skip the join side effects entirely.
+          Map<String, dynamic>? payload = link.data;
+          GroupCollection? existing;
+          if (payload != null) {
+            existing = await groupService.findExistingForInvite(payload);
+          }
+          if (existing != null && await groupService.isMember(existing.id, me.id)) {
+            // Still request chat history — peers may have messages this
+            // device missed since the last visit (V3.0.4 bug 1).
+            unawaited(
+                serviceLocator<ChatSyncService>().requestHistory(existing.id));
+            // V3.0.5 hotfix — a re-scan also re-pulls the full group state.
+            // This is the self-heal path for groups joined before the state
+            // sync worked (the joiner's Members / Activities tabs stayed
+            // empty) — one more scan fills them in.
+            final rescanCode = (existing.inviteCode?.trim().isNotEmpty == true)
+                ? existing.inviteCode!
+                : link.payload;
+            unawaited(serviceLocator<ChatSyncService>()
+                .requestGroupState(existing.id, rescanCode));
+            _toast(l.alreadyInGroup);
+            _push(GroupDetailPage(groupId: existing.id));
+            return;
+          }
           // V3 fix — if the link carries the embedded group payload, use
           // acceptInvitation which can materialize the group locally.
           // Otherwise fall back to the legacy joinByInviteCode path which
           // only works for groups already on this device.
-          final group = link.data != null
-              ? await groupService.acceptInvitation(
-                  user: me, payload: link.data!)
+          final group = payload != null
+              ? await groupService.acceptInvitation(user: me, payload: payload)
               : await groupService.joinByInviteCode(
                   user: me, code: link.payload);
+          // V3.0.4 (bug 1) — ask peers on the local network for the recent
+          // chat history of the group's activities. Runs fire-and-forget:
+          // the group page must open instantly regardless of network state.
+          unawaited(
+              serviceLocator<ChatSyncService>().requestHistory(group.id));
+          // V3.0.5 (bug 3) — the QR payload no longer embeds members /
+          // activities: pull the full group state over the network right
+          // after the join.
+          final joinCode = group.inviteCode ?? link.payload;
+          unawaited(serviceLocator<ChatSyncService>()
+              .requestGroupState(group.id, joinCode));
+          // V3.0.5 (bug 2) — subscribe the new group on the internet relay
+          // so mobile-network delivery starts immediately.
+          final communication = serviceLocator<CommunicationService>();
+          if (communication is HybridCommunicationService) {
+            unawaited(communication.syncSubscriptions());
+          }
+          _toast(l.groupJoined);
           _push(GroupDetailPage(groupId: group.id));
         } on AppError catch (e) {
           // Prefer the localized "group not found" message over the raw

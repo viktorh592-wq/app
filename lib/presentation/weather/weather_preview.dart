@@ -195,7 +195,7 @@ class _Body extends StatelessWidget {
                 final h = w.hourly[i];
                 final dt = DateTime.tryParse(h.time);
                 final hourLabel = dt == null
-                    ? '${i}ч'
+                    ? '$iч'
                     : '${dt.hour.toString().padLeft(2, '0')}ч';
                 return _HourCell(
                   hour: hourLabel,

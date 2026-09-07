@@ -16,10 +16,18 @@ import 'package:pokatuha/core/utils/validators.dart';
 import 'package:pokatuha/database/collections/message_collection.dart';
 import 'package:pokatuha/database/database.dart';
 import 'package:pokatuha/domain/enums/enums.dart';
+import 'package:pokatuha/domain/services/communication_service.dart';
 
 class MessageRepository {
-  MessageRepository(this._db);
+  MessageRepository(this._db, {CommunicationService? transport})
+      : _transport = transport;
   final DatabaseService _db;
+
+  /// Optional P2P transport (V3.0.4 — bug 1). When registered, every
+  /// locally-sent message is broadcast so other Pokatuha devices on the
+  /// same network receive it. Null in unit tests / web — the local copy
+  /// is always the source of truth (local-first).
+  final CommunicationService? _transport;
 
   TypedStore<MessageCollection> get _store => _db.messagesStore;
 
@@ -76,6 +84,36 @@ class MessageRepository {
   final Set<StreamController<List<MessageCollection>>> _notifyControllers =
       <StreamController<List<MessageCollection>>>{};
 
+  /// Per-event change controllers (V3.0.4) — lets the chat tab reload the
+  /// message list the moment an incoming P2P message (or ack) mutates the
+  /// store, without polling.
+  final Map<String, Set<StreamController<void>>> _changeControllers =
+      <String, Set<StreamController<void>>>{};
+
+  /// Notifies subscribers of [changeStream] that [eventId] data changed.
+  void notifyChanged(String eventId) {
+    final controllers = _changeControllers[eventId];
+    if (controllers == null || controllers.isEmpty) return;
+    for (final c in controllers.toList()) {
+      if (!c.isClosed) c.add(null);
+    }
+  }
+
+  /// Emits a (void) event whenever any message of [eventId] is created,
+  /// ingested from a peer, or has its delivery state changed. The chat tab
+  /// subscribes to keep the visible list in sync with incoming P2P traffic.
+  Stream<void> changeStream(String eventId) {
+    final controller = StreamController<void>();
+    final set = _changeControllers.putIfAbsent(eventId, () => <StreamController<void>>{});
+    set.add(controller);
+    controller.onCancel = () {
+      set.remove(controller);
+      if (set.isEmpty) _changeControllers.remove(eventId);
+      controller.close();
+    };
+    return controller.stream;
+  }
+
   Future<void> _notifyPinned(String eventId) async {
     if (_notifyControllers.isEmpty) return;
     final list = await pinned(eventId);
@@ -115,6 +153,8 @@ class MessageRepository {
       ..createdBy = authorId;
     final saved = await _store.put(msg);
     await _notifyPinned(eventId);
+    notifyChanged(eventId);
+    await _broadcastMessage(saved, authorId: authorId);
     return saved;
   }
 
@@ -150,6 +190,8 @@ class MessageRepository {
       ..createdBy = authorId;
     final saved = await _store.put(msg);
     await _notifyPinned(eventId);
+    notifyChanged(eventId);
+    await _broadcastMessage(saved, authorId: authorId);
     return saved;
   }
 
@@ -198,7 +240,84 @@ class MessageRepository {
       ..createdBy = byUserId;
     final saved = await _store.put(msg);
     await _notifyPinned(toEventId);
+    notifyChanged(toEventId);
+    await _broadcastMessage(saved, authorId: byUserId);
     return saved;
+  }
+
+  /// Broadcasts a freshly-saved message via the registered transport so
+  /// peers on the same network receive it (V3.0.4 — bug 1).
+  ///
+  /// The local delivery state advances queued → sending BEFORE the envelope
+  /// hits the wire: a fast peer ack can then safely flip it to delivered
+  /// (no post-broadcast write exists that could downgrade it). Failures are
+  /// swallowed: the local copy is already persisted; the history sync (last
+  /// 50 messages per event) heals any missed deliveries.
+  Future<void> _broadcastMessage(
+    MessageCollection message, {
+    required String authorId,
+  }) async {
+    final transport = _transport;
+    if (transport == null) return;
+    try {
+      if (message.deliveryState == DeliveryState.queued.name) {
+        message
+          ..deliveryState = DeliveryState.sending.name
+          ..touch(Timestamps.nowUtc());
+        await _store.put(message);
+        notifyChanged(message.eventId);
+      }
+      await transport.broadcast(RealtimeEnvelope(
+        type: RealtimeType.chat,
+        payload: message.toMap(),
+        senderId: authorId,
+        timestamp: Timestamps.nowUtc(),
+      ));
+    } catch (_) {
+      // Transport unavailable — keep the local copy authoritative.
+    }
+  }
+
+  /// Persists an incoming message payload (live chat or history batch).
+  /// Idempotent: returns false for exact duplicates (same id + same version
+  /// + unchanged delivery state) or records whose local version is newer.
+  /// Never re-broadcasts (loop safety — see ChatSyncService docs).
+  Future<bool> ingestIncoming(
+    Map<String, dynamic> payload, {
+    String? deliveryState,
+  }) async {
+    final id = payload['id'] as String?;
+    if (id == null || id.isEmpty) return false;
+    final incomingVersion = (payload['version'] as num?)?.toInt() ?? 1;
+    final existing = await _store.getById(id);
+    if (existing != null) {
+      if (incomingVersion < existing.version) return false;
+      final nextState = deliveryState ??
+          (payload['deliveryState'] as String? ?? existing.deliveryState);
+      if (incomingVersion == existing.version && nextState == existing.deliveryState) {
+        return false; // exact duplicate — nothing changed locally
+      }
+    }
+    final incoming = MessageCollection.fromMap(payload)
+      ..id = id
+      ..deliveryState = deliveryState ??
+          (payload['deliveryState'] as String? ??
+              DeliveryState.delivered.name);
+    await _store.put(incoming);
+    await _notifyPinned(incoming.eventId);
+    notifyChanged(incoming.eventId);
+    return true;
+  }
+
+  /// Last [limit] messages of an event, oldest first — the history batch
+  /// served to peers that just joined the group via QR (V3.0.4).
+  Future<List<MessageCollection>> recentByEvent(
+    String eventId,
+    int limit,
+  ) async {
+    final all = await byEvent(eventId); // oldest -> newest, non-deleted
+    if (all.length <= limit) return all;
+    return all.sublist(all.length - limit);
   }
 
   /// Toggle the pinned flag (legacy V1 entry point kept for tests / menu).

@@ -1,9 +1,8 @@
-// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
-
 
 /// The translations for English (`en`).
 class AppLocalizationsEn extends AppLocalizations {
@@ -145,13 +144,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get finished => 'Finished';
 
   @override
-  String arrivalNear(String name) => '${name} is 500 m away';
+  String arrivalNear(String name) {
+    return '$name is 500 m away';
+  }
 
   @override
-  String arrivalClose(String name) => '${name} is arriving';
+  String arrivalClose(String name) {
+    return '$name is arriving';
+  }
 
   @override
-  String arrivalArrived(String name) => '${name} has arrived';
+  String arrivalArrived(String name) {
+    return '$name has arrived';
+  }
 
   @override
   String get offlineMode => 'Offline mode';
@@ -220,7 +225,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cartoVoyager => 'Carto Voyager';
 
   @override
-  String mapLayerByContext(String context) => 'Suggested for: ${context}';
+  String mapLayerByContext(String context) {
+    return 'Suggested for: $context';
+  }
 
   @override
   String get mapContextCycling => 'cycling';
@@ -388,10 +395,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invite => 'Invite';
 
   @override
-  String memberAdded(String name) => '${name} added to the group';
+  String memberAdded(String name) {
+    return '$name added to the group';
+  }
 
   @override
-  String membersCount(int count) => if (count == 0) 'No members' else if (count == 1) '$count member' else '$count members';
+  String membersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# members',
+      one: '# member',
+      zero: 'No members',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get showMyQr => 'Show my QR';
@@ -511,7 +529,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noParticipants => 'No participants yet';
 
   @override
-  String liveSharingCount(int count) => '${count} live';
+  String liveSharingCount(int count) {
+    return '$count live';
+  }
 
   @override
   String get noMessagesYet => 'No messages yet';
@@ -577,13 +597,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatDeleteMessage => 'Delete';
 
   @override
-  String chatForwardedFrom(String name) => 'Forwarded from ${name}';
+  String chatForwardedFrom(String name) {
+    return 'Forwarded from $name';
+  }
 
   @override
-  String chatReplyTo(String name) => 'Reply to ${name}';
+  String chatReplyTo(String name) {
+    return 'Reply to $name';
+  }
 
   @override
-  String chatPinnedBar(int count) => '${count} pinned';
+  String chatPinnedBar(int count) {
+    return '$count pinned';
+  }
 
   @override
   String get chatAttachCamera => 'Camera';
@@ -664,7 +690,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatForwarded => 'Message forwarded';
 
   @override
-  String chatPhotoSizeWarning(int kb) => 'Photo size: ${kb} KB';
+  String chatPhotoSizeWarning(int kb) {
+    return 'Photo size: $kb KB';
+  }
 
   @override
   String get chatNoMedia => 'No media in this chat yet';
@@ -682,7 +710,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatOpenInMap => 'Open in map';
 
   @override
-  String chatPlaybackSpeed(String speed) => '${speed}x speed';
+  String chatPlaybackSpeed(String speed) {
+    return '${speed}x speed';
+  }
 
   @override
   String get chatDocumentOpen => 'Open';
@@ -712,13 +742,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapParticipantStatusIdle => 'Idle';
 
   @override
-  String mapParticipantBatteryValue(int percent) => '${percent}%';
+  String mapParticipantBatteryValue(int percent) {
+    return '$percent%';
+  }
 
   @override
-  String mapParticipantSpeedValue(String kmh) => '${kmh} km/h';
+  String mapParticipantSpeedValue(String kmh) {
+    return '$kmh km/h';
+  }
 
   @override
-  String mapParticipantDistanceValue(String meters) => '${meters} m';
+  String mapParticipantDistanceValue(String meters) {
+    return '$meters m';
+  }
 
   @override
   String get mapHeadingN => 'North';
@@ -787,28 +823,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addOption => 'Add option';
 
   @override
-  String closesInMinutes(String minutes) => 'Closes in ${minutes}m';
+  String closesInMinutes(String minutes) {
+    return 'Closes in ${minutes}m';
+  }
 
   @override
-  String closesInHours(String hours) => 'Closes in ${hours}h';
+  String closesInHours(String hours) {
+    return 'Closes in ${hours}h';
+  }
 
   @override
-  String closesInDays(String days) => 'Closes in ${days}d';
+  String closesInDays(String days) {
+    return 'Closes in ${days}d';
+  }
 
   @override
-  String closedMinutesAgo(String minutes) => 'Closed ${minutes}m ago';
+  String closedMinutesAgo(String minutes) {
+    return 'Closed ${minutes}m ago';
+  }
 
   @override
-  String closedHoursAgo(String hours) => 'Closed ${hours}h ago';
+  String closedHoursAgo(String hours) {
+    return 'Closed ${hours}h ago';
+  }
 
   @override
-  String closedDaysAgo(String days) => 'Closed ${days}d ago';
+  String closedDaysAgo(String days) {
+    return 'Closed ${days}d ago';
+  }
 
   @override
-  String routeStats(String km, String elev) => '${km} km • ↑ ${elev} m';
+  String routeStats(String km, String elev) {
+    return '$km km • ↑ $elev m';
+  }
 
   @override
-  String routeStatsWithDuration(String km, String elev, String duration) => '${km} km • ↑ ${elev} m • ⏱ ${duration}';
+  String routeStatsWithDuration(String km, String elev, String duration) {
+    return '$km km • ↑ $elev m • ⏱ $duration';
+  }
 
   @override
   String get importRoute => 'Import route';
@@ -931,8 +983,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get elevationLoss => 'Descent';
 
   @override
-  String get groupNotFound =>
-      'Group not found on this device. Ask the organizer to share the group via QR code or link.';
+  String get groupNotFound => 'Group not found on this device. Ask the organizer to share the group via QR code or link.';
 
   @override
   String get activityNotFound => 'Activity not found';
@@ -951,4 +1002,133 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mapLayers => 'Layers';
+
+  @override
+  String get fieldRequired => 'This field is required';
+
+  @override
+  String get meetingPointHint => 'Tap the map icon to set coordinates';
+
+  @override
+  String get visibilityPrivate => 'Private';
+
+  @override
+  String get visibilityPublic => 'Public';
+
+  @override
+  String get visibilityLinkOnly => 'By link';
+
+  @override
+  String get selectActivityType => 'Select activity type';
+
+  @override
+  String get archivedActivityTitle => 'Archived activity';
+
+  @override
+  String get archivedActivityHint => 'This activity is finished and read-only';
+
+  @override
+  String get usernameLabel => 'Username';
+
+  @override
+  String get bioLabel => 'Bio';
+
+  @override
+  String get markAllRead => 'Mark all read';
+
+  @override
+  String get noNotifications => 'No notifications';
+
+  @override
+  String get noPollsYet => 'No polls yet';
+
+  @override
+  String get okButton => 'OK';
+
+  @override
+  String get profileVisibleHint => 'Profile visible to peers';
+
+  @override
+  String get shareGpsByDefault => 'Share GPS by default';
+
+  @override
+  String get privacy => 'Privacy';
+
+  @override
+  String get canInvite => 'May invite to activities';
+
+  @override
+  String get canInviteHint => 'Lets this member invite other users to activities in this group';
+
+  @override
+  String get canInviteShort => 'Invite';
+
+  @override
+  String get privateActivityRequiresInvite => 'Private activity — invitation required';
+
+  @override
+  String get alreadyInvited => 'Already invited';
+
+  @override
+  String get scanStart => 'Scan';
+
+  @override
+  String get scanPause => 'Pause';
+
+  @override
+  String get scanStarting => 'Starting camera…';
+
+  @override
+  String get scanActive => 'Scanning active — aim at the QR code';
+
+  @override
+  String get scanStopped => 'Scanning paused';
+
+  @override
+  String get cameraPermissionDenied => 'No camera access — allow the camera in Settings';
+
+  @override
+  String get alreadyInGroup => 'You are already a member of this group';
+
+  @override
+  String get groupJoined => 'You joined the group';
+
+  @override
+  String get meetingPointPick => 'Pick on map';
+
+  @override
+  String get mapSearchHint => 'Search address or place';
+
+  @override
+  String get mapConfirm => 'Use this point';
+
+  @override
+  String get mapSearchNoResults => 'Nothing found';
+
+  @override
+  String get mapSearchError => 'Search failed — check your connection';
+
+  @override
+  String get mapPickHint => 'Tap the map or search for an address';
+
+  @override
+  String get mapLoadingAddress => 'Resolving address…';
+
+  @override
+  String get addressUnavailable => 'Address unavailable';
+
+  @override
+  String get mapMyLocation => 'My location';
+
+  @override
+  String get mapClearMeetingPoint => 'Clear meeting point';
+
+  @override
+  String get chatKeepAliveTitle => 'Pokatuha runs in background';
+
+  @override
+  String get chatKeepAliveBody => 'Receiving chat messages';
+
+  @override
+  String get chatMessagesChannel => 'Chat messages';
 }

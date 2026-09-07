@@ -120,6 +120,14 @@ class EventService {
   }
 
   /// Join an activity (UC-002).
+  ///
+  /// V3.0.3 fix (user feedback): visibility is enforced at the activity
+  /// level:
+  ///   • public — any group member may join without an explicit invitation.
+  ///   • linkOnly — same as public (anyone with the activity link may join).
+  ///   • private — only users who have been explicitly invited (participant
+  ///     record with status = `invited`) may join. The organizer may also
+  ///     join (although they are auto-added at activity creation).
   Future<ParticipantCollection> join({
     required EventCollection event,
     required UserCollection user,
@@ -128,14 +136,28 @@ class EventService {
       throw const BusinessRuleError(
           'Cannot join an archived activity (BR-002)');
     }
+    final visibility = EventVisibility.values.firstWhere(
+      (v) => v.name == event.visibility,
+      orElse: () => EventVisibility.private,
+    );
+    final existing =
+        await _participantRepository.byEventAndUser(event.id, user.id);
+    if (visibility == EventVisibility.private &&
+        user.id != event.organizerId) {
+      final isInvited = existing != null &&
+          existing.status == ParticipantStatus.invited.name;
+      if (!isInvited) {
+        throw const BusinessRuleError(
+            'Private activity — invitation required');
+      }
+    }
     if (event.maxParticipants != null) {
       final accepted = await _participantRepository.acceptedCount(event.id);
       if (accepted >= event.maxParticipants!) {
         throw const BusinessRuleError('Activity is full');
       }
     }
-    var participant =
-        await _participantRepository.byEventAndUser(event.id, user.id);
+    var participant = existing;
     participant ??= await _participantRepository.invite(
       eventId: event.id,
       userId: user.id,

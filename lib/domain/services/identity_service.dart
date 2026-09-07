@@ -8,11 +8,22 @@
 ///                                          group payload (V3 fix — lets the
 ///                                          receiver materialize the group
 ///                                          even if it doesn't exist locally).
+///                                          V3.0.4: the payload is gzipped
+///                                          before base64 (detected by the
+///                                          gzip magic bytes) — the full
+///                                          group + members + activities
+///                                          payload otherwise produces a QR
+///                                          too dense for phone cameras to
+///                                          read (user-reported bug 2:
+///                                          «сканирую QR — и ничего не
+///                                          происходит»). Plain base64 JSON
+///                                          from older builds still parses.
 ///
 /// The short public ID is the first 12 hex chars of the user UUID with the
 /// dashes removed, upper-cased — compact enough for a QR payload, unique
 /// enough for local discovery.
 import 'dart:convert';
+import 'dart:io';
 
 class IdentityService {
   static const String _scheme = 'pokatuha';
@@ -38,12 +49,18 @@ class IdentityService {
   /// materialize the group from this payload even if the group doesn't
   /// yet exist on their device (V3 fix for the "group not found on device"
   /// bug).
+  ///
+  /// V3.0.4 (bug 2): the JSON is gzipped before encoding — repeated JSON
+  /// keys compress ~5-10×, keeping the QR code within a density phones can
+  /// actually scan. [parse] accepts both the gzipped and the legacy plain
+  /// forms (gzip magic bytes are checked after base64 decoding).
   String groupUriWithPayload({
     required String inviteCode,
     required Map<String, dynamic> payload,
   }) {
     final json = jsonEncode(payload);
-    final b64 = base64Url.encode(utf8.encode(json));
+    final gzipped = gzip.encode(utf8.encode(json));
+    final b64 = base64Url.encode(gzipped);
     return '$_scheme://$_groupHost/$inviteCode?d=$b64';
   }
 
@@ -61,12 +78,19 @@ class IdentityService {
     if (u.host == _groupHost && u.pathSegments.length == 1) {
       final payload = u.pathSegments[0];
       if (payload.isEmpty) return null;
-      // Extract optional ?d= payload.
+      // Extract optional ?d= payload. V3.0.4: gzipped JSON (starts with
+      // the 0x1f 0x8b magic) or legacy plain JSON — accept both.
       Map<String, dynamic>? data;
       final dParam = u.queryParameters['d'];
       if (dParam != null && dParam.isNotEmpty) {
         try {
-          final json = utf8.decode(base64Url.decode(dParam));
+          final bytes = base64Url.decode(dParam);
+          String json;
+          if (bytes.length >= 2 && bytes[0] == 0x1f && bytes[1] == 0x8b) {
+            json = utf8.decode(gzip.decode(bytes));
+          } else {
+            json = utf8.decode(bytes);
+          }
           final decoded = jsonDecode(json);
           if (decoded is Map<String, dynamic>) data = decoded;
         } catch (_) {

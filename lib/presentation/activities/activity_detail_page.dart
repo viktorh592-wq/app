@@ -194,9 +194,12 @@ class _ActivityDetailPageState extends State<ActivityDetailPage>
 
   /// Header summary: activity type • date • meeting point (V2 §13).
   String _headerSubtitle(EventCollection event, AppLocalizations l) {
+    // V3.0.3 fix — use the active locale for date formatting instead of
+    // hardcoded 'en' (user-reported Issue 5: English text in Russian UI).
+    final localeCode = Localizations.localeOf(context).languageCode;
     final parts = <String>[
       if (_activityLabel.isNotEmpty) _activityLabel,
-      Timestamps.formatLocalDateTime(event.startAt, 'en'),
+      Timestamps.formatLocalDateTime(event.startAt, localeCode),
       if (event.meetingPointLabel != null &&
           event.meetingPointLabel!.isNotEmpty)
         event.meetingPointLabel!,

@@ -1,9 +1,8 @@
-// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
-
 
 /// The translations for Russian (`ru`).
 class AppLocalizationsRu extends AppLocalizations {
@@ -145,13 +144,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get finished => 'Завершено';
 
   @override
-  String arrivalNear(String name) => '${name} в 500 м';
+  String arrivalNear(String name) {
+    return '$name в 500 м';
+  }
 
   @override
-  String arrivalClose(String name) => '${name} приближается';
+  String arrivalClose(String name) {
+    return '$name приближается';
+  }
 
   @override
-  String arrivalArrived(String name) => '${name} прибыл';
+  String arrivalArrived(String name) {
+    return '$name прибыл';
+  }
 
   @override
   String get offlineMode => 'Автономный режим';
@@ -220,7 +225,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get cartoVoyager => 'Carto Voyager';
 
   @override
-  String mapLayerByContext(String context) => 'Подходит для: ${context}';
+  String mapLayerByContext(String context) {
+    return 'Подходит для: $context';
+  }
 
   @override
   String get mapContextCycling => 'велосипед';
@@ -388,10 +395,23 @@ class AppLocalizationsRu extends AppLocalizations {
   String get invite => 'Пригласить';
 
   @override
-  String memberAdded(String name) => '${name} добавлен(а) в группу';
+  String memberAdded(String name) {
+    return '$name добавлен(а) в группу';
+  }
 
   @override
-  String membersCount(int count) => if (count == 0) 'Нет участников' else if (count == 1) '$count участник' else if (count >= 2 && count <= 4) '$count участника' else if (count >= 5 && count <= 10) '$count участников' else '$count участников';
+  String membersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# участников',
+      many: '# участников',
+      few: '# участника',
+      one: '# участник',
+      zero: 'Нет участников',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get showMyQr => 'Показать мой QR';
@@ -511,7 +531,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noParticipants => 'Пока нет участников';
 
   @override
-  String liveSharingCount(int count) => '${count} в эфире';
+  String liveSharingCount(int count) {
+    return '$count в эфире';
+  }
 
   @override
   String get noMessagesYet => 'Сообщений пока нет';
@@ -577,13 +599,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatDeleteMessage => 'Удалить';
 
   @override
-  String chatForwardedFrom(String name) => 'Переслано от ${name}';
+  String chatForwardedFrom(String name) {
+    return 'Переслано от $name';
+  }
 
   @override
-  String chatReplyTo(String name) => 'Ответ ${name}';
+  String chatReplyTo(String name) {
+    return 'Ответ $name';
+  }
 
   @override
-  String chatPinnedBar(int count) => '${count} закрепл.';
+  String chatPinnedBar(int count) {
+    return '$count закрепл.';
+  }
 
   @override
   String get chatAttachCamera => 'Камера';
@@ -664,7 +692,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatForwarded => 'Сообщение переслано';
 
   @override
-  String chatPhotoSizeWarning(int kb) => 'Размер фото: ${kb} КБ';
+  String chatPhotoSizeWarning(int kb) {
+    return 'Размер фото: $kb КБ';
+  }
 
   @override
   String get chatNoMedia => 'В чате пока нет медиа';
@@ -682,7 +712,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatOpenInMap => 'Открыть на карте';
 
   @override
-  String chatPlaybackSpeed(String speed) => 'Скорость ${speed}x';
+  String chatPlaybackSpeed(String speed) {
+    return 'Скорость ${speed}x';
+  }
 
   @override
   String get chatDocumentOpen => 'Открыть';
@@ -712,13 +744,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mapParticipantStatusIdle => 'Ожидает';
 
   @override
-  String mapParticipantBatteryValue(int percent) => '${percent}%';
+  String mapParticipantBatteryValue(int percent) {
+    return '$percent%';
+  }
 
   @override
-  String mapParticipantSpeedValue(String kmh) => '${kmh} км/ч';
+  String mapParticipantSpeedValue(String kmh) {
+    return '$kmh км/ч';
+  }
 
   @override
-  String mapParticipantDistanceValue(String meters) => '${meters} м';
+  String mapParticipantDistanceValue(String meters) {
+    return '$meters м';
+  }
 
   @override
   String get mapHeadingN => 'Север';
@@ -787,28 +825,44 @@ class AppLocalizationsRu extends AppLocalizations {
   String get addOption => 'Добавить вариант';
 
   @override
-  String closesInMinutes(String minutes) => 'Закроется через ${minutes}м';
+  String closesInMinutes(String minutes) {
+    return 'Закроется через $minutesм';
+  }
 
   @override
-  String closesInHours(String hours) => 'Закроется через ${hours}ч';
+  String closesInHours(String hours) {
+    return 'Закроется через $hoursч';
+  }
 
   @override
-  String closesInDays(String days) => 'Закроется через ${days}д';
+  String closesInDays(String days) {
+    return 'Закроется через $daysд';
+  }
 
   @override
-  String closedMinutesAgo(String minutes) => 'Закрыт ${minutes}м назад';
+  String closedMinutesAgo(String minutes) {
+    return 'Закрыт $minutesм назад';
+  }
 
   @override
-  String closedHoursAgo(String hours) => 'Закрыт ${hours}ч назад';
+  String closedHoursAgo(String hours) {
+    return 'Закрыт $hoursч назад';
+  }
 
   @override
-  String closedDaysAgo(String days) => 'Закрыт ${days}д назад';
+  String closedDaysAgo(String days) {
+    return 'Закрыт $daysд назад';
+  }
 
   @override
-  String routeStats(String km, String elev) => '${km} км • ↑ ${elev} м';
+  String routeStats(String km, String elev) {
+    return '$km км • ↑ $elev м';
+  }
 
   @override
-  String routeStatsWithDuration(String km, String elev, String duration) => '${km} км • ↑ ${elev} м • ⏱ ${duration}';
+  String routeStatsWithDuration(String km, String elev, String duration) {
+    return '$km км • ↑ $elev м • ⏱ $duration';
+  }
 
   @override
   String get importRoute => 'Импорт маршрута';
@@ -931,8 +985,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get elevationLoss => 'Спуск';
 
   @override
-  String get groupNotFound =>
-      'Группа не найдена на этом устройстве. Попросите организатора поделиться группой через QR-код или ссылку.';
+  String get groupNotFound => 'Группа не найдена на этом устройстве. Попросите организатора поделиться группой через QR-код или ссылку.';
 
   @override
   String get activityNotFound => 'Активность не найдена';
@@ -951,4 +1004,133 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get mapLayers => 'Слои';
+
+  @override
+  String get fieldRequired => 'Заполните это поле';
+
+  @override
+  String get meetingPointHint => 'Нажмите на иконку карты, чтобы задать координаты';
+
+  @override
+  String get visibilityPrivate => 'Приватная';
+
+  @override
+  String get visibilityPublic => 'Публичная';
+
+  @override
+  String get visibilityLinkOnly => 'По ссылке';
+
+  @override
+  String get selectActivityType => 'Выберите тип активности';
+
+  @override
+  String get archivedActivityTitle => 'Архивная активность';
+
+  @override
+  String get archivedActivityHint => 'Эта активность завершена и доступна только для чтения';
+
+  @override
+  String get usernameLabel => 'Ник';
+
+  @override
+  String get bioLabel => 'О себе';
+
+  @override
+  String get markAllRead => 'Отметить все прочитанными';
+
+  @override
+  String get noNotifications => 'Нет уведомлений';
+
+  @override
+  String get noPollsYet => 'Опросов пока нет';
+
+  @override
+  String get okButton => 'OK';
+
+  @override
+  String get profileVisibleHint => 'Профиль виден другим участникам';
+
+  @override
+  String get shareGpsByDefault => 'Делиться GPS по умолчанию';
+
+  @override
+  String get privacy => 'Приватность';
+
+  @override
+  String get canInvite => 'Может приглашать в активности';
+
+  @override
+  String get canInviteHint => 'Позволяет участнику приглашать других пользователей в активности этой группы';
+
+  @override
+  String get canInviteShort => 'Приглашает';
+
+  @override
+  String get privateActivityRequiresInvite => 'Приватная активность — нужно приглашение';
+
+  @override
+  String get alreadyInvited => 'Уже приглашён';
+
+  @override
+  String get scanStart => 'Сканировать';
+
+  @override
+  String get scanPause => 'Пауза';
+
+  @override
+  String get scanStarting => 'Запускаем камеру…';
+
+  @override
+  String get scanActive => 'Сканирование активно — наведите на QR-код';
+
+  @override
+  String get scanStopped => 'Сканирование остановлено';
+
+  @override
+  String get cameraPermissionDenied => 'Нет доступа к камере — разрешите камеру в настройках';
+
+  @override
+  String get alreadyInGroup => 'Вы уже состоите в этой группе';
+
+  @override
+  String get groupJoined => 'Вы вступили в группу';
+
+  @override
+  String get meetingPointPick => 'Выбрать на карте';
+
+  @override
+  String get mapSearchHint => 'Поиск адреса или места';
+
+  @override
+  String get mapConfirm => 'Указать эту точку';
+
+  @override
+  String get mapSearchNoResults => 'Ничего не найдено';
+
+  @override
+  String get mapSearchError => 'Ошибка поиска — проверьте интернет';
+
+  @override
+  String get mapPickHint => 'Ткните на карту или найдите адрес';
+
+  @override
+  String get mapLoadingAddress => 'Определяем адрес…';
+
+  @override
+  String get addressUnavailable => 'Адрес не определён';
+
+  @override
+  String get mapMyLocation => 'Моё местоположение';
+
+  @override
+  String get mapClearMeetingPoint => 'Очистить точку сбора';
+
+  @override
+  String get chatKeepAliveTitle => 'Pokatuha работает в фоне';
+
+  @override
+  String get chatKeepAliveBody => 'Приём сообщений чата активен';
+
+  @override
+  String get chatMessagesChannel => 'Сообщения чата';
 }

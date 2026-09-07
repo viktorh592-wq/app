@@ -6,8 +6,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'dart:async';
+
 import 'package:pokatuha/core/errors/app_error.dart';
+import 'package:pokatuha/core/tokens/design_tokens.dart';
 import 'package:pokatuha/database/collections/group_collection.dart';
+import 'package:pokatuha/database/collections/user_collection.dart';
+import 'package:pokatuha/domain/repositories/event_repository.dart';
+import 'package:pokatuha/domain/repositories/group_member_repository.dart';
 import 'package:pokatuha/domain/repositories/group_repository.dart';
 import 'package:pokatuha/domain/services/group_service.dart';
 import 'package:pokatuha/domain/services/identity_service.dart';
@@ -19,6 +25,8 @@ import 'package:pokatuha/presentation/groups/tabs/group_activities_tab.dart';
 import 'package:pokatuha/presentation/groups/tabs/group_media_tab.dart';
 import 'package:pokatuha/presentation/groups/tabs/group_members_tab.dart';
 import 'package:pokatuha/presentation/groups/tabs/group_settings_tab.dart';
+import 'package:pokatuha/presentation/users/user_search_page.dart';
+import 'package:pokatuha/presentation/widgets/morphing_fab.dart';
 import 'package:pokatuha/presentation/widgets/qr_code_dialog.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -38,16 +46,40 @@ class _GroupDetailPageState extends State<GroupDetailPage>
   bool _canManage = false;
   bool _loading = true;
 
+  /// V3.0.5 hotfix — reload the group header when network sync materializes
+  /// late data (groupStateBatch ingest after a slim QR join). The tabs keep
+  /// their own subscriptions for their lists.
+  StreamSubscription<String>? _membersChanges;
+  StreamSubscription<String>? _eventsChanges;
+
   @override
   void initState() {
     super.initState();
     _load();
+    _membersChanges = serviceLocator<GroupMemberRepository>()
+        .groupChanges
+        .where((g) => g == widget.groupId)
+        .listen((_) => _load());
+    _eventsChanges = serviceLocator<EventRepository>()
+        .groupChanges
+        .where((g) => g == widget.groupId)
+        .listen((_) => _load());
   }
 
   @override
   void dispose() {
+    _membersChanges?.cancel();
+    _eventsChanges?.cancel();
+    _tabController?.removeListener(_onTabChanged);
     _tabController?.dispose();
     super.dispose();
+  }
+
+  /// V3.0.3 fix — rebuild the FAB when the user switches tabs so the
+  /// action matches the active tab (Activities → Create Activity,
+  /// Members → Invite, others → hidden).
+  void _onTabChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _load() async {
@@ -64,12 +96,14 @@ class _GroupDetailPageState extends State<GroupDetailPage>
     final previousIndex = _tabController?.index ?? 0;
     final controller = _tabController;
     if (controller == null || controller.length != tabs) {
+      controller?.removeListener(_onTabChanged);
       controller?.dispose();
       _tabController = TabController(
         length: tabs,
         vsync: this,
         initialIndex: previousIndex.clamp(0, tabs - 1),
       );
+      _tabController!.addListener(_onTabChanged);
     }
     if (mounted) {
       setState(() {
@@ -195,36 +229,156 @@ class _GroupDetailPageState extends State<GroupDetailPage>
           ],
         ),
       ),
-      // Inside a group the primary action is «Add Activity»
-      // (ARCHITECTURE_V2.md §6).
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.of(context)
-            .push(MaterialPageRoute(
-                builder: (_) => CreateActivityPage(groupId: group.id)))
-            .then((_) => _load()),
-        icon: const Icon(Icons.add_rounded),
-        label: Text(l.createActivity),
+      // V3.0.3 fix — the FAB is tab-dependent:
+      //   • Activities tab → «Create Activity» (round + morphs to pill)
+      //   • Members tab → «Invite» (round + morphs to pill)
+      //   • Media / Settings → no FAB
+      // Previously the page had a single global FAB that showed on ALL tabs,
+      // which meant the Members tab's own «Invite» FAB was hidden by the
+      // parent (Flutter nested Scaffold doesn't show the inner FAB).
+      floatingActionButton: _buildFab(context, l, group, tabController.index),
+    );
+  }
+
+  /// Builds the tab-appropriate MorphingFab. Returns null (no FAB) on
+  /// Media and Settings tabs.
+  Widget? _buildFab(
+    BuildContext context,
+    AppLocalizations l,
+    GroupCollection group,
+    int tabIndex,
+  ) {
+    switch (tabIndex) {
+      case 0: // Activities
+        return MorphingFab(
+          heroTag: 'fab-group-activity',
+          label: l.createActivity,
+          onPressed: () => Navigator.of(context)
+              .push(MaterialPageRoute(
+                  builder: (_) => CreateActivityPage(groupId: group.id)))
+              .then((_) => _load()),
+        );
+      case 1: // Members
+        return MorphingFab(
+          heroTag: 'fab-group-invite',
+          icon: Icons.person_add_rounded,
+          label: l.invite,
+          onPressed: () => _showInviteSheet(context, group),
+        );
+      default:
+        return null;
+    }
+  }
+
+  /// Invite bottom sheet — moved here from GroupMembersTab so the parent
+  /// FAB can trigger it on the Members tab (USER_DISCOVERY.md §2).
+  void _showInviteSheet(BuildContext context, GroupCollection group) {
+    final l = AppLocalizations.of(context)!;
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.qr_code_rounded),
+              title: Text(l.showGroupQr),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _showGroupQr(context, group);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.link_rounded),
+              title: Text(l.shareInviteLink),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _shareInviteLink(context, group);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.person_search_rounded),
+              title: Text(l.searchByNickname),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => UserSearchPage(
+                    onUserSelected: (user) =>
+                        _inviteUser(context, group, user),
+                  ),
+                ));
+              },
+            ),
+            const SizedBox(height: DesignTokens.space2),
+          ],
+        ),
       ),
     );
   }
 
+  Future<void> _inviteUser(
+    BuildContext context,
+    GroupCollection group,
+    UserCollection user,
+  ) async {
+    final l = AppLocalizations.of(context)!;
+    final me = context.read<AppViewModel>().user;
+    if (me == null) return;
+    try {
+      await serviceLocator<GroupService>().inviteMember(
+        group: group,
+        user: user,
+        addedBy: me.id,
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l.memberAdded(user.displayName))),
+        );
+      }
+      _load();
+    } on AppError catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    }
+  }
+
   void _showGroupQr(BuildContext context, GroupCollection group) {
     final l = AppLocalizations.of(context)!;
+    // V3.0.3 fix — invitation payload now also carries the member roster and
+    // activities so the receiver sees the same group state (members +
+    // activities) right after scanning. Build the payload asynchronously
+    // before showing the QR dialog.
+    _buildInviteUri(group).then((uri) {
+      if (!context.mounted) return;
+      showDialog(
+        context: context,
+        builder: (_) => QrCodeDialog(
+          title: l.groupQrCode,
+          subtitle: group.name,
+          uri: uri,
+        ),
+      );
+    });
+  }
+
+  Future<void> _shareInviteLink(
+    BuildContext context,
+    GroupCollection group,
+  ) async {
+    final uri = await _buildInviteUri(group);
+    await Share.share(uri);
+  }
+
+  Future<String> _buildInviteUri(GroupCollection group) async {
     final groupService = serviceLocator<GroupService>();
     final identity = serviceLocator<IdentityService>();
-    // V3 fix — embed the full group payload in the QR so the receiver can
-    // materialize the group even when it doesn't exist on their device yet.
-    final uri = identity.groupUriWithPayload(
+    final payload = groupService.invitationPayload(group);
+    return identity.groupUriWithPayload(
       inviteCode: group.inviteCode ?? '',
-      payload: groupService.invitationPayload(group),
-    );
-    showDialog(
-      context: context,
-      builder: (_) => QrCodeDialog(
-        title: l.groupQrCode,
-        subtitle: group.name,
-        uri: uri,
-      ),
+      payload: payload,
     );
   }
 
@@ -238,14 +392,8 @@ class _GroupDetailPageState extends State<GroupDetailPage>
     final user = context.read<AppViewModel>().user;
     switch (value) {
       case 'shareLink':
-        final groupService = serviceLocator<GroupService>();
-        final identity = serviceLocator<IdentityService>();
-        // V3 fix — embed the payload in the shared link too.
-        final uri = identity.groupUriWithPayload(
-          inviteCode: group.inviteCode ?? '',
-          payload: groupService.invitationPayload(group),
-        );
-        await Share.share(uri);
+        // V3.0.3 fix — payload now carries members + activities.
+        await _shareInviteLink(context, group);
         break;
       case 'leave':
         if (user == null) return;

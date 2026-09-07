@@ -99,16 +99,16 @@ class _SettingsPageState extends State<SettingsPage> {
                   () => _settings.silentMode, (v) => _settings.silentMode = v),
             ),
           ]),
-          _section('Privacy', [
+          _section(l.privacy, [
             SwitchListTile(
               title: Text(l.profile),
-              subtitle: const Text('Profile visible to peers'),
+              subtitle: Text(l.profileVisibleHint),
               value: _settings.profileVisible,
               onChanged: (_) => _toggle(() => _settings.profileVisible,
                   (v) => _settings.profileVisible = v),
             ),
             SwitchListTile(
-              title: const Text('Share GPS by default'),
+              title: Text(l.shareGpsByDefault),
               value: _settings.shareGpsByDefault,
               onChanged: (_) => _toggle(() => _settings.shareGpsByDefault,
                   (v) => _settings.shareGpsByDefault = v),
