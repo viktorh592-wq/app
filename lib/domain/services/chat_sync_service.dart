@@ -49,6 +49,13 @@ const int kGroupStateEventsCap = 50;
 /// protects against duplicated QR scans flooding peers.
 const Duration kHistoryRequestCooldown = Duration(seconds: 5);
 
+/// Activities per one groupState batch frame (V3.0.5 hotfix 3). A full
+/// 50-event batch in one UDP datagram approaches the 48 KiB refusal
+/// threshold and depends on unreliable Wi-Fi IP fragmentation of broadcast
+/// datagrams; small frames keep every datagram tiny and the idempotent
+/// insert-only ingest tolerates any frame order / duplication.
+const int kGroupStateEventsPerFrame = 8;
+
 /// First characters of an id used for placeholder display names —
 /// bounded by the actual length (ids in tests may be shorter than 6).
 String _shortId(String id) =>
@@ -385,26 +392,40 @@ class ChatSyncService {
     }
 
     final allEvents = await _events.byGroup(groupId);
-    final eventPayloads = <Map<String, dynamic>>[];
-    var count = 0;
-    for (final e in allEvents) {
-      if (count >= kGroupStateEventsCap) break;
-      count++;
-      eventPayloads.add(e.toMap());
-    }
+    final eventPayloads = <Map<String, dynamic>>[
+      for (final e in allEvents.take(kGroupStateEventsCap)) e.toMap(),
+    ];
 
-    await _transport.broadcast(RealtimeEnvelope(
-      type: RealtimeType.groupStateBatch,
-      payload: <String, dynamic>{
+    // V3.0.5 hotfix — split the state into small frames: the first frame
+    // carries the group doc + member roster, every frame carries a slice
+    // of activities (≤ [kGroupStateEventsPerFrame]). The ingest side is
+    // insert-only idempotent, so frame order and duplication are safe.
+    var index = 0;
+    var firstFrame = true;
+    do {
+      final slice = <Map<String, dynamic>>[];
+      while (slice.length < kGroupStateEventsPerFrame &&
+          index < eventPayloads.length) {
+        slice.add(eventPayloads[index]);
+        index++;
+      }
+      final frame = <String, dynamic>{
         'groupId': groupId,
         'requesterId': requesterId,
-        'group': group.toMap(),
-        'members': memberPayloads,
-        'events': eventPayloads,
-      },
-      senderId: me,
-      timestamp: Timestamps.nowUtc(),
-    ));
+        'events': slice,
+      };
+      if (firstFrame) {
+        frame['group'] = group.toMap();
+        frame['members'] = memberPayloads;
+        firstFrame = false;
+      }
+      await _transport.broadcast(RealtimeEnvelope(
+        type: RealtimeType.groupStateBatch,
+        payload: frame,
+        senderId: me,
+        timestamp: Timestamps.nowUtc(),
+      ));
+    } while (index < eventPayloads.length);
   }
 
   /// Ingests a state batch that answers OUR request: materializes missing

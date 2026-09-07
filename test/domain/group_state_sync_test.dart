@@ -354,4 +354,60 @@ void main() {
     expect(eventSignals, contains(joined.id),
         reason: 'activity ingest must notify the Activities tab');
   });
+
+  test('V3.0.5 hotfix: state batch is split into small frames', () async {
+    // Owner side: group + 20 activities → 20 / 8 = at least 3 frames.
+    final group = GroupCollection()..name = 'Фреймы';
+    group.ownerId = 'alice';
+    group.inviteCode = code;
+    final created = await alice.groups.create(group);
+    await alice.members.addMember(
+      groupId: created.id,
+      userId: 'alice',
+      role: GroupRole.owner.name,
+      addedBy: 'alice',
+    );
+    for (var i = 0; i < 20; i++) {
+      await alice.events.create(EventCollection()
+        ..title = 'Активность $i'
+        ..startAt = 1725600000000 + i * 60000
+        ..groupId = created.id
+        ..organizerId = 'alice');
+    }
+
+    // Bob joins via the slim payload.
+    final joined = await bob.groupService.acceptInvitation(
+      user: bob.auth.current!,
+      payload: alice.groupService.invitationPayload(created),
+    );
+    await bob.sync.requestGroupState(joined.id, code);
+    await settle();
+
+    final batches = alice.hub.sent
+        .where((e) => e.type == RealtimeType.groupStateBatch)
+        .toList();
+    expect(batches.length, greaterThanOrEqualTo(3),
+        reason: '20 activities at 8 per frame must be split');
+
+    // Every frame is small — no oversized datagrams, no reliance on
+    // Wi-Fi IP fragmentation of broadcast packets.
+    for (final b in batches) {
+      final events = b.payload['events'] as List;
+      expect(events.length, lessThanOrEqualTo(kGroupStateEventsPerFrame));
+    }
+
+    // Group doc + roster ride on the FIRST frame only.
+    expect(batches.first.payload['group'], isNotNull);
+    expect(batches.first.payload['members'], isNotNull);
+    for (final b in batches.skip(1)) {
+      expect(b.payload.containsKey('group'), isFalse);
+      expect(b.payload.containsKey('members'), isFalse);
+    }
+
+    // The joiner materialized the whole state anyway — ingest is
+    // idempotent and frame-order tolerant.
+    expect((await bob.events.byGroup(joined.id)).length, 20);
+    expect((await bob.members.byGroup(joined.id)).map((m) => m.userId),
+        contains('alice'));
+  });
 }
