@@ -46,12 +46,25 @@ class QrCodeDialog extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
               ),
-              child: QrImageView(
-                data: uri,
-                version: QrVersions.auto,
-                size: 220,
-                backgroundColor: Colors.white,
-              ),
+              child: Builder(builder: (context) {
+                // V3.0.5 (bug 3) — render the QR as LARGE as the dialog
+                // allows (bounded by the screen). Smaller modules are much
+                // easier for weak cameras (Android 13) to resolve; the
+                // payload slimming keeps the version low.
+                final screenWidth = MediaQuery.sizeOf(context).width;
+                final qrSize =
+                    (screenWidth - 96).clamp(240.0, 360.0).toDouble();
+                return QrImageView(
+                  data: uri,
+                  version: QrVersions.auto,
+                  size: qrSize,
+                  // EC level L carries the least redundancy — fewer modules
+                  // for the same payload (the full URI is also shown below
+                  // as text, so partial damage is recoverable by copy).
+                  errorCorrectionLevel: QrErrorCorrectLevel.L,
+                  backgroundColor: Colors.white,
+                );
+              }),
             ),
             const SizedBox(height: DesignTokens.space3),
             SelectableText(

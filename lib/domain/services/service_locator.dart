@@ -187,6 +187,7 @@ Future<void> setupServiceLocator() async {
         notifications: serviceLocator<SystemNotificationService>(),
         groupRepository: serviceLocator<GroupRepository>(),
         userRepository: serviceLocator<UserRepository>(),
+        participantRepository: serviceLocator<ParticipantRepository>(),
         isAppInBackground: () {
           final state =
               WidgetsBinding.instance.lifecycleState ?? AppLifecycleState.resumed;

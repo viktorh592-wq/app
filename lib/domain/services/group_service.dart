@@ -357,11 +357,34 @@ class GroupService {
   /// The receiver passes this map to [acceptInvitation] to materialize
   /// the group locally.
   ///
-  /// V3.0.3 fix (user feedback): the payload also includes the list of
-  /// group members (with displayName / username / role / canInvite) and
-  /// the list of activities in the group so the receiver sees the same
-  /// roster and activities after joining.
-  Future<Map<String, dynamic>> invitationPayload(GroupCollection group) async {
+  /// V3.0.5 (bug 3 — user feedback): the QR payload was slimmed down to
+  /// the ESSENTIALS (id / name / invite code / owner / type) so the QR
+  /// code stays easy to scan even on devices with weaker cameras
+  /// (Android 13). Members and activities are NO LONGER embedded — the
+  /// joiner pulls them over the network via [RealtimeType.groupStateRequest]
+  /// right after the join. [acceptInvitation] still accepts the legacy
+  /// full payloads from older builds.
+  Map<String, dynamic> invitationPayload(GroupCollection group) {
+    return {
+      'id': group.id,
+      'name': group.name,
+      'description': group.description,
+      'type': group.type,
+      'ownerId': group.ownerId,
+      'inviteCode': group.inviteCode,
+      'defaultAccentColor': group.defaultAccentColor,
+      'discoverable': group.discoverable,
+    };
+  }
+
+  /// Full group state for the [RealtimeType.groupStateBatch] reply
+  /// (V3.0.5 bug 3): group doc + member roster (with display names) +
+  /// activities, capped so one UDP datagram stays comfortably below the
+  /// transport limit. [eventsLimit] bounds the activity list.
+  Future<Map<String, dynamic>?> groupStatePayload(
+    GroupCollection group, {
+    int eventsLimit = 50,
+  }) async {
     final members = await _memberRepository.byGroup(group.id);
     final memberPayloads = <Map<String, dynamic>>[];
     for (final m in members) {
@@ -378,7 +401,10 @@ class GroupService {
 
     final activities = await _eventRepository.byGroup(group.id);
     final activityPayloads = <Map<String, dynamic>>[];
+    var count = 0;
     for (final a in activities) {
+      if (count >= eventsLimit) break;
+      count++;
       activityPayloads.add({
         'id': a.id,
         'title': a.title,
@@ -397,16 +423,18 @@ class GroupService {
     }
 
     return {
-      'id': group.id,
-      'name': group.name,
-      'description': group.description,
-      'type': group.type,
-      'ownerId': group.ownerId,
-      'inviteCode': group.inviteCode,
-      'defaultAccentColor': group.defaultAccentColor,
-      'discoverable': group.discoverable,
+      'group': {
+        'id': group.id,
+        'name': group.name,
+        'description': group.description,
+        'type': group.type,
+        'ownerId': group.ownerId,
+        'inviteCode': group.inviteCode,
+        'defaultAccentColor': group.defaultAccentColor,
+        'discoverable': group.discoverable,
+      },
       'members': memberPayloads,
-      'activities': activityPayloads,
+      'events': activityPayloads,
     };
   }
 

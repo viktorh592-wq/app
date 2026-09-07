@@ -83,6 +83,12 @@ class DeepLinkDispatcher {
           // the group page must open instantly regardless of network state.
           unawaited(
               serviceLocator<ChatSyncService>().requestHistory(group.id));
+          // V3.0.5 (bug 3) — the QR payload no longer embeds members /
+          // activities: pull the full group state over the network right
+          // after the join.
+          final joinCode = group.inviteCode ?? link.payload;
+          unawaited(serviceLocator<ChatSyncService>()
+              .requestGroupState(group.id, joinCode));
           // V3.0.5 (bug 2) — subscribe the new group on the internet relay
           // so mobile-network delivery starts immediately.
           final communication = serviceLocator<CommunicationService>();

@@ -198,31 +198,30 @@ void main() {
 
   // V3.0.3 fix (user feedback) — the invitation payload now carries the
   // full member roster + activities, and the receiver materializes them.
-  group('V3.0.3 — invitation payload + acceptInvitation', () {
-    test('invitationPayload includes members and activities', () async {
+  // V3.0.5: the QR payload was slimmed down (bug 3) — members / activities
+  // now arrive via the groupState sync; acceptInvitation keeps supporting
+  // the legacy full payloads from older builds.
+  group('V3.0.3/V3.0.5 — invitation payload + acceptInvitation', () {
+    test('invitationPayload is slim — no members / activities (V3.0.5)',
+        () async {
       final owner = await makeUser('Alex');
       final group = await service.createGroup(
         owner: owner,
         name: 'Crew',
         type: GroupType.public,
       );
-      final payload = await service.invitationPayload(group);
+      final payload = service.invitationPayload(group);
       expect(payload['id'], group.id);
       expect(payload['name'], 'Crew');
-      expect(payload['members'], isA<List<dynamic>>());
-      // Owner is auto-added as a member with canInvite = true.
-      final members = payload['members'] as List<dynamic>;
-      expect(members.length, 1);
-      expect(members.first['userId'], owner.id);
-      expect(members.first['role'], GroupRole.owner.name);
-      expect(members.first['canInvite'], isTrue);
-      // activities starts empty for a fresh group.
-      expect(payload['activities'], isA<List<dynamic>>());
-      expect((payload['activities'] as List<dynamic>).isEmpty, isTrue);
+      expect(payload['inviteCode'], isNotNull);
+      expect(payload.containsKey('members'), isFalse,
+          reason: 'V3.0.5: members are no longer embedded in the QR');
+      expect(payload.containsKey('activities'), isFalse,
+          reason: 'V3.0.5: activities are no longer embedded in the QR');
     });
 
-    test('acceptInvitation materializes members and activities on the '
-        'receiver device', () async {
+    test('acceptInvitation materializes members and activities from a '
+        'LEGACY full payload on the receiver device', () async {
       // Sender side: owner creates a group, invites a friend, creates an
       // activity in the group.
       final owner = await makeUser('Alex');
@@ -237,25 +236,46 @@ void main() {
         user: friend,
         addedBy: owner.id,
       );
-      // Build the payload (simulating what the QR / share link carries).
-      final payload = await service.invitationPayload(group);
+      // Build a LEGACY full payload (what V3.0.3 QRs carried) to pin the
+      // backwards-compatible materialization path.
+      final payload = service.invitationPayload(group);
+      payload['members'] = [
+        {
+          'userId': owner.id,
+          'displayName': 'Alex',
+          'username': 'alex',
+          'role': GroupRole.owner.name,
+          'canInvite': true,
+          'joinedAt': null,
+        },
+        {
+          'userId': friend.id,
+          'displayName': 'Bro',
+          'username': 'bro',
+          'role': GroupRole.member.name,
+          'canInvite': false,
+          'joinedAt': null,
+        },
+      ];
       // Inject an activity into the payload (as the QR would carry it).
       final activityId = UuidGenerator.generate();
-      (payload['activities'] as List).add({
-        'id': activityId,
-        'title': 'Night Ride',
-        'description': 'desc',
-        'startAt': Timestamps.nowUtc() + 86400000,
-        'activityTypeId': 'MTB',
-        'visibility': EventVisibility.public.name,
-        'organizerId': owner.id,
-        'meetingPoint': {'lat': 50.45, 'lng': 30.52},
-        'meetingPointLabel': 'Park',
-        'maxParticipants': null,
-        'accentColor': 0xFF9B8AFB,
-        'pinnedInGroup': false,
-        'status': EventStatus.preparation.name,
-      });
+      payload['activities'] = [
+        {
+          'id': activityId,
+          'title': 'Night Ride',
+          'description': 'desc',
+          'startAt': Timestamps.nowUtc() + 86400000,
+          'activityTypeId': 'MTB',
+          'visibility': EventVisibility.public.name,
+          'organizerId': owner.id,
+          'meetingPoint': {'lat': 50.45, 'lng': 30.52},
+          'meetingPointLabel': 'Park',
+          'maxParticipants': null,
+          'accentColor': 0xFF9B8AFB,
+          'pinnedInGroup': false,
+          'status': EventStatus.preparation.name,
+        }
+      ];
 
       // Receiver side: simulate a fresh device by creating a new in-memory
       // DB and a guest user.
@@ -330,7 +350,17 @@ void main() {
         name: 'Crew',
         type: GroupType.public,
       );
-      final payload = await service.invitationPayload(group);
+      final payload = service.invitationPayload(group);
+      payload['members'] = [
+        {
+          'userId': owner.id,
+          'displayName': 'Alex',
+          'username': 'alex',
+          'role': GroupRole.owner.name,
+          'canInvite': true,
+          'joinedAt': null,
+        },
+      ];
 
       final rxDb = await DatabaseService.memory();
       final rxService = GroupService(

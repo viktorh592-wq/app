@@ -355,7 +355,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
   Future<String> _buildInviteUri(GroupCollection group) async {
     final groupService = serviceLocator<GroupService>();
     final identity = serviceLocator<IdentityService>();
-    final payload = await groupService.invitationPayload(group);
+    final payload = groupService.invitationPayload(group);
     return identity.groupUriWithPayload(
       inviteCode: group.inviteCode ?? '',
       payload: payload,

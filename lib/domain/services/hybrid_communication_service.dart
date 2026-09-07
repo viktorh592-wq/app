@@ -67,6 +67,8 @@ class HybridCommunicationService extends LocalNetworkCommunicationService {
     RealtimeType.chatAck,
     RealtimeType.chatHistoryRequest,
     RealtimeType.chatHistoryBatch,
+    RealtimeType.groupStateRequest,
+    RealtimeType.groupStateBatch,
   };
 
   /// Boots the relay connection and subscribes all known groups.
