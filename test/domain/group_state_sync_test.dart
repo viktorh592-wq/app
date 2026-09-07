@@ -309,4 +309,49 @@ void main() {
         contains('alice'));
     expect(await bob.events.getById(event.id), isNotNull);
   });
+
+  test('V3.0.5 hotfix: UI change streams fire when the state batch lands',
+      () async {
+    // Owner side: group + owner membership + one activity.
+    final group = GroupCollection()..name = 'Сигналы';
+    group.ownerId = 'alice';
+    group.inviteCode = code;
+    final created = await alice.groups.create(group);
+    await alice.members.addMember(
+      groupId: created.id,
+      userId: 'alice',
+      role: GroupRole.owner.name,
+      addedBy: 'alice',
+    );
+    final event = EventCollection()
+      ..title = 'Сигнальная активность'
+      ..startAt = 1725600000000
+      ..groupId = created.id
+      ..organizerId = 'alice';
+    await alice.events.create(event);
+
+    // Bob joins via the slim payload — his local state is minimal.
+    final joined = await bob.groupService.acceptInvitation(
+      user: bob.auth.current!,
+      payload: alice.groupService.invitationPayload(created),
+    );
+
+    // Bob's open group page subscribes exactly like the tabs do.
+    final memberSignals = <String>[];
+    final eventSignals = <String>[];
+    final sub1 = bob.members.groupChanges.listen(memberSignals.add);
+    final sub2 = bob.events.groupChanges.listen(eventSignals.add);
+
+    await bob.sync.requestGroupState(joined.id, code);
+    await settle();
+    await sub1.cancel();
+    await sub2.cancel();
+
+    // The page got reload signals for THIS group — that is what makes the
+    // Members / Activities tabs fill in without leaving the page.
+    expect(memberSignals, contains(joined.id),
+        reason: 'roster ingest must notify the Members tab');
+    expect(eventSignals, contains(joined.id),
+        reason: 'activity ingest must notify the Activities tab');
+  });
 }

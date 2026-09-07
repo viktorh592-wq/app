@@ -48,6 +48,11 @@ class _GroupActivitiesTabState extends State<GroupActivitiesTab>
   final _searchController = TextEditingController();
   Timer? _debounce;
 
+  /// V3.0.5 hotfix — reload when activities arrive over the network (a
+  /// groupState batch after a slim QR join). Debounced.
+  StreamSubscription<String>? _activityChanges;
+  Timer? _reloadDebounce;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -55,11 +60,22 @@ class _GroupActivitiesTabState extends State<GroupActivitiesTab>
   void initState() {
     super.initState();
     _load();
+    _activityChanges = serviceLocator<EventRepository>()
+        .groupChanges
+        .where((g) => g == widget.group.id)
+        .listen((_) {
+      _reloadDebounce?.cancel();
+      _reloadDebounce = Timer(const Duration(milliseconds: 150), () {
+        if (mounted) setState(_load);
+      });
+    });
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
+    _reloadDebounce?.cancel();
+    _activityChanges?.cancel();
     _searchController.dispose();
     super.dispose();
   }

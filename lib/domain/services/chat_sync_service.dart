@@ -523,5 +523,12 @@ class ChatSyncService {
         }
       }
     }
+
+    // V3.0.5 hotfix — one final change signal AFTER everything is written
+    // (the per-write notifications from the repositories may fire before
+    // organizer participants are added). The open group page reloads on
+    // this event and shows the complete state.
+    _members.notifyGroupChanged(groupId);
+    _events.notifyGroupChanged(groupId);
   }
 }

@@ -1,5 +1,12 @@
 /// Group member repository (V2 GROUPS_AND_ACTIVITIES.md §4).
 /// Membership link User ↔ Group with role; soft-delete on leave/remove.
+///
+/// V3.0.5 hotfix: carries a lightweight per-group change stream so UI
+/// (group detail tabs) can reload when memberships arrive over the network
+/// (groupStateBatch ingest) — previously the Members tab loaded once in
+/// initState and never reflected late-arriving roster data.
+import 'dart:async';
+
 import 'package:sembast/sembast.dart';
 
 import 'package:pokatuha/core/utils/timestamps.dart';
@@ -10,6 +17,17 @@ import 'package:pokatuha/database/database.dart';
 class GroupMemberRepository {
   GroupMemberRepository(this._db);
   final DatabaseService _db;
+
+  final StreamController<String> _groupChanges =
+      StreamController<String>.broadcast();
+
+  /// Emits the groupId whose membership roster changed (add / update /
+  /// remove / network ingest). Listen and reload the open group page.
+  Stream<String> get groupChanges => _groupChanges.stream;
+
+  void notifyGroupChanged(String groupId) {
+    if (!_groupChanges.isClosed) _groupChanges.add(groupId);
+  }
 
   TypedStore<GroupMemberCollection> get _store => _db.groupMembersStore;
 
@@ -71,7 +89,9 @@ class GroupMemberRepository {
       ..joinedAt = now
       ..canInvite = canInvite
       ..createdBy = addedBy;
-    return _store.put(member);
+    final saved = await _store.put(member);
+    notifyGroupChanged(groupId);
+    return saved;
   }
 
   /// Update role and canInvite flag (V3.0.3 fix — admin grants invite rights).
@@ -85,7 +105,9 @@ class GroupMemberRepository {
     if (canInvite != null) member.canInvite = canInvite;
     member.touch(Timestamps.nowUtc());
     member.updatedBy = by;
-    return _store.put(member);
+    final saved = await _store.put(member);
+    notifyGroupChanged(member.groupId);
+    return saved;
   }
 
   /// Soft-delete a membership (leave / remove).
@@ -95,5 +117,10 @@ class GroupMemberRepository {
   }) async {
     member.softDelete(Timestamps.nowUtc(), by: by);
     await _store.put(member);
+    notifyGroupChanged(member.groupId);
+  }
+
+  void dispose() {
+    _groupChanges.close();
   }
 }

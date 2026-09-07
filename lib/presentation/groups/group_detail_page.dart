@@ -6,10 +6,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'dart:async';
+
 import 'package:pokatuha/core/errors/app_error.dart';
 import 'package:pokatuha/core/tokens/design_tokens.dart';
 import 'package:pokatuha/database/collections/group_collection.dart';
 import 'package:pokatuha/database/collections/user_collection.dart';
+import 'package:pokatuha/domain/repositories/event_repository.dart';
+import 'package:pokatuha/domain/repositories/group_member_repository.dart';
 import 'package:pokatuha/domain/repositories/group_repository.dart';
 import 'package:pokatuha/domain/services/group_service.dart';
 import 'package:pokatuha/domain/services/identity_service.dart';
@@ -42,14 +46,30 @@ class _GroupDetailPageState extends State<GroupDetailPage>
   bool _canManage = false;
   bool _loading = true;
 
+  /// V3.0.5 hotfix — reload the group header when network sync materializes
+  /// late data (groupStateBatch ingest after a slim QR join). The tabs keep
+  /// their own subscriptions for their lists.
+  StreamSubscription<String>? _membersChanges;
+  StreamSubscription<String>? _eventsChanges;
+
   @override
   void initState() {
     super.initState();
     _load();
+    _membersChanges = serviceLocator<GroupMemberRepository>()
+        .groupChanges
+        .where((g) => g == widget.groupId)
+        .listen((_) => _load());
+    _eventsChanges = serviceLocator<EventRepository>()
+        .groupChanges
+        .where((g) => g == widget.groupId)
+        .listen((_) => _load());
   }
 
   @override
   void dispose() {
+    _membersChanges?.cancel();
+    _eventsChanges?.cancel();
     _tabController?.removeListener(_onTabChanged);
     _tabController?.dispose();
     super.dispose();

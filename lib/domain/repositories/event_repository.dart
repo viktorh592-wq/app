@@ -1,5 +1,10 @@
 /// Activity / event repository (FR-001, FR-002, FR-009).
 /// Enforces soft-delete filtering (Soft_Delete.md).
+///
+/// V3.0.5 hotfix: per-group change stream so the open group page reloads
+/// when activities arrive over the network (groupStateBatch ingest).
+import 'dart:async';
+
 import 'package:sembast/sembast.dart';
 
 import 'package:pokatuha/core/errors/app_error.dart';
@@ -13,6 +18,18 @@ import 'package:pokatuha/domain/enums/enums.dart';
 class EventRepository {
   EventRepository(this._db);
   final DatabaseService _db;
+
+  final StreamController<String> _groupChanges =
+      StreamController<String>.broadcast();
+
+  /// Emits the groupId whose activity list changed (create / update /
+  /// delete / network ingest). Listen and reload the open group page.
+  Stream<String> get groupChanges => _groupChanges.stream;
+
+  void notifyGroupChanged(String groupId) {
+    if (groupId.isEmpty || _groupChanges.isClosed) return;
+    _groupChanges.add(groupId);
+  }
 
   TypedStore<EventCollection> get _store => _db.eventsStore;
 
@@ -74,12 +91,16 @@ class EventRepository {
       ..visibility = event.visibility.isEmpty
           ? EventVisibility.private.name
           : event.visibility;
-    return _store.put(event);
+    final saved = await _store.put(event);
+    notifyGroupChanged(event.groupId ?? '');
+    return saved;
   }
 
   Future<EventCollection> update(EventCollection event) async {
     event.touch(Timestamps.nowUtc());
-    return _store.put(event);
+    final saved = await _store.put(event);
+    notifyGroupChanged(event.groupId ?? '');
+    return saved;
   }
 
   /// Soft delete (Soft_Delete.md). Never deletes another activity's
@@ -87,6 +108,7 @@ class EventRepository {
   Future<void> softDelete(EventCollection event, {String? by}) async {
     event.softDelete(Timestamps.nowUtc(), by: by);
     await _store.put(event);
+    notifyGroupChanged(event.groupId ?? '');
   }
 
   /// V3.0.3 fix (user feedback): upsert an activity that was received via
@@ -100,6 +122,12 @@ class EventRepository {
     if (event.createdAt == 0) event.createdAt = Timestamps.nowUtc();
     if (event.updatedAt == 0) event.updatedAt = Timestamps.nowUtc();
     if (event.version < 1) event.version = 1;
-    return _store.put(event);
+    final saved = await _store.put(event);
+    notifyGroupChanged(event.groupId ?? '');
+    return saved;
+  }
+
+  void dispose() {
+    _groupChanges.close();
   }
 }

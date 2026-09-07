@@ -17,6 +17,7 @@
 ///       - promote / demote the member's role (admin ↔ member, owner only).
 ///   • The owner / admin rows show a badge with the canInvite state so it
 ///     is visible at a glance which members have the right to invite.
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -54,6 +55,12 @@ class _GroupMembersTabState extends State<GroupMembersTab>
     with AutomaticKeepAliveClientMixin {
   late Future<_MembersData> _future;
 
+  /// V3.0.5 hotfix — reload when the roster changes (e.g. a groupState
+  /// batch arrived over the network after a slim QR join). Debounced so a
+  /// burst of ingest events triggers one reload.
+  StreamSubscription<String>? _rosterChanges;
+  Timer? _reloadDebounce;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -61,6 +68,22 @@ class _GroupMembersTabState extends State<GroupMembersTab>
   void initState() {
     super.initState();
     _load();
+    _rosterChanges = serviceLocator<GroupMemberRepository>()
+        .groupChanges
+        .where((g) => g == widget.group.id)
+        .listen((_) {
+      _reloadDebounce?.cancel();
+      _reloadDebounce = Timer(const Duration(milliseconds: 150), () {
+        if (mounted) setState(_load);
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _reloadDebounce?.cancel();
+    _rosterChanges?.cancel();
+    super.dispose();
   }
 
   void _load() {
