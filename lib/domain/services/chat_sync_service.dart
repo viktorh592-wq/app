@@ -94,6 +94,14 @@ class ChatSyncService {
 
   StreamSubscription<RealtimeEnvelope>? _subscription;
   final Map<String, DateTime> _lastHistoryRequestAt = <String, DateTime>{};
+
+  /// V3.0.5 hotfix — SEPARATE cooldown map. It previously shared
+  /// [_lastHistoryRequestAt] with [requestHistory], so the dispatcher's
+  /// back-to-back «requestHistory(group)» + «requestGroupState(group)»
+  /// after a QR join suppressed the state request silently: the joiner
+  /// never received members / activities and the group page stayed empty.
+  final Map<String, DateTime> _lastGroupStateRequestAt =
+      <String, DateTime>{};
   bool _started = false;
 
   /// Current user id, or null when onboarding is not finished yet.
@@ -318,11 +326,13 @@ class ChatSyncService {
     final me = _me;
     if (me == null || groupId.isEmpty || code.trim().isEmpty) return;
     final now = DateTime.now();
-    final last = _lastHistoryRequestAt[groupId];
+    // Own cooldown bucket — the history request fired by the dispatcher
+    // right before this call must NOT throttle the state request.
+    final last = _lastGroupStateRequestAt[groupId];
     if (last != null && now.difference(last) < kHistoryRequestCooldown) {
       return;
     }
-    _lastHistoryRequestAt[groupId] = now;
+    _lastGroupStateRequestAt[groupId] = now;
     await _transport.broadcast(RealtimeEnvelope(
       type: RealtimeType.groupStateRequest,
       payload: <String, dynamic>{

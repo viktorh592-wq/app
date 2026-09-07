@@ -66,6 +66,15 @@ class DeepLinkDispatcher {
             // device missed since the last visit (V3.0.4 bug 1).
             unawaited(
                 serviceLocator<ChatSyncService>().requestHistory(existing.id));
+            // V3.0.5 hotfix — a re-scan also re-pulls the full group state.
+            // This is the self-heal path for groups joined before the state
+            // sync worked (the joiner's Members / Activities tabs stayed
+            // empty) — one more scan fills them in.
+            final rescanCode = (existing.inviteCode?.trim().isNotEmpty == true)
+                ? existing.inviteCode!
+                : link.payload;
+            unawaited(serviceLocator<ChatSyncService>()
+                .requestGroupState(existing.id, rescanCode));
             _toast(l.alreadyInGroup);
             _push(GroupDetailPage(groupId: existing.id));
             return;

@@ -258,4 +258,55 @@ void main() {
     expect(after!.title, 'СВОЯ локальная версия',
         reason: 'ingest is insert-only — local state wins');
   });
+
+  test('V3.0.5 hotfix: history request must not throttle the state request',
+      () async {
+    // Owner side: group + owner membership + one activity.
+    final group = GroupCollection()..name = 'Кулдауны';
+    group.ownerId = 'alice';
+    group.inviteCode = code;
+    final created = await alice.groups.create(group);
+    await alice.members.addMember(
+      groupId: created.id,
+      userId: 'alice',
+      role: GroupRole.owner.name,
+      addedBy: 'alice',
+    );
+    final event = EventCollection()
+      ..title = 'Проверка кулдаунов'
+      ..startAt = 1725600000000
+      ..groupId = created.id
+      ..organizerId = 'alice';
+    await alice.events.create(event);
+
+    // Bob joins via the slim payload.
+    final joined = await bob.groupService.acceptInvitation(
+      user: bob.auth.current!,
+      payload: alice.groupService.invitationPayload(created),
+    );
+
+    // EXACT dispatcher sequence (deep_link_dispatcher.dart): the history
+    // request is fired first, the state request immediately after. Before
+    // the hotfix both shared one cooldown map keyed by groupId, so the
+    // state request was silently dropped and the group page stayed empty.
+    await bob.sync.requestHistory(joined.id);
+    await bob.sync.requestGroupState(joined.id, code);
+    await settle();
+
+    // The state request really left the device…
+    expect(
+        bob.hub.sent.where((e) => e.type == RealtimeType.groupStateRequest),
+        isNotEmpty);
+    // …and alice answered it (the batch is sent by the OWNER device).
+    final batches = alice.hub.sent
+        .where((e) => e.type == RealtimeType.groupStateBatch)
+        .toList();
+    expect(batches, isNotEmpty,
+        reason: 'state request must NOT be suppressed by the history cooldown');
+
+    // The group page data is now on bob's device.
+    expect((await bob.members.byGroup(joined.id)).map((m) => m.userId),
+        contains('alice'));
+    expect(await bob.events.getById(event.id), isNotNull);
+  });
 }
