@@ -1,8 +1,16 @@
 /// Event service — orchestrates activity lifecycle enforcing business rules
 /// (BR-001..BR-010) and the activity timeline (BR-010).
+///
+/// V3.0.7 (bug 2) — activity create / edit now BROADCASTS the change to all
+/// group members over the realtime transport so every member's device
+/// updates its local copy of the activity without needing a QR rescan.
+/// Edit permission is enforced: only the organizer of the activity OR the
+/// owner / admin of the parent group may edit (the user chose option C).
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:pokatuha/core/errors/app_error.dart';
+import 'package:pokatuha/core/utils/timestamps.dart';
 import 'package:pokatuha/database/collections/embedded/geo_point.dart';
 import 'package:pokatuha/database/collections/event_collection.dart';
 import 'package:pokatuha/database/collections/participant_collection.dart';
@@ -10,7 +18,9 @@ import 'package:pokatuha/database/collections/user_collection.dart';
 import 'package:pokatuha/domain/enums/enums.dart';
 import 'package:pokatuha/domain/repositories/archive_repository.dart';
 import 'package:pokatuha/domain/repositories/event_repository.dart';
+import 'package:pokatuha/domain/repositories/group_member_repository.dart';
 import 'package:pokatuha/domain/repositories/participant_repository.dart';
+import 'package:pokatuha/domain/services/communication_service.dart';
 
 /// A timeline entry (BR-010 — every significant action is recorded).
 class TimelineEntry {
@@ -38,12 +48,24 @@ class EventService {
   EventService(
     this._eventRepository,
     this._participantRepository,
-    this._archiveRepository,
-  );
+    this._archiveRepository, {
+    CommunicationService? transport,
+    GroupMemberRepository? memberRepository,
+  })  : _transport = transport,
+        _memberRepository = memberRepository;
 
   final EventRepository _eventRepository;
   final ParticipantRepository _participantRepository;
   final ArchiveRepository _archiveRepository;
+
+  /// Optional realtime transport (V3.0.7 bug 2) — when present, activity
+  /// create / edit broadcasts the change to all group members so their
+  /// devices upsert the activity locally. Null in unit tests.
+  final CommunicationService? _transport;
+
+  /// Optional group member repository (V3.0.7 bug 2) — used to enforce
+  /// edit permission (only organizer OR owner/admin of the group may edit).
+  final GroupMemberRepository? _memberRepository;
 
   final List<TimelineEntry> _timelines = <TimelineEntry>[];
 
@@ -115,6 +137,16 @@ class EventService {
           detail: created.title,
           actorId: organizer.id,
         ));
+
+    // V3.0.7 bug 2 — broadcast the freshly-created activity to every member
+    // of the group so their Activities tab updates immediately (no QR rescan
+    // needed). Local-first: the broadcast is best-effort, the local copy is
+    // already authoritative.
+    await _broadcastActivityUpsert(
+      event: created,
+      byUserId: organizer.id,
+      op: 'create',
+    );
 
     return created;
   }
@@ -203,6 +235,15 @@ class EventService {
 
   /// Edit an existing activity (V2 §9 — activity menu → Edit). Validates the
   /// same invariants as creation (title, start time).
+  ///
+  /// V3.0.7 (bug 2) — ENFORCES edit permission: only the organizer of this
+  /// activity OR the owner / admin of the parent group may edit. A regular
+  /// member cannot edit someone else's activity (user chose option C). The
+  /// edited activity is then broadcast to all group members so their
+  /// Activities tab updates to the latest version.
+  ///
+  /// [byUserId] — the user attempting the edit. When null (legacy callers /
+  /// tests), the permission check is skipped (backwards compatibility).
   Future<EventCollection> editActivity({
     required EventCollection event,
     required String title,
@@ -215,12 +256,20 @@ class EventService {
     EventVisibility? visibility,
     int? maxParticipants,
     int? accentColor,
+    String? byUserId,
   }) async {
     if (title.trim().isEmpty) {
       throw const BusinessRuleError('Event title is required');
     }
     if (startAt <= 0) {
       throw const BusinessRuleError('Event start time is required');
+    }
+    // V3.0.7 bug 2 — enforce edit permission. The organizer of THIS activity
+    // OR the owner / admin of the parent group may edit. Regular members may
+    // not (user chose option C). [byUserId] is null only for legacy callers
+    // and tests where the check is intentionally skipped.
+    if (byUserId != null && byUserId.isNotEmpty) {
+      await _ensureCanEditActivity(event, byUserId);
     }
     event
       ..title = title
@@ -242,7 +291,80 @@ class EventService {
           action: 'ride_updated',
           detail: updated.title,
         ));
+
+    // V3.0.7 bug 2 — broadcast the updated activity so every member's device
+    // refreshes its local copy (local-first: existing local copy with a newer
+    // version wins, so concurrent edits never regress).
+    await _broadcastActivityUpsert(
+      event: updated,
+      byUserId: byUserId ?? event.organizerId,
+      op: 'update',
+    );
+
     return updated;
+  }
+
+  /// Throws [BusinessRuleError] when [userId] is NOT allowed to edit this
+  /// activity. Allowed: the organizer of this activity OR the owner / admin
+  /// of the parent group. V3.0.7 bug 2 (user chose option C).
+  Future<void> _ensureCanEditActivity(
+    EventCollection event,
+    String userId,
+  ) async {
+    // The organizer of this activity may always edit.
+    if (event.organizerId == userId) return;
+    // Otherwise check the group role.
+    final groupId = event.groupId;
+    if (groupId == null || groupId.isEmpty) {
+      throw const BusinessRuleError(
+          'Only the organizer may edit this activity');
+    }
+    final members = _memberRepository;
+    if (members == null) {
+      // No member repository available — fail open (legacy callers in tests
+      // that don't wire the member repo). Production callers always wire it.
+      return;
+    }
+    final member = await members.byGroupAndUser(groupId, userId);
+    if (member == null) {
+      throw const BusinessRuleError(
+          'Only the organizer or a group admin may edit this activity');
+    }
+    if (member.role == GroupRole.owner.name ||
+        member.role == GroupRole.admin.name) {
+      return;
+    }
+    throw const BusinessRuleError(
+        'Only the organizer or a group admin may edit this activity');
+  }
+
+  /// Broadcasts an activity upsert (create or update) to all group members
+  /// over the realtime transport. Best-effort: a transport failure leaves
+  /// the local copy authoritative (local-first — ADR-001). V3.0.7 bug 2.
+  Future<void> _broadcastActivityUpsert({
+    required EventCollection event,
+    required String byUserId,
+    required String op, // "create" or "update"
+  }) async {
+    final transport = _transport;
+    if (transport == null) return;
+    final groupId = event.groupId;
+    if (groupId == null || groupId.isEmpty) return;
+    try {
+      await transport.broadcast(RealtimeEnvelope(
+        type: RealtimeType.activityUpsert,
+        payload: <String, dynamic>{
+          'groupId': groupId,
+          'event': event.toMap(),
+          'byUserId': byUserId,
+          'op': op,
+        },
+        senderId: byUserId,
+        timestamp: Timestamps.nowUtc(),
+      ));
+    } catch (_) {
+      // Best-effort — local-first: local copy is already authoritative.
+    }
   }
 
   /// Duplicate an activity (V2 §9 — activity menu → Duplicate): creates a

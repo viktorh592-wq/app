@@ -29,6 +29,15 @@
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
 
+    <!-- V3.0.7 bug 4 — request battery-optimization exemption so the chat
+         keep-alive foreground service survives aggressive OEM Doze (Xiaomi,
+         Huawei, Oppo). Without this, the OS kills the process a few minutes
+         after the user swipes the app away, and incoming chat messages
+         produce no notification. The user must explicitly grant this via a
+         system dialog. -->
+    <uses-permission
+        android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+
     <application
         android:label="Pokatuha"
         android:name="${applicationName}"

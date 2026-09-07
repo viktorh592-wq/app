@@ -20,8 +20,17 @@ import 'package:mqtt_client/mqtt_server_client.dart';
 export 'package:pokatuha/domain/services/relay_codec.dart'
     show kRelayTopicPrefix, openSeal, sealEnvelope, topicForInviteCode;
 
-/// Public bootstrap broker (TLS). See ADR-009 — replace with a
-/// self-hosted instance for production deployments.
+/// Public bootstrap brokers (TLS), tried in order (V3.0.7 — user-reported
+/// bug 3: «chat not working over mobile network»). Multiple brokers give
+/// the connection resilience when one broker is down or rate-limiting.
+/// See ADR-009 — replace with a self-hosted instance for production.
+const List<({String host, int port})> kRelayBrokers = <({String host, int port})>[
+  (host: 'broker.emqx.io', port: 8883),
+  (host: '8f5f4d56b3c04d8a8b3f9c4f7c2e1d6f.s1.eu.hivemq.cloud', port: 8883),
+  (host: 'test.mosquitto.org', port: 8886),
+];
+
+/// Legacy single-host constant kept for backwards compatibility with tests.
 const String kRelayBrokerHost = 'broker.emqx.io';
 const int kRelayBrokerPort = 8883;
 
@@ -61,6 +70,7 @@ class MqttRelayConnection extends RelayConnection {
     required String clientId,
     this.host = kRelayBrokerHost,
     this.port = kRelayBrokerPort,
+    this.brokers = kRelayBrokers,
     RelayMessageHandler? onMessage,
   })  : _clientId = clientId {
     this.onMessage = onMessage;
@@ -69,6 +79,10 @@ class MqttRelayConnection extends RelayConnection {
   final String _clientId;
   final String host;
   final int port;
+
+  /// Broker list tried in order on connect / reconnect. V3.0.7 — multiple
+  /// fallback brokers give chat resilience when one broker is down.
+  final List<({String host, int port})> brokers;
 
   MqttServerClient? _client;
   bool _connecting = false;
@@ -86,7 +100,31 @@ class MqttRelayConnection extends RelayConnection {
     if (_connecting) return false;
     _connecting = true;
     try {
-      final client = MqttServerClient.withPort(host, _clientId, port)
+      // V3.0.7 — try every known broker until one connects. This makes
+      // chat-over-mobile robust to a single public broker being down or
+      // rate-limiting (the original bug 3 root cause).
+      for (final broker in brokers) {
+        final ok = await _connectToBroker(broker.host, broker.port);
+        if (ok) return true;
+      }
+      // Fallback to the legacy single-host constant if the list above
+      // failed entirely (kept for tests that inject a custom host).
+      if (host != kRelayBrokerHost || port != kRelayBrokerPort) {
+        return await _connectToBroker(host, port);
+      }
+      return false;
+    } finally {
+      _connecting = false;
+    }
+  }
+
+  Future<bool> _connectToBroker(String brokerHost, int brokerPort) async {
+    try {
+      final client = MqttServerClient.withPort(
+        brokerHost,
+        '$_clientId-${brokerHost.hashCode.toRadixString(36)}',
+        brokerPort,
+      )
         ..secure = true
         ..autoReconnect = true
         ..resubscribeOnAutoReconnect = true
@@ -95,10 +133,14 @@ class MqttRelayConnection extends RelayConnection {
         ..logging(on: false);
       final status = await client.connect();
       if (status?.state != MqttConnectionState.connected) {
+        try {
+          client.disconnect();
+        } catch (_) {}
         return false;
       }
       _client = client;
-      client.updates?.listen((List<MqttReceivedMessage<MqttMessage>> batch) {
+      client.updates
+          ?.listen((List<MqttReceivedMessage<MqttMessage>> batch) {
         final handler = onMessage;
         if (handler == null) return;
         for (final received in batch) {
@@ -122,8 +164,6 @@ class MqttRelayConnection extends RelayConnection {
       return true;
     } catch (_) {
       return false;
-    } finally {
-      _connecting = false;
     }
   }
 

@@ -1,5 +1,5 @@
+// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -332,7 +332,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get groupTypePrivate => 'Приватная';
 
   @override
-  String get groupTypePrivateHint => 'Не видна в поиске, вход только по приглашению';
+  String get groupTypePrivateHint =>
+      'Не видна в поиске, вход только по приглашению';
 
   @override
   String get groupTypeInviteOnly => 'По приглашению';
@@ -438,7 +439,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noUsersFound => 'Никого не найдено';
 
   @override
-  String get noUsersFoundHint => 'Пользователи появятся после сканирования QR или обмена контактами';
+  String get noUsersFoundHint =>
+      'Пользователи появятся после сканирования QR или обмена контактами';
 
   @override
   String get invalidQr => 'QR-код не распознан';
@@ -563,7 +565,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menuShowOnMap => 'Показать на карте';
 
   @override
-  String get deleteActivityConfirm => 'Удалить эту активность? Запись в архиве сохранится.';
+  String get deleteActivityConfirm =>
+      'Удалить эту активность? Запись в архиве сохранится.';
 
   @override
   String get duplicated => 'Активность продублирована';
@@ -659,7 +662,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatMenuExport => 'Экспорт';
 
   @override
-  String get chatReadOnlyBanner => 'Эта активность в архиве. Чат только для чтения.';
+  String get chatReadOnlyBanner =>
+      'Эта активность в архиве. Чат только для чтения.';
 
   @override
   String get chatVoiceHoldToRecord => 'Удерживайте для записи';
@@ -786,7 +790,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gpsPermissionDenied => 'Доступ к местоположению запрещён';
 
   @override
-  String get gpsPermissionDeniedForever => 'Доступ запрещён навсегда. Откройте настройки, чтобы разрешить.';
+  String get gpsPermissionDeniedForever =>
+      'Доступ запрещён навсегда. Откройте настройки, чтобы разрешить.';
 
   @override
   String get gpsServiceDisabled => 'Службы геолокации отключены';
@@ -798,7 +803,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get gpsForegroundTracking => 'Покатуха делится вашим местоположением';
 
   @override
-  String get gpsForegroundTrackingBody => 'Живая позиция передаётся участникам активности.';
+  String get gpsForegroundTrackingBody =>
+      'Живая позиция передаётся участникам активности.';
 
   @override
   String get pollAnonymous => 'Анонимный';
@@ -871,7 +877,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get importFailed => 'Ошибка импорта';
 
   @override
-  String get fitNotSupported => 'FIT формат не поддерживается (проприетарный бинарный)';
+  String get fitNotSupported =>
+      'FIT формат не поддерживается (проприетарный бинарный)';
 
   @override
   String get unsupportedFormat => 'Неподдерживаемый формат файла';
@@ -985,7 +992,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get elevationLoss => 'Спуск';
 
   @override
-  String get groupNotFound => 'Группа не найдена на этом устройстве. Попросите организатора поделиться группой через QR-код или ссылку.';
+  String get groupNotFound =>
+      'Группа не найдена на этом устройстве. Попросите организатора поделиться группой через QR-код или ссылку.';
 
   @override
   String get activityNotFound => 'Активность не найдена';
@@ -1009,7 +1017,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get fieldRequired => 'Заполните это поле';
 
   @override
-  String get meetingPointHint => 'Нажмите на иконку карты, чтобы задать координаты';
+  String get meetingPointHint =>
+      'Нажмите на иконку карты, чтобы задать координаты';
 
   @override
   String get visibilityPrivate => 'Приватная';
@@ -1027,7 +1036,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get archivedActivityTitle => 'Архивная активность';
 
   @override
-  String get archivedActivityHint => 'Эта активность завершена и доступна только для чтения';
+  String get archivedActivityHint =>
+      'Эта активность завершена и доступна только для чтения';
 
   @override
   String get usernameLabel => 'Ник';
@@ -1060,13 +1070,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get canInvite => 'Может приглашать в активности';
 
   @override
-  String get canInviteHint => 'Позволяет участнику приглашать других пользователей в активности этой группы';
+  String get canInviteHint =>
+      'Позволяет участнику приглашать других пользователей в активности этой группы';
 
   @override
   String get canInviteShort => 'Приглашает';
 
   @override
-  String get privateActivityRequiresInvite => 'Приватная активность — нужно приглашение';
+  String get privateActivityRequiresInvite =>
+      'Приватная активность — нужно приглашение';
 
   @override
   String get alreadyInvited => 'Уже приглашён';
@@ -1087,7 +1099,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get scanStopped => 'Сканирование остановлено';
 
   @override
-  String get cameraPermissionDenied => 'Нет доступа к камере — разрешите камеру в настройках';
+  String get cameraPermissionDenied =>
+      'Нет доступа к камере — разрешите камеру в настройках';
 
   @override
   String get alreadyInGroup => 'Вы уже состоите в этой группе';

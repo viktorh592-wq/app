@@ -1,5 +1,5 @@
+// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -389,7 +389,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noMedia => 'No media yet';
 
   @override
-  String get noMediaHint => 'Photos and videos from group chats will appear here';
+  String get noMediaHint =>
+      'Photos and videos from group chats will appear here';
 
   @override
   String get invite => 'Invite';
@@ -436,7 +437,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noUsersFound => 'No users found';
 
   @override
-  String get noUsersFoundHint => 'Users appear after QR scan or contact exchange';
+  String get noUsersFoundHint =>
+      'Users appear after QR scan or contact exchange';
 
   @override
   String get invalidQr => 'Unrecognized QR code';
@@ -561,7 +563,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuShowOnMap => 'Show on map';
 
   @override
-  String get deleteActivityConfirm => 'Delete this activity? The archive record is kept.';
+  String get deleteActivityConfirm =>
+      'Delete this activity? The archive record is kept.';
 
   @override
   String get duplicated => 'Activity duplicated';
@@ -657,7 +660,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatMenuExport => 'Export';
 
   @override
-  String get chatReadOnlyBanner => 'This activity is archived. The chat is read-only.';
+  String get chatReadOnlyBanner =>
+      'This activity is archived. The chat is read-only.';
 
   @override
   String get chatVoiceHoldToRecord => 'Hold to record';
@@ -784,7 +788,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gpsPermissionDenied => 'Location permission denied';
 
   @override
-  String get gpsPermissionDeniedForever => 'Location permission permanently denied. Open settings to enable.';
+  String get gpsPermissionDeniedForever =>
+      'Location permission permanently denied. Open settings to enable.';
 
   @override
   String get gpsServiceDisabled => 'Location services are disabled';
@@ -796,7 +801,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gpsForegroundTracking => 'Pokatuha is sharing your location';
 
   @override
-  String get gpsForegroundTrackingBody => 'Live position is being shared with activity participants.';
+  String get gpsForegroundTrackingBody =>
+      'Live position is being shared with activity participants.';
 
   @override
   String get pollAnonymous => 'Anonymous';
@@ -869,7 +875,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importFailed => 'Import failed';
 
   @override
-  String get fitNotSupported => 'FIT format is not supported (proprietary binary)';
+  String get fitNotSupported =>
+      'FIT format is not supported (proprietary binary)';
 
   @override
   String get unsupportedFormat => 'Unsupported file format';
@@ -983,7 +990,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get elevationLoss => 'Descent';
 
   @override
-  String get groupNotFound => 'Group not found on this device. Ask the organizer to share the group via QR code or link.';
+  String get groupNotFound =>
+      'Group not found on this device. Ask the organizer to share the group via QR code or link.';
 
   @override
   String get activityNotFound => 'Activity not found';
@@ -1058,13 +1066,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get canInvite => 'May invite to activities';
 
   @override
-  String get canInviteHint => 'Lets this member invite other users to activities in this group';
+  String get canInviteHint =>
+      'Lets this member invite other users to activities in this group';
 
   @override
   String get canInviteShort => 'Invite';
 
   @override
-  String get privateActivityRequiresInvite => 'Private activity — invitation required';
+  String get privateActivityRequiresInvite =>
+      'Private activity — invitation required';
 
   @override
   String get alreadyInvited => 'Already invited';
@@ -1085,7 +1095,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanStopped => 'Scanning paused';
 
   @override
-  String get cameraPermissionDenied => 'No camera access — allow the camera in Settings';
+  String get cameraPermissionDenied =>
+      'No camera access — allow the camera in Settings';
 
   @override
   String get alreadyInGroup => 'You are already a member of this group';

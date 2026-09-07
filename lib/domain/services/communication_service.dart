@@ -56,6 +56,27 @@ enum RealtimeType {
   /// Reply to a state request — the full group snapshot. Payload:
   /// `{groupId, requesterId, group: {...}, members: [...], events: [...]}`.
   groupStateBatch,
+
+  /// Live activity upsert — V3.0.7 bug 2: when an organizer creates or
+  /// edits an activity, the change is broadcast immediately so every
+  /// member of the group sees it without rescanning the QR. Payload:
+  /// `{groupId, event: {...}, byUserId, op: "create"|"update"}`.
+  /// Receivers upsert the event into their local store (local-first:
+  /// existing local copy with newer version wins).
+  activityUpsert,
+
+  /// Live membership change — V3.0.7 bug 1: when an admin adds a member
+  /// to the group, the new member's UserCollection is broadcast so every
+  /// existing member's device materializes the new participant. Payload:
+  /// `{groupId, member: {userId, displayName, username, role, canInvite,
+  ///  joinedAt}, user: {id, displayName, username}, byUserId}`.
+  memberAdded,
+
+  /// Live activity edit permission ack — V3.0.7 bug 2: a member who is
+  /// NOT allowed to edit (not organizer, not owner/admin) gets a denial
+  /// envelope so the UI shows an error. Payload: `{eventId, byUserId,
+  /// reason}`. Never mutates state — purely a UI signal.
+  activityEditDenied,
 }
 
 /// Queued change awaiting synchronization (Offline Mode — UC-005).

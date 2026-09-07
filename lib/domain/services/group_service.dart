@@ -33,6 +33,7 @@ import 'package:pokatuha/domain/repositories/group_member_repository.dart';
 import 'package:pokatuha/domain/repositories/group_repository.dart';
 import 'package:pokatuha/domain/repositories/participant_repository.dart';
 import 'package:pokatuha/domain/repositories/user_repository.dart';
+import 'package:pokatuha/domain/services/communication_service.dart';
 
 class GroupService {
   GroupService(
@@ -40,14 +41,21 @@ class GroupService {
     this._memberRepository,
     this._eventRepository,
     this._userRepository,
-    this._participantRepository,
-  );
+    this._participantRepository, {
+    CommunicationService? transport,
+  }) : _transport = transport;
 
   final GroupRepository _groupRepository;
   final GroupMemberRepository _memberRepository;
   final EventRepository _eventRepository;
   final UserRepository _userRepository;
   final ParticipantRepository _participantRepository;
+
+  /// Optional realtime transport (V3.0.7 bug 1) — when present, adding a
+  /// member broadcasts the new member's UserCollection + membership to all
+  /// existing members so their Members tab updates immediately. Null in
+  /// unit tests.
+  final CommunicationService? _transport;
 
   /// Create a group (GROUPS_AND_ACTIVITIES.md §3). The owner automatically
   /// joins as a member with the `owner` role (§4).
@@ -441,6 +449,12 @@ class GroupService {
   /// Invite a user to a group by nickname-search result / scanned profile
   /// (USER_DISCOVERY.md §4 — «Пригласить в группу»). Enforces the 30-member
   /// cap (ARCHITECTURE_V2.md §3).
+  ///
+  /// V3.0.7 (bug 1) — broadcasts the new member's UserCollection + the
+  /// membership record to all existing members over the realtime transport
+  /// so every member's «Members» tab updates immediately. The admin who
+  /// added the member also sees the change (their own device already wrote
+  /// it locally before the broadcast — local-first).
   Future<void> inviteMember({
     required GroupCollection group,
     required UserCollection user,
@@ -457,12 +471,47 @@ class GroupService {
     if (count >= group.maxMembers) {
       throw const BusinessRuleError('Group is full (max 30 members)');
     }
+    final now = Timestamps.nowUtc();
     await _memberRepository.addMember(
       groupId: group.id,
       userId: user.id,
       role: GroupRole.member.name,
       addedBy: addedBy,
+      joinedAt: now,
     );
+
+    // V3.0.7 bug 1 — broadcast the new member to every existing member so
+    // their Members tab refreshes immediately (no pull-to-refresh needed).
+    // The new member's displayName + username ride along so receivers can
+    // render the row without an extra UserCollection lookup.
+    final transport = _transport;
+    if (transport == null) return;
+    try {
+      await transport.broadcast(RealtimeEnvelope(
+        type: RealtimeType.memberAdded,
+        payload: <String, dynamic>{
+          'groupId': group.id,
+          'member': {
+            'userId': user.id,
+            'displayName': user.displayName,
+            'username': user.username,
+            'role': GroupRole.member.name,
+            'canInvite': false,
+            'joinedAt': now,
+          },
+          'user': {
+            'id': user.id,
+            'displayName': user.displayName,
+            'username': user.username,
+          },
+          'byUserId': addedBy,
+        },
+        senderId: addedBy,
+        timestamp: now,
+      ));
+    } catch (_) {
+      // Best-effort — local-first: the local roster is already authoritative.
+    }
   }
 
   /// Leave a group. The owner must transfer ownership first (§4).

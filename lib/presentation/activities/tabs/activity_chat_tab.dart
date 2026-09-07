@@ -186,6 +186,9 @@ class ActivityChatTabState extends State<ActivityChatTab> {
         authorId: user.id,
         text: text,
         replyToId: _replyTarget?.id,
+        // V3.0.7 bug 5 — pass the author's UserCollection so the receiver
+        // can render the real display name instead of «User xxxxxx».
+        author: user,
       );
       _controller.clear();
       _clearReply();
@@ -250,6 +253,7 @@ class ActivityChatTabState extends State<ActivityChatTab> {
           'size': size,
           'source': source == ImageSource.camera ? 'camera' : 'gallery',
         },
+        author: user,
       );
       if (mounted) setState(_load);
     } on AppError catch (e) {
@@ -309,6 +313,7 @@ class ActivityChatTabState extends State<ActivityChatTab> {
           type: AttachmentType.route,
           attachmentPath: target,
           meta: meta,
+          author: user,
         );
       } else {
         await repo.sendAttachment(
@@ -317,6 +322,7 @@ class ActivityChatTabState extends State<ActivityChatTab> {
           type: AttachmentType.document,
           attachmentPath: target,
           meta: meta,
+          author: user,
         );
       }
       if (mounted) setState(_load);
@@ -343,6 +349,7 @@ class ActivityChatTabState extends State<ActivityChatTab> {
         type: AttachmentType.location,
         attachmentPath: '',
         meta: {'lat': sample.lat, 'lng': sample.lng},
+        author: user,
       );
       if (mounted) setState(_load);
     } on AppError catch (e) {
@@ -525,6 +532,7 @@ class ActivityChatTabState extends State<ActivityChatTab> {
           'elevationGainMeters': stats.elevation,
           'durationSeconds': stats.durationSeconds,
         },
+        author: user,
       );
       if (mounted) setState(_load);
     } on AppError catch (e) {
@@ -677,6 +685,7 @@ class ActivityChatTabState extends State<ActivityChatTab> {
         source: source,
         toEventId: target.id,
         byUserId: user.id,
+        author: user,
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

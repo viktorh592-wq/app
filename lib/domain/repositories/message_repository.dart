@@ -14,6 +14,7 @@ import 'package:pokatuha/core/utils/timestamps.dart';
 import 'package:pokatuha/core/utils/uuid.dart';
 import 'package:pokatuha/core/utils/validators.dart';
 import 'package:pokatuha/database/collections/message_collection.dart';
+import 'package:pokatuha/database/collections/user_collection.dart';
 import 'package:pokatuha/database/database.dart';
 import 'package:pokatuha/domain/enums/enums.dart';
 import 'package:pokatuha/domain/services/communication_service.dart';
@@ -128,6 +129,7 @@ class MessageRepository {
     required String text,
     String? replyToId,
     String? forwardedFrom,
+    UserCollection? author,
   }) async {
     if (!Validators.isValidMessage(text)) {
       throw const ValidationError('Invalid message');
@@ -154,7 +156,7 @@ class MessageRepository {
     final saved = await _store.put(msg);
     await _notifyPinned(eventId);
     notifyChanged(eventId);
-    await _broadcastMessage(saved, authorId: authorId);
+    await _broadcastMessage(saved, authorId: authorId, author: author);
     return saved;
   }
 
@@ -170,6 +172,7 @@ class MessageRepository {
     String? caption,
     String? replyToId,
     Map<String, dynamic>? meta,
+    UserCollection? author,
   }) async {
     final now = Timestamps.nowUtc();
     final msg = MessageCollection()
@@ -191,7 +194,7 @@ class MessageRepository {
     final saved = await _store.put(msg);
     await _notifyPinned(eventId);
     notifyChanged(eventId);
-    await _broadcastMessage(saved, authorId: authorId);
+    await _broadcastMessage(saved, authorId: authorId, author: author);
     return saved;
   }
 
@@ -219,6 +222,7 @@ class MessageRepository {
     required MessageCollection source,
     required String toEventId,
     required String byUserId,
+    UserCollection? author,
   }) async {
     final now = Timestamps.nowUtc();
     final msg = MessageCollection()
@@ -241,7 +245,7 @@ class MessageRepository {
     final saved = await _store.put(msg);
     await _notifyPinned(toEventId);
     notifyChanged(toEventId);
-    await _broadcastMessage(saved, authorId: byUserId);
+    await _broadcastMessage(saved, authorId: byUserId, author: author);
     return saved;
   }
 
@@ -253,9 +257,18 @@ class MessageRepository {
   /// (no post-broadcast write exists that could downgrade it). Failures are
   /// swallowed: the local copy is already persisted; the history sync (last
   /// 50 messages per event) heals any missed deliveries.
+  ///
+  /// V3.0.7 (bug 5) — the envelope payload is ENRICHED with the author's
+  /// display name + username so receivers can render the sender name
+  /// without an extra UserCollection lookup (fixes the «User xxxxxx»
+  /// placeholder bug). The author info is fetched best-effort: when the
+  /// sender's UserCollection is missing locally, the receiver falls back
+  /// to a placeholder just like before — but in practice the sender
+  /// always knows their own name.
   Future<void> _broadcastMessage(
     MessageCollection message, {
     required String authorId,
+    UserCollection? author,
   }) async {
     final transport = _transport;
     if (transport == null) return;
@@ -267,9 +280,17 @@ class MessageRepository {
         await _store.put(message);
         notifyChanged(message.eventId);
       }
+      final payload = message.toMap();
+      // V3.0.7 bug 5 — enrich the envelope with the author's display name
+      // + username so the receiver can render the sender name immediately
+      // (fixes the «User xxxxxx» placeholder reported by the user).
+      if (author != null) {
+        payload['authorDisplayName'] = author.displayName;
+        payload['authorUsername'] = author.username;
+      }
       await transport.broadcast(RealtimeEnvelope(
         type: RealtimeType.chat,
-        payload: message.toMap(),
+        payload: payload,
         senderId: authorId,
         timestamp: Timestamps.nowUtc(),
       ));

@@ -22,10 +22,12 @@ import 'package:pokatuha/domain/repositories/settings_repository.dart';
 import 'package:pokatuha/domain/repositories/statistics_repository.dart';
 import 'package:pokatuha/domain/repositories/user_repository.dart';
 import 'package:pokatuha/domain/services/auth_service.dart';
+import 'package:pokatuha/domain/services/battery_optimization_service.dart';
 import 'package:pokatuha/domain/services/chat_keep_alive_service.dart';
 import 'package:pokatuha/domain/services/chat_sync_service.dart';
 import 'package:pokatuha/domain/services/communication_service.dart';
 import 'package:pokatuha/domain/services/event_service.dart';
+import 'package:pokatuha/domain/services/fcm_push_service.dart';
 import 'package:pokatuha/domain/services/foreground_location_service.dart';
 import 'package:pokatuha/domain/services/geocoding_service.dart';
 import 'package:pokatuha/domain/services/gpx_service.dart';
@@ -93,6 +95,12 @@ Future<void> setupServiceLocator() async {
         serviceLocator<EventRepository>(),
         serviceLocator<ParticipantRepository>(),
         serviceLocator<ArchiveRepository>(),
+        // V3.0.7 bug 2 — broadcast activity create / edit to all group
+        // members over the realtime transport (UDP + MQTT relay).
+        transport: serviceLocator<CommunicationService>(),
+        // V3.0.7 bug 2 — enforce edit permission: only organizer OR owner /
+        // admin of the parent group may edit.
+        memberRepository: serviceLocator<GroupMemberRepository>(),
       ));
   serviceLocator.registerLazySingleton<GpsService>(() => GpsService());
   // V3.0.5 — the foreground service is shared between GPS sharing and the
@@ -118,6 +126,9 @@ Future<void> setupServiceLocator() async {
         serviceLocator<EventRepository>(),
         serviceLocator<UserRepository>(),
         serviceLocator<ParticipantRepository>(),
+        // V3.0.7 bug 1 — broadcast new-member additions to all existing
+        // members so their Members tab updates immediately.
+        transport: serviceLocator<CommunicationService>(),
       ));
   serviceLocator.registerLazySingleton<StatisticsService>(
       () => StatisticsService(serviceLocator<StatisticsRepository>()));
@@ -127,6 +138,16 @@ Future<void> setupServiceLocator() async {
   // V3.0.5 (bug 1) — status-bar notifications for background chat messages.
   serviceLocator.registerLazySingleton<SystemNotificationService>(
       () => SystemNotificationService());
+  // V3.0.7 (bug 4) — request battery-optimization exemption so the chat
+  // keep-alive foreground service survives aggressive OEM Doze.
+  serviceLocator.registerLazySingleton<BatteryOptimizationService>(
+      () => BatteryOptimizationService());
+  // V3.0.7 (bug 3 & 4) — FCM push notifications wake the device when the
+  // app is fully killed or the foreground service was destroyed by the OS.
+  // ADR-003 is preserved: FCM carries only metadata (groupId, eventId,
+  // authorName) — never the chat payload. The actual message is fetched
+  // peer-to-peer via ChatSyncService after the app wakes.
+  serviceLocator.registerLazySingleton<FcmPushService>(() => FcmPushService());
   serviceLocator.registerLazySingleton<ChatKeepAliveService>(
       () => ChatKeepAliveService(
             groupRepository: serviceLocator<GroupRepository>(),

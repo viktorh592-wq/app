@@ -162,6 +162,14 @@ class ChatSyncService {
           await _onGroupStateRequest(envelope);
         case RealtimeType.groupStateBatch:
           await _onGroupStateBatch(envelope);
+        case RealtimeType.activityUpsert:
+          await _onActivityUpsert(envelope);
+        case RealtimeType.memberAdded:
+          await _onMemberAdded(envelope);
+        case RealtimeType.activityEditDenied:
+          // Pure UI signal — no state mutation. The chat / activity tab
+          // surfaces the denial via a snackbar from the originating call.
+          break;
         default:
           break; // gps / poll / vote / presence / stage / arrival — not here
       }
@@ -181,6 +189,11 @@ class ChatSyncService {
     // Guard against self-echo (belt & suspenders — the transport already
     // filters its own origin).
     if (envelope.senderId == me) return;
+    // V3.0.7 bug 5 — materialize the author's UserCollection from the
+    // envelope payload so the chat bubble can render the real display name
+    // instead of the «User xxxxxx» placeholder. Best-effort: a missing
+    // authorDisplayName falls back to the existing placeholder behaviour.
+    await _materializeAuthorFromEnvelope(envelope.payload);
     final stored = await _messages.ingestIncoming(
       envelope.payload,
       deliveryState: DeliveryState.delivered.name,
@@ -198,6 +211,47 @@ class ChatSyncService {
       senderId: me,
       timestamp: Timestamps.nowUtc(),
     ));
+  }
+
+  /// Materializes the sender's UserCollection from the chat envelope
+  /// payload (V3.0.7 bug 5 — fixes «User xxxxxx» placeholder). When the
+  /// envelope carries `authorDisplayName` / `authorUsername`, the local
+  /// store is updated (idempotent) so the chat bubble can render the
+  /// real name. Best-effort: failures are silently swallowed.
+  Future<void> _materializeAuthorFromEnvelope(
+      Map<String, dynamic> payload) async {
+    final users = _users;
+    if (users == null) return;
+    final authorId = payload['authorId'] as String? ?? '';
+    if (authorId.isEmpty) return;
+    final displayName = payload['authorDisplayName'] as String? ?? '';
+    final username = payload['authorUsername'] as String? ?? '';
+    if (displayName.isEmpty && username.isEmpty) return;
+    final existing = await users.getById(authorId);
+    // Only update when the local copy is missing OR has a placeholder
+    // name (local-first: a user who edited their own profile keeps it).
+    final needsUpdate = existing == null ||
+        (existing.displayName.isEmpty ||
+            existing.displayName.startsWith('User ') ||
+            existing.displayName.startsWith('user_'));
+    if (!needsUpdate) return;
+    final now = Timestamps.nowUtc();
+    final u = existing ??
+        UserCollection()
+          ..id = authorId
+          ..createdAt = now
+          ..version = 1
+          ..isDeleted = false
+          ..profileVisible = true;
+    u
+      ..updatedAt = now
+      ..displayName = displayName.isEmpty
+          ? (existing?.displayName ?? 'User ${_shortId(authorId)}')
+          : displayName
+      ..username = username.isEmpty
+          ? (existing?.username ?? 'user_${_shortId(authorId)}')
+          : username;
+    await users.upsertKnown(u);
   }
 
   Future<void> _onChatAck(RealtimeEnvelope envelope) async {
@@ -551,5 +605,136 @@ class ChatSyncService {
     // this event and shows the complete state.
     _members.notifyGroupChanged(groupId);
     _events.notifyGroupChanged(groupId);
+  }
+
+  // ---------------------------------------------------------------------
+  // Live activity upsert (V3.0.7 — bug 2)
+  // ---------------------------------------------------------------------
+
+  /// Handles a live activityUpsert envelope (create or update). Upserts
+  /// the activity into the local store (local-first: a newer local version
+  /// wins on conflict) and fires the group change signal so the open
+  /// Activities tab reloads immediately. Never re-broadcasts (loop safety).
+  Future<void> _onActivityUpsert(RealtimeEnvelope envelope) async {
+    final me = _me;
+    if (me == null) return;
+    if (envelope.senderId == me) return; // own echo — ignore
+    final rawEvent = envelope.payload['event'];
+    if (rawEvent is! Map) return;
+    final map = Map<String, dynamic>.from(rawEvent);
+    final eventId = map['id'] as String? ?? '';
+    if (eventId.isEmpty) return;
+    final groupId = envelope.payload['groupId'] as String? ??
+        map['groupId'] as String? ??
+        '';
+    if (groupId.isEmpty) return;
+
+    // Local-first conflict resolution: when a local copy exists with a
+    // newer version, keep the local copy (the local organizer's edit wins).
+    final existing = await _events.getById(eventId);
+    final incomingVersion = (map['version'] as num?)?.toInt() ?? 1;
+    if (existing != null && existing.version > incomingVersion) {
+      // Local copy is newer — ignore the incoming (probably stale) edit.
+      return;
+    }
+    final event = EventCollection.fromMap(map)
+      ..id = eventId
+      ..groupId = groupId;
+    await _events.upsertFromInvitation(event);
+
+    // Materialize the organizer as an accepted participant (parity with
+    // the QR accept path) so the activity shows the correct participant
+    // count + avatars on every member's device.
+    final organizerId = event.organizerId;
+    final participants = _participants;
+    if (organizerId.isNotEmpty && participants != null) {
+      try {
+        final existingP =
+            await participants.byEventAndUser(eventId, organizerId);
+        if (existingP == null) {
+          await participants.invite(
+            eventId: eventId,
+            userId: organizerId,
+            role: ParticipantRole.organizer.name,
+            byUserId: organizerId,
+          );
+          final organizerP =
+              await participants.byEventAndUser(eventId, organizerId);
+          if (organizerP != null) {
+            await participants.setStatus(
+                organizerP, ParticipantStatus.accepted);
+          }
+        }
+      } catch (_) {
+        // Best-effort parity — never fail the upsert.
+      }
+    }
+
+    _messages.notifyChanged(eventId);
+    _events.notifyGroupChanged(groupId);
+  }
+
+  // ---------------------------------------------------------------------
+  // Live membership change (V3.0.7 — bug 1)
+  // ---------------------------------------------------------------------
+
+  /// Handles a live memberAdded envelope: materializes the new member's
+  /// UserCollection (if not already known) and adds them to the group's
+  /// member roster. Never re-broadcasts (loop safety). Fires the group
+  /// change signal so the open Members tab reloads immediately.
+  Future<void> _onMemberAdded(RealtimeEnvelope envelope) async {
+    final me = _me;
+    if (me == null) return;
+    if (envelope.senderId == me) return; // own echo — ignore
+    final groupId = envelope.payload['groupId'] as String? ?? '';
+    if (groupId.isEmpty) return;
+    final rawMember = envelope.payload['member'];
+    if (rawMember is! Map) return;
+    final m = Map<String, dynamic>.from(rawMember);
+    final userId = m['userId'] as String? ?? '';
+    if (userId.isEmpty) return;
+
+    // Materialize the new member's UserCollection (idempotent).
+    final users = _users;
+    if (users != null) {
+      final existingUser = await users.getById(userId);
+      if (existingUser == null) {
+        final now = Timestamps.nowUtc();
+        final displayName = m['displayName'] as String? ?? '';
+        final username = m['username'] as String? ?? '';
+        await users.upsertKnown(UserCollection()
+          ..id = userId
+          ..createdAt = now
+          ..updatedAt = now
+          ..version = 1
+          ..isDeleted = false
+          ..displayName = displayName.isEmpty
+              ? 'User ${_shortId(userId)}'
+              : displayName
+          ..username = username.isEmpty
+              ? (displayName.isEmpty
+                  ? 'user_${_shortId(userId)}'
+                  : displayName)
+              : username
+          ..profileVisible = true);
+      }
+    }
+
+    // Add the membership (idempotent — duplicate adds are silently ignored).
+    try {
+      await _members.addMember(
+        groupId: groupId,
+        userId: userId,
+        role: m['role'] as String? ?? 'member',
+        canInvite: m['canInvite'] as bool? ?? false,
+        addedBy: envelope.payload['byUserId'] as String? ?? userId,
+        joinedAt: (m['joinedAt'] as num?)?.toInt(),
+      );
+    } catch (_) {
+      // Duplicate membership — idempotent ingest.
+    }
+
+    // Notify the open Members tab to reload.
+    _members.notifyGroupChanged(groupId);
   }
 }

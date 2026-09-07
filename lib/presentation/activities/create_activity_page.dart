@@ -183,6 +183,10 @@ class _CreateActivityPageState extends State<CreateActivityPage> {
               ? null
               : int.tryParse(_maxParticipants.text.trim()),
           accentColor: _accentColor,
+          // V3.0.7 bug 2 — enforce edit permission (organizer OR group
+          // owner/admin). Throws BusinessRuleError when the user lacks
+          // permission.
+          byUserId: user.id,
         );
       } else {
         await service.createActivity(

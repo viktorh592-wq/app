@@ -62,6 +62,10 @@ class HybridCommunicationService extends LocalNetworkCommunicationService {
   final Set<String> _seenRelayEnvelopeIds = <String>{};
 
   /// Envelope types that may cross the internet (ADR-009).
+  ///
+  /// V3.0.7 — added `activityUpsert`, `memberAdded` so live group state
+  /// changes (new activity, new member) propagate to all members on
+  /// mobile networks, not just over Wi-Fi.
   static const Set<RealtimeType> relayableTypes = <RealtimeType>{
     RealtimeType.chat,
     RealtimeType.chatAck,
@@ -69,18 +73,58 @@ class HybridCommunicationService extends LocalNetworkCommunicationService {
     RealtimeType.chatHistoryBatch,
     RealtimeType.groupStateRequest,
     RealtimeType.groupStateBatch,
+    RealtimeType.activityUpsert,
+    RealtimeType.memberAdded,
+    RealtimeType.activityEditDenied,
   };
 
   /// Boots the relay connection and subscribes all known groups.
+  ///
+  /// V3.0.7 — retry with exponential backoff. The original fire-and-forget
+  /// boot would silently never reconnect if the first attempt failed
+  /// (broker down, no mobile data at startup). Now the boot retries every
+  /// [kRelayBootRetryInterval] until it succeeds.
   Future<void> _bootRelay() async {
     try {
       final connected = await _relay.connect();
-      if (!connected) return;
-      await syncSubscriptions();
+      if (connected) {
+        await syncSubscriptions();
+        return;
+      }
     } catch (_) {
       // Best-effort.
     }
+    _scheduleRelayRetry();
   }
+
+  /// Schedules a deferred retry of the relay boot. Cancelled on dispose.
+  /// V3.0.7 — when the initial connect fails, retry on a fixed cadence
+  /// until success (or dispose). This fixes bug 3 (chat not working on
+  /// mobile) when the first broker was unreachable at app start.
+  Timer? _relayRetryTimer;
+  static const Duration kRelayBootRetryInterval = Duration(seconds: 15);
+
+  void _scheduleRelayRetry() {
+    _relayRetryTimer?.cancel();
+    _relayRetryTimer = Timer(kRelayBootRetryInterval, () async {
+      if (isRelayConnected) {
+        _relayRetryTimer = null;
+        return;
+      }
+      try {
+        final connected = await _relay.connect();
+        if (connected) {
+          await syncSubscriptions();
+          _relayRetryTimer = null;
+          return;
+        }
+      } catch (_) {}
+      _scheduleRelayRetry();
+    });
+  }
+
+  /// Visible for tests / status banner.
+  bool get isRelayConnected => _relay.isConnected;
 
   /// (Re)applies subscriptions for the current group list. Called at boot
   /// and after a new group was joined via QR.
@@ -173,6 +217,8 @@ class HybridCommunicationService extends LocalNetworkCommunicationService {
 
   @override
   void dispose() {
+    _relayRetryTimer?.cancel();
+    _relayRetryTimer = null;
     try {
       _relay.disconnect();
     } catch (_) {}
