@@ -35,6 +35,7 @@ import 'package:pokatuha/domain/repositories/event_repository.dart';
 import 'package:pokatuha/domain/repositories/group_repository.dart';
 import 'package:pokatuha/domain/repositories/user_repository.dart';
 import 'package:pokatuha/domain/services/chat_keep_alive_task.dart';
+import 'package:pokatuha/domain/services/relay_codec.dart';
 
 /// How often the UI isolate proves it is alive to the task isolate.
 const int kKeepAlivePingIntervalMs = 3000;
@@ -164,9 +165,14 @@ class ChatKeepAliveService {
   Future<void> _sendPing() async {
     try {
       final groups = <String, String>{};
+      final routes = <Map<String, String>>[];
       for (final g in await _groups.all()) {
         if (groups.length >= kKeepAliveSnapshotCap) break;
         groups[g.id] = g.name;
+        final code = g.inviteCode;
+        if (code != null && code.trim().isNotEmpty) {
+          routes.add({'gid': g.id, 'code': code});
+        }
       }
       final labels = <String, String>{};
       for (final e in await _events.all()) {
@@ -181,10 +187,20 @@ class ChatKeepAliveService {
         if (users.length >= kKeepAliveSnapshotCap) break;
         users[u.id] = u.displayName;
       }
+      // Relay topics for the task's standby subscriptions (V3.0.5 bug 2).
+      final topics = <Map<String, String>>[];
+      for (final route in routes) {
+        topics.add({
+          'gid': route['gid']!,
+          'code': route['code']!,
+          'topic': await topicForInviteCode(route['code']!),
+        });
+      }
       FlutterForegroundTask.sendDataToTask(<String, dynamic>{
         'cmd': 'ping',
         'labels': labels,
         'users': users,
+        'topics': topics,
       });
     } catch (_) {
       // Snapshot failures are non-fatal — the task falls back to a

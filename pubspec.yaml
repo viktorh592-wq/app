@@ -66,6 +66,13 @@ dependencies:
   # release APK build failed on Linux. When S3-T6 voice messages are
   # actually implemented, a future sprint should re-add a maintained
   # version (likely `record: ^7.x` which pulls `record_linux ^1.x`).
+  # --- V3.0.5 bug 2 — chat over mobile networks (ADR-009): the LAN UDP
+  # transport (ADR-008) cannot cross the internet. mqtt_client connects to
+  # an MQTT relay broker; cryptography provides AES-GCM end-to-end payload
+  # encryption so the broker never sees message contents.
+  mqtt_client: ^10.5.1
+  cryptography: ^2.7.0
+
   qr_flutter: ^4.1.0
   mobile_scanner: ^5.2.3
   share_plus: ^10.1.2

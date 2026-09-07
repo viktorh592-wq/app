@@ -15,7 +15,9 @@ import 'package:pokatuha/database/collections/group_collection.dart';
 import 'package:pokatuha/domain/repositories/user_repository.dart';
 import 'package:pokatuha/domain/services/auth_service.dart';
 import 'package:pokatuha/domain/services/chat_sync_service.dart';
+import 'package:pokatuha/domain/services/communication_service.dart';
 import 'package:pokatuha/domain/services/group_service.dart';
+import 'package:pokatuha/domain/services/hybrid_communication_service.dart';
 import 'package:pokatuha/domain/services/identity_service.dart';
 import 'package:pokatuha/domain/services/service_locator.dart';
 import 'package:pokatuha/l10n/app_localizations.dart';
@@ -81,6 +83,12 @@ class DeepLinkDispatcher {
           // the group page must open instantly regardless of network state.
           unawaited(
               serviceLocator<ChatSyncService>().requestHistory(group.id));
+          // V3.0.5 (bug 2) — subscribe the new group on the internet relay
+          // so mobile-network delivery starts immediately.
+          final communication = serviceLocator<CommunicationService>();
+          if (communication is HybridCommunicationService) {
+            unawaited(communication.syncSubscriptions());
+          }
           _toast(l.groupJoined);
           _push(GroupDetailPage(groupId: group.id));
         } on AppError catch (e) {

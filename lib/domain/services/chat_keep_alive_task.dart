@@ -1,21 +1,24 @@
 /// Keep-alive task — runs inside the background engine created by
-/// flutter_foreground_task (V3.0.5 — bug 1).
+/// flutter_foreground_task (V3.0.5 — bug 1 + bug 2).
 ///
 /// Lifecycle:
 ///   1. The service starts while the app is in the FOREGROUND (allowed on
 ///      every Android version). The task handler starts DORMANT: the main
-///      isolate owns the UDP socket, the store and notifications.
+///      isolate owns the UDP socket, the relay connection, the store and
+///      notifications.
 ///   2. The main isolate pings the task every 3 s with fresh display-name
-///      snapshots (chat labels + user names).
+///      snapshots (chat labels + user names) and the relay topics
+///      (groupId + invite code) of the device's groups.
 ///   3. When the user swipes the app away, the UI engine is destroyed but
 ///      the service keeps the process alive (`stopWithTask=false`). Pings
 ///      stop → the [KeepAliveArbiter] activates the task: it binds its own
-///      UDP socket and shows system notifications for incoming chat
-///      messages. It deliberately does NOT touch the Sembast store (two
-///      isolates must never open the same database) — missed messages are
-///      healed by the history sync when the app is reopened.
+///      UDP socket AND connects to the relay broker, then shows system
+///      notifications for incoming chat messages (both transports). It
+///      deliberately does NOT touch the Sembast store (two isolates must
+///      never open the same database) — missed messages are healed by the
+///      history sync when the app is reopened.
 ///   4. When the app is launched again, pings resume → the task closes its
-///      socket and goes back to sleep.
+///      socket / relay and goes back to sleep.
 library;
 
 import 'dart:async';
@@ -27,6 +30,7 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:pokatuha/domain/services/chat_keep_alive_service.dart';
 import 'package:pokatuha/domain/services/communication_service.dart';
 import 'package:pokatuha/domain/services/local_network_communication_service.dart';
+import 'package:pokatuha/domain/services/relay_connection.dart';
 import 'package:pokatuha/domain/services/system_notification_service.dart';
 
 /// Top-level entry point — MUST be a top-level function for the plugin to
@@ -49,6 +53,12 @@ class ChatKeepAliveTask extends TaskHandler {
   /// Display-name snapshots streamed from the main isolate via pings.
   Map<String, String> _labels = const <String, String>{};
   Map<String, String> _users = const <String, String>{};
+
+  /// Relay routes (topic → gid/code) streamed via pings (V3.0.5 bug 2).
+  final Map<String, RelayRoute> _relayRoutes = <String, RelayRoute>{};
+
+  /// Standby relay connection — bound only while ACTIVE.
+  RelayConnection? _relay;
 
   /// Bound only while ACTIVE (UI engine dead). Null while dormant.
   RawDatagramSocket? _socket;
@@ -83,6 +93,19 @@ class ChatKeepAliveTask extends TaskHandler {
     if (users is Map) {
       _users = users.map((k, v) => MapEntry(k.toString(), v.toString()));
     }
+    final topics = map['topics'];
+    if (topics is List) {
+      _relayRoutes.clear();
+      for (final raw in topics) {
+        if (raw is! Map) continue;
+        final t = Map<String, dynamic>.from(raw);
+        final gid = t['gid'] as String? ?? '';
+        final code = t['code'] as String? ?? '';
+        final topic = t['topic'] as String? ?? '';
+        if (gid.isEmpty || code.isEmpty || topic.isEmpty) continue;
+        _relayRoutes[topic] = (groupId: gid, inviteCode: code);
+      }
+    }
   }
 
   @override
@@ -105,24 +128,44 @@ class ChatKeepAliveTask extends TaskHandler {
   // -------------------------------------------------------------------
 
   Future<void> _activate() async {
-    if (_socket != null || _activating) return;
+    if (_activating) return;
+    if (_socket != null && (_relay?.isConnected ?? false)) return;
     if (!Platform.isAndroid && !Platform.isIOS) return;
     _activating = true;
     try {
       _ensureNotifications();
-      final socket = await RawDatagramSocket.bind(
-        InternetAddress.anyIPv4,
-        kPokatuhaUdpPort,
-        reuseAddress: true,
-      );
-      socket.listen((RawSocketEvent event) {
-        if (event == RawSocketEvent.read) {
-          final datagram = socket.receive();
-          if (datagram == null) return;
-          _handleDatagram(datagram);
+      if (_socket == null) {
+        final socket = await RawDatagramSocket.bind(
+          InternetAddress.anyIPv4,
+          kPokatuhaUdpPort,
+          reuseAddress: true,
+        );
+        socket.listen((RawSocketEvent event) {
+          if (event == RawSocketEvent.read) {
+            final datagram = socket.receive();
+            if (datagram == null) return;
+            _handleDatagram(datagram);
+          }
+        });
+        _socket = socket;
+      }
+      // V3.0.5 bug 2 — standby relay subscriptions so messages also
+      // arrive over mobile networks while the app is swiped away.
+      if (_relay == null || !_relay!.isConnected) {
+        final relay = _relay ??
+            MqttRelayConnection(
+              clientId: 'pokatuha-task-${_arbiter.hashCode.toRadixString(36)}',
+              onMessage: (topic, body) =>
+                  unawaited(_handleRelayBody(topic, body)),
+            );
+        _relay = relay;
+        final connected = await relay.connect();
+        if (connected) {
+          for (final topic in _relayRoutes.keys) {
+            await relay.subscribe(topic);
+          }
         }
-      });
-      _socket = socket;
+      }
     } catch (_) {
       // Bind failures (no network yet, port taken by the UI engine during
       // a race) stay silent — the next repeat event retries activation.
@@ -134,11 +177,17 @@ class ChatKeepAliveTask extends TaskHandler {
 
   void _deactivate() {
     final socket = _socket;
-    if (socket == null) return;
     _socket = null;
-    try {
-      socket.close();
-    } catch (_) {}
+    if (socket != null) {
+      try {
+        socket.close();
+      } catch (_) {}
+    }
+    final relay = _relay;
+    _relay = null;
+    if (relay != null) {
+      unawaited(relay.disconnect());
+    }
     _seenEnvelopeIds.clear();
   }
 
@@ -185,6 +234,35 @@ class ChatKeepAliveTask extends TaskHandler {
     }
     _seenEnvelopeIds.add(eid);
     return true;
+  }
+
+  /// Relay standby path: opens the seal with the route's key material and
+  /// notifies for live chat envelopes (acks/batches stay silent).
+  Future<void> _handleRelayBody(String topic, String body) async {
+    final route = _relayRoutes[topic];
+    if (route == null) return;
+    try {
+      final envelopeJson = await openSeal(
+        relayJson: body,
+        groupId: route.groupId,
+        inviteCode: route.inviteCode,
+      );
+      if (envelopeJson == null) return;
+      final decoded = jsonDecode(envelopeJson);
+      if (decoded is! Map<String, dynamic>) return;
+      final eid = decoded['eid'] as String? ?? '';
+      if (eid.isEmpty || !_remember(eid)) return;
+      final envelope = LocalNetworkCommunicationService.decodeEnvelope(
+        envelopeJson,
+        envelopeId: eid,
+        origin: decoded['o'] as String? ?? '',
+      );
+      if (envelope == null) return;
+      if (envelope.type != RealtimeType.chat) return;
+      await _notify(envelope.payload);
+    } catch (_) {
+      // Never let a relay failure kill the task.
+    }
   }
 
   /// Builds the notification from the chat payload + snapshots. Never

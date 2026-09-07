@@ -31,7 +31,9 @@ import 'package:pokatuha/domain/services/geocoding_service.dart';
 import 'package:pokatuha/domain/services/gpx_service.dart';
 import 'package:pokatuha/domain/services/gps_service.dart';
 import 'package:pokatuha/domain/services/group_service.dart';
+import 'package:pokatuha/domain/services/hybrid_communication_service.dart';
 import 'package:pokatuha/domain/services/identity_service.dart';
+import 'package:pokatuha/domain/services/relay_connection.dart';
 import 'package:pokatuha/domain/services/map_service.dart';
 import 'package:pokatuha/domain/services/notification_service.dart';
 import 'package:pokatuha/domain/services/local_network_communication_service.dart';
@@ -133,12 +135,48 @@ Future<void> setupServiceLocator() async {
           ));
   serviceLocator.registerLazySingleton<SettingsService>(
       () => SettingsService(serviceLocator<SettingsRepository>()));
-  // --- Communication (V3.0.4 — real local-network transport) ---
-  // LocalNetworkCommunicationService keeps the in-process loopback of the
-  // old LocalCommunicationService and adds UDP broadcast on the local
-  // Wi-Fi (ADR-008) so chat messages actually leave the device.
+  // --- Communication (V3.0.4/V3.0.5 — real local-network + internet) ---
+  // HybridCommunicationService keeps the in-process loopback, the UDP
+  // broadcast on the local Wi-Fi (ADR-008) AND adds an encrypted MQTT
+  // relay so chat works over mobile networks too (ADR-009, bug 2).
   serviceLocator.registerLazySingleton<CommunicationService>(
-      () => LocalNetworkCommunicationService());
+      () => HybridCommunicationService(
+            resolveRoute: (envelope) async {
+              // Route resolution: most payloads carry the groupId directly;
+              // chat payloads carry eventId (→ event → group), acks carry
+              // the acknowledged message id (→ message → event → group).
+              final events = serviceLocator<EventRepository>();
+              final groups = serviceLocator<GroupRepository>();
+              String? gid = envelope.payload['groupId'] as String?;
+              if (gid == null || gid.isEmpty) {
+                String? eventId;
+                if (envelope.type == RealtimeType.chatAck) {
+                  final message = await serviceLocator<MessageRepository>()
+                      .getById(envelope.payload['ackFor'] as String? ?? '');
+                  eventId = message?.eventId;
+                } else {
+                  eventId = envelope.payload['eventId'] as String?;
+                }
+                if (eventId != null && eventId.isNotEmpty) {
+                  final event = await events.getById(eventId);
+                  gid = event?.groupId;
+                }
+              }
+              if (gid == null || gid.isEmpty) return null;
+              final group = await groups.getById(gid);
+              final code = group?.inviteCode;
+              if (code == null || code.trim().isEmpty) return null;
+              return (groupId: gid, inviteCode: code);
+            },
+            currentRoutes: () async {
+              final groups = await serviceLocator<GroupRepository>().all();
+              return <RelayRoute>[
+                for (final g in groups)
+                  if (g.inviteCode != null && g.inviteCode!.trim().isNotEmpty)
+                    (groupId: g.id, inviteCode: g.inviteCode!),
+              ];
+            },
+          ));
   serviceLocator.registerLazySingleton<ChatSyncService>(() => ChatSyncService(
         transport: serviceLocator<CommunicationService>(),
         messageRepository: serviceLocator<MessageRepository>(),

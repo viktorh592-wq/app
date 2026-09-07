@@ -104,6 +104,11 @@ class LocalNetworkCommunicationService implements CommunicationService {
       !(const bool.fromEnvironment('FLUTTER_TEST')) &&
       !(Platform.environment.containsKey('FLUTTER_TEST'));
 
+  /// Protected — subclasses check the same hermetic-test guard before
+  /// booting their own network plumbing.
+  @protected
+  bool get supportsNetwork => _supportsNetwork;
+
   @override
   CommunicationMode get mode => _inner.mode;
 
@@ -142,7 +147,7 @@ class LocalNetworkCommunicationService implements CommunicationService {
     await _inner.broadcast(envelope); // loopback + offline queue
     if (!_networkBooted) return;
     try {
-      await _sendDatagram(_encodeEnvelope(envelope));
+      await _sendDatagram(encodeEnvelope(envelope));
     } catch (_) {
       // Best-effort — never surface transport errors to the caller.
     }
@@ -257,9 +262,12 @@ class LocalNetworkCommunicationService implements CommunicationService {
   /// `ts` (ms) and payload map `p`.
   @visibleForTesting
   String encodeEnvelopeForTest(RealtimeEnvelope envelope) =>
-      _encodeEnvelope(envelope);
+      encodeEnvelope(envelope);
 
-  String _encodeEnvelope(RealtimeEnvelope envelope) {
+  /// Protected — subclasses (HybridCommunicationService) reuse the same
+  /// wire format for other transports.
+  @protected
+  String encodeEnvelope(RealtimeEnvelope envelope) {
     return jsonEncode(<String, dynamic>{
       'v': kEnvelopeVersion,
       'eid': UuidGenerator.generate(),
@@ -340,6 +348,12 @@ class LocalNetworkCommunicationService implements CommunicationService {
     if (envelope == null) return;
     _incomingController.add(envelope);
   }
+
+  /// Protected — lets subclasses feed additional transports (relay) into
+  /// the same merged incoming stream.
+  @protected
+  void addIncoming(RealtimeEnvelope envelope) =>
+      _incomingController.add(envelope);
 
   /// Records the envelope id; returns false when it was already seen.
   bool _rememberEnvelope(String eid) {
