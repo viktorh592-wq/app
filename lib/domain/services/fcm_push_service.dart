@@ -62,10 +62,25 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 class FcmPushService {
-  FcmPushService({FirebaseMessaging? instance})
-      : _messaging = instance ?? FirebaseMessaging.instance;
+  /// V3.0.8 HOTFIX (white screen on launch) — the constructor previously
+  /// resolved `FirebaseMessaging.instance` EAGERLY. That getter calls
+  /// `Firebase.app()`, which throws synchronously
+  /// (FirebaseException: No Firebase App '[DEFAULT]' has been created)
+  /// when Firebase.initializeApp() has not run yet. In v3.0.7 no
+  /// initializeApp() existed on the main isolate, so the exception
+  /// escaped through `serviceLocator<FcmPushService>()` in main() and
+  /// killed the app BEFORE runApp() — the user saw the white launch
+  /// theme forever. The instance is now resolved lazily inside [init]
+  /// AFTER Firebase.initializeApp() completes.
+  FcmPushService({FirebaseMessaging? instance}) : _override = instance;
 
-  final FirebaseMessaging _messaging;
+  /// Test override (see constructor). Null in production.
+  final FirebaseMessaging? _override;
+
+  /// Resolved inside [init] once Firebase is initialized. Null when the
+  /// platform has no usable Firebase (no Play Services / config) — every
+  /// accessor then degrades to a no-op instead of throwing.
+  FirebaseMessaging? _messaging;
 
   bool _initialized = false;
   String? _token;
@@ -80,9 +95,26 @@ class FcmPushService {
   /// Initializes Firebase Messaging, requests notification permission and
   /// registers the background handler. Idempotent — safe to call from both
   /// main() and from a settings UI.
+  ///
+  /// V3.0.8 hotfix — self-guarded end to end: runs Firebase.initializeApp()
+  /// FIRST, resolves the messaging instance only afterwards, and never
+  /// rethrows. Every failure path degrades to "FCM unavailable" while chat
+  /// keeps working over MQTT / UDP (ADR-009).
   Future<void> init({FcmChatHandler? foregroundHandler}) async {
     if (_initialized) return;
     _foregroundHandler = foregroundHandler;
+    try {
+      // V3.0.8 HOTFIX — MUST happen before ANY FirebaseMessaging access.
+      // Uses FirebaseOptions.fromResource on Android (google-services.json
+      // values baked in by the google-services Gradle plugin).
+      await Firebase.initializeApp();
+      _messaging = _override ?? FirebaseMessaging.instance;
+    } catch (_) {
+      // Firebase may be unavailable (no Google Play Services, missing
+      // config on a forked build). Chat keeps working over MQTT / UDP.
+      _initialized = true;
+      return;
+    }
     try {
       // Register the background isolate handler FIRST so a data message
       // arriving before init completes still surfaces a notification.
@@ -96,7 +128,7 @@ class FcmPushService {
       FirebaseMessaging.onMessage.listen(_onForegroundMessage);
 
       // Notification permission (Android 13+ POST_NOTIFICATIONS, iOS prompt).
-      final settings = await _messaging.requestPermission(
+      final settings = await _messaging!.requestPermission(
         alert: true,
         badge: true,
         sound: true,
@@ -110,7 +142,7 @@ class FcmPushService {
         return;
       }
 
-      _token = await _messaging.getToken();
+      _token = await _messaging!.getToken();
       _initialized = true;
     } catch (_) {
       // Firebase may be unavailable (no Google Play Services, missing
@@ -137,18 +169,20 @@ class FcmPushService {
   /// random-looking topic. ADR-001 (local-first) is preserved — the message
   /// body never transits FCM.
   Future<void> subscribeToGroup(String groupId) async {
-    if (!_initialized) return;
+    final messaging = _messaging;
+    if (!_initialized || messaging == null) return;
     try {
-      await _messaging.subscribeToTopic('group_$groupId');
+      await messaging.subscribeToTopic('group_$groupId');
     } catch (_) {
       // Best-effort — peers may also wake via MQTT.
     }
   }
 
   Future<void> unsubscribeFromGroup(String groupId) async {
-    if (!_initialized) return;
+    final messaging = _messaging;
+    if (!_initialized || messaging == null) return;
     try {
-      await _messaging.unsubscribeFromTopic('group_$groupId');
+      await messaging.unsubscribeFromTopic('group_$groupId');
     } catch (_) {}
   }
 

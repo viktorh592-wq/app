@@ -29,17 +29,28 @@ class AppViewModel extends ChangeNotifier {
   CommunicationMode get communicationMode =>
       serviceLocator<CommunicationService>().mode;
 
+  /// V3.0.8 hotfix — self-healing boot: any failure while loading the
+  /// profile / settings (corrupt store, plugin error) previously left
+  /// [_initialized] false forever, freezing the UI on the boot spinner.
+  /// Now every failure degrades to the onboarding path and the flag is
+  /// ALWAYS set in [finally], so the UI is guaranteed to appear.
   Future<void> initialize() async {
-    final auth = serviceLocator<AuthService>();
-    _user = await auth.loadCurrent();
+    try {
+      final auth = serviceLocator<AuthService>();
+      _user = await auth.loadCurrent();
 
-    if (_user != null) {
-      await _loadSettings();
-      _applyThemeAndMap();
-      _watchCommunication();
+      if (_user != null) {
+        await _loadSettings();
+        _applyThemeAndMap();
+        _watchCommunication();
+      }
+    } catch (_) {
+      // Local-first: a failed profile load must never block the UI.
+      _user = null;
+    } finally {
+      _initialized = true;
+      notifyListeners();
     }
-    _initialized = true;
-    notifyListeners();
   }
 
   Future<void> completeOnboarding({
