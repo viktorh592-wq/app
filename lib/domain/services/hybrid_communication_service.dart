@@ -23,6 +23,7 @@ import 'package:pokatuha/domain/services/communication_service.dart';
 import 'package:pokatuha/domain/services/local_network_communication_service.dart';
 import 'package:pokatuha/domain/services/relay_connection.dart';
 import 'package:pokatuha/domain/services/relay_codec.dart';
+import 'package:pokatuha/domain/services/relay_transport.dart';
 
 /// Resolves the relay route of an envelope (null — do not relay).
 typedef RelayRouteResolver = Future<RelayRoute?> Function(
@@ -40,8 +41,10 @@ class HybridCommunicationService extends LocalNetworkCommunicationService {
     RelayConnection? relayConnection,
   })  : _resolveRoute = resolveRoute,
         _currentRoutes = currentRoutes {
+    // V3.0.9 (ADR-010) — default transport is a fanout of the MQTT relay
+    // (ADR-009) and the NOSTR relay (ADR-010); either leg may be down.
     _relay = relayConnection ??
-        MqttRelayConnection(clientId: 'pokatuha-relay-$originId');
+        buildDefaultRelayTransport(clientId: 'pokatuha-relay-$originId');
     _relay.onMessage = (topic, body) => unawaited(_onRelayMessage(topic, body));
     if (supportsNetwork) {
       // Fire-and-forget like the UDP boot — a broker outage must never

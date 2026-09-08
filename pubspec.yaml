@@ -1,7 +1,7 @@
 name: pokatuha
 description: "Pokatuha — privacy-first, local-first P2P activity coordination platform for cyclists, hikers and outdoor communities."
 publish_to: "none"
-version: 3.0.8+1
+version: 3.0.9+1
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
@@ -72,6 +72,13 @@ dependencies:
   # encryption so the broker never sees message contents.
   mqtt_client: ^10.5.1
   cryptography: ^2.7.0
+  # --- V3.0.9 (ADR-010) — NOSTR relay transport, second internet leg next
+  # to the MQTT relay. web_socket_channel speaks the relay websocket JSON
+  # protocol; bip340 signs ephemeral events (kind 20001) with a random
+  # per-run secp256k1 keypair (relays reject unsigned events). Payloads
+  # stay E2E-encrypted by relay_codec (ADR-009); no account is involved.
+  web_socket_channel: ^3.0.3
+  bip340: ^0.3.1
 
   qr_flutter: ^4.1.0
   mobile_scanner: ^5.2.3

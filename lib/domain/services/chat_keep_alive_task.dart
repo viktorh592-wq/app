@@ -31,6 +31,7 @@ import 'package:pokatuha/domain/services/chat_keep_alive_service.dart';
 import 'package:pokatuha/domain/services/communication_service.dart';
 import 'package:pokatuha/domain/services/local_network_communication_service.dart';
 import 'package:pokatuha/domain/services/relay_connection.dart';
+import 'package:pokatuha/domain/services/relay_transport.dart';
 import 'package:pokatuha/domain/services/system_notification_service.dart';
 
 /// Top-level entry point — MUST be a top-level function for the plugin to
@@ -152,8 +153,11 @@ class ChatKeepAliveTask extends TaskHandler {
       // V3.0.5 bug 2 — standby relay subscriptions so messages also
       // arrive over mobile networks while the app is swiped away.
       if (_relay == null || !_relay!.isConnected) {
+        // V3.0.9 (ADR-010) — standby transport fans out MQTT + NOSTR so
+        // swiped-away devices keep receiving messages even when one of
+        // the public relay legs is down.
         final relay = _relay ??
-            MqttRelayConnection(
+            buildDefaultRelayTransport(
               clientId: 'pokatuha-task-${_arbiter.hashCode.toRadixString(36)}',
               onMessage: (topic, body) =>
                   unawaited(_handleRelayBody(topic, body)),
