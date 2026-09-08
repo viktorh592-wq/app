@@ -30,9 +30,6 @@ Future<String> _nip01EventId(Map<String, dynamic> event) async {
       .join();
 }
 
-String _hex(List<int> bytes) =>
-    bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-
 class _FakeRelay implements RelayConnection {
   _FakeRelay(this.name, {this.connectResult = true});
 
@@ -283,6 +280,9 @@ void main() {
       final fanout = FanoutRelayConnection([mqtt, nostr],
           onMessage: (topic, body) =>
               received.add((topic: topic, body: body)));
+      // Legs were never connected through the fanout — messages still
+      // merge when each leg delivers independently.
+      expect(fanout.isConnected, isFalse);
 
       mqtt.deliver('topic-1', 'via-mqtt');
       nostr.deliver('topic-1', 'via-nostr');
